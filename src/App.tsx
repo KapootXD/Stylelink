@@ -2,29 +2,44 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
+// Components
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+
+// Pages
+import HomePage from './pages/HomePage';
+import MainFeaturePage from './pages/MainFeaturePage';
+import ResultsPage from './pages/ResultsPage';
+import AboutPage from './pages/AboutPage';
+import ProfilePage from './pages/ProfilePage';
+import NotFoundPage from './pages/NotFoundPage';
+
 function App() {
   return (
     <Router>
-      <div className="App">
-        <main className="min-h-screen bg-secondary-50">
+      <div className="App min-h-screen flex flex-col">
+        <Navbar />
+        
+        <main className="flex-1">
           <Routes>
-            <Route 
-              path="/" 
-              element={
-                <div className="flex items-center justify-center min-h-screen">
-                  <div className="text-center">
-                    <h1 className="text-4xl font-bold text-primary-600 mb-4">
-                      StyleLink
-                    </h1>
-                    <p className="text-secondary-600 text-lg">
-                      Fashion discovery and shopping platform
-                    </p>
-                  </div>
-                </div>
-              } 
-            />
+            {/* Home Route */}
+            <Route path="/" element={<HomePage />} />
+            
+            {/* Specific Routes - These must come before dynamic route */}
+            <Route path="/results" element={<ResultsPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            
+            {/* Dynamic Main Feature Route - Must come after specific routes */}
+            <Route path="/:mainFeature" element={<MainFeaturePage />} />
+            
+            {/* 404 Route */}
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
+        
+        <Footer />
+        
         <Toaster 
           position="top-right"
           toastOptions={{
