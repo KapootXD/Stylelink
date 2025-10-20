@@ -1,5 +1,6 @@
 # StyleLink
 ## *Connecting Global Fashion with Local Creativity*
+## *Connecting Global Fashion with Local Creativity*
 
 A web-based fashion discovery and shopping platform that connects global fashion with local creativity. StyleLink empowers users to discover, share, and shop authentic styles worldwide while supporting local brands and everyday creators.
 
