@@ -1,4 +1,5 @@
 # StyleLink
+## *Connecting Global Fashion with Local Creativity*
 
 A web-based fashion discovery and shopping platform that connects global fashion with local creativity. StyleLink empowers users to discover, share, and shop authentic styles worldwide while supporting local brands and everyday creators.
 
@@ -74,6 +75,15 @@ src/
 └── index.css      # Global styles and Tailwind imports
 ```
 
+## Team Members
+
+*[Team members will be added here]*
+
+- **QA/Documentation Lead**: [Name to be added]
+- **Frontend Developer**: [Name to be added]
+- **Backend Developer**: [Name to be added]
+- **UI/UX Designer**: [Name to be added]
+
 ## Team Development
 
 This project is set up for a team of 4 developers with the following considerations:
@@ -109,4 +119,8 @@ REACT_APP_API_URL=your_api_url_here
 
 ## License
 
-This project is proprietary and confidential.
+This project is proprietary and confidential. All rights reserved.
+
+---
+
+**StyleLink** - *Connecting Global Fashion with Local Creativity*
