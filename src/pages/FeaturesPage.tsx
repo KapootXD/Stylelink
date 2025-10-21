@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Heart, Clock } from 'lucide-react';
+import { ArrowLeft, Sparkles, Clock } from 'lucide-react';
 import { Button } from '../components';
 import { useReducedMotion } from '../components/PageTransition';
 
-const AboutPage: React.FC = () => {
+const FeaturesPage: React.FC = () => {
   const prefersReducedMotion = useReducedMotion();
 
   const fadeInUp = {
@@ -27,10 +27,10 @@ const AboutPage: React.FC = () => {
             variants={fadeInUp}
           >
             <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
-              About StyleLink
+              StyleLink Features
             </h1>
             <p className="text-xl text-white/90 max-w-2xl mx-auto">
-              Learn more about our mission to connect global fashion with local creativity.
+              Discover all the amazing features that make StyleLink the ultimate fashion platform.
             </p>
           </motion.div>
         </div>
@@ -50,13 +50,13 @@ const AboutPage: React.FC = () => {
               </div>
               
               <h2 className="text-4xl font-bold text-[#2D2D2D] mb-6">
-                About Page Coming Soon!
+                Features Overview Coming Soon!
               </h2>
               
               <p className="text-xl text-[#2D2D2D]/70 mb-8 leading-relaxed">
-                We're crafting a comprehensive about page that will tell the story of StyleLink, 
-                our mission, team, and vision for the future of fashion discovery. 
-                Stay tuned for an inspiring look into what drives us.
+                We're preparing a comprehensive overview of all StyleLink features. 
+                Soon you'll be able to explore detailed information about our platform's 
+                capabilities and how they can enhance your fashion experience.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -74,7 +74,7 @@ const AboutPage: React.FC = () => {
                   onClick={() => window.location.href = '/'}
                   className="border-[#B7410E] text-[#B7410E] hover:bg-[#B7410E] hover:text-white"
                 >
-                  <Heart className="w-5 h-5 mr-2" />
+                  <Sparkles className="w-5 h-5 mr-2" />
                   Explore Homepage
                 </Button>
               </div>
@@ -86,4 +86,4 @@ const AboutPage: React.FC = () => {
   );
 };
 
-export default AboutPage;
+export default FeaturesPage;
