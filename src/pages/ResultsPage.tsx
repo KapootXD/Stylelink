@@ -30,8 +30,17 @@ import {
 } from '../types';
 import { DEMO_DATA } from '../data/demoData';
 import { likeOutfit, shareOutfit } from '../services/apiService';
+import { 
+  getLikedPosts, 
+  getSavedPosts, 
+  getComments, 
+  saveLikedPosts, 
+  saveSavedPosts, 
+  saveComments 
+} from '../utils/localStorage';
+import PageErrorBoundary from '../components/PageErrorBoundary';
 
-const ResultsPage: React.FC = () => {
+const ResultsPageContent: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -50,8 +59,8 @@ const ResultsPage: React.FC = () => {
   
   // Interaction state
   const [interactions, setInteractions] = useState<InteractionState>({
-    likedOutfits: new Set(),
-    savedOutfits: new Set(),
+    likedOutfits: getLikedPosts(),
+    savedOutfits: getSavedPosts(),
     commentedOutfits: new Set(),
     sharedOutfits: new Set()
   });
@@ -102,6 +111,16 @@ const ResultsPage: React.FC = () => {
       return () => document.removeEventListener('click', handleClickOutside);
     }
   }, [showFilters]);
+
+  // Save liked outfits to localStorage when they change
+  useEffect(() => {
+    saveLikedPosts(interactions.likedOutfits);
+  }, [interactions.likedOutfits]);
+
+  // Save saved outfits to localStorage when they change
+  useEffect(() => {
+    saveSavedPosts(interactions.savedOutfits);
+  }, [interactions.savedOutfits]);
   
   // Sort results
   const sortedResults = useMemo(() => {
@@ -382,7 +401,7 @@ const ResultsPage: React.FC = () => {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
                   Style Results
-                </h1>
+        </h1>
                 <p className="text-sm text-gray-600">
                   {sortedResults.length} outfits found
                 </p>
@@ -640,6 +659,14 @@ const ResultsPage: React.FC = () => {
         )}
       </AnimatePresence>
     </div>
+  );
+};
+
+const ResultsPage: React.FC = () => {
+  return (
+    <PageErrorBoundary pageName="Results">
+      <ResultsPageContent />
+    </PageErrorBoundary>
   );
 };
 
