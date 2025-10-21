@@ -3,16 +3,9 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
   Camera, 
-  Users, 
-  DollarSign, 
   Globe, 
-  Sparkles, 
   ArrowRight,
-  Upload,
   Search,
-  Heart,
-  Share2,
-  Star,
   ShoppingBag,
   MapPin,
   TrendingUp
@@ -30,24 +23,6 @@ const HomePage: React.FC = () => {
     animate: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: prefersReducedMotion ? 0.3 : 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
-    }
-  };
-
-  const fadeInLeft = {
-    initial: { opacity: 0, x: -60 },
-    animate: { 
-      opacity: 1, 
-      x: 0,
-      transition: { duration: prefersReducedMotion ? 0.3 : 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
-    }
-  };
-
-  const fadeInRight = {
-    initial: { opacity: 0, x: 60 },
-    animate: { 
-      opacity: 1, 
-      x: 0,
       transition: { duration: prefersReducedMotion ? 0.3 : 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
     }
   };

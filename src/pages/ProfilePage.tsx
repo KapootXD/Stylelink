@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   Camera, 
   Edit3, 
@@ -114,6 +115,7 @@ const mockOutfitPosts = [
 ];
 
 const ProfilePage: React.FC = () => {
+  const navigate = useNavigate();
   const { user, updateUser } = useUser();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -416,7 +418,7 @@ const ProfilePage: React.FC = () => {
                   <Card 
                     variant="outfit" 
                     className="overflow-hidden h-full"
-                    onClick={() => console.log('Post clicked:', post.id)}
+                    onClick={() => navigate('/results')}
                   >
                     {/* Image Placeholder */}
                     <div className="relative h-80 bg-gradient-to-br from-[#B7410E]/20 to-[#D4AF37]/20 rounded-t-2xl overflow-hidden">
@@ -538,7 +540,7 @@ const ProfilePage: React.FC = () => {
                 <Button
                   variant="primary"
                   size="lg"
-                  onClick={() => console.log('Navigate to upload')}
+                  onClick={() => navigate('/upload')}
                 >
                   <Plus className="w-5 h-5 mr-2" />
                   Share Your First Look

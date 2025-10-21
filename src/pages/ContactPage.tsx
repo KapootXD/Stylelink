@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Store, Clock } from 'lucide-react';
+import { ArrowLeft, Mail, Clock } from 'lucide-react';
 import { Button } from '../components';
 import { useReducedMotion } from '../components/PageTransition';
 
-const SellerSignupPage: React.FC = () => {
+const ContactPage: React.FC = () => {
   const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
 
@@ -21,7 +21,7 @@ const SellerSignupPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FAF3E0]">
       {/* Header */}
-      <section className="py-16 px-4 bg-gradient-to-br from-[#D4AF37] to-[#8B5E3C]">
+      <section className="py-16 px-4 bg-gradient-to-br from-[#B7410E] to-[#8B5E3C]">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial="initial"
@@ -29,10 +29,10 @@ const SellerSignupPage: React.FC = () => {
             variants={fadeInUp}
           >
             <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
-              Seller Sign-Up
+              Contact Us
             </h1>
             <p className="text-xl text-white/90 max-w-2xl mx-auto">
-              Grow your fashion brand and reach customers worldwide with StyleLink.
+              Get in touch with the StyleLink team. We'd love to hear from you!
             </p>
           </motion.div>
         </div>
@@ -52,20 +52,19 @@ const SellerSignupPage: React.FC = () => {
               </div>
               
               <h2 className="text-4xl font-bold text-[#2D2D2D] mb-6">
-                Coming Soon!
+                Contact Form Coming Soon!
               </h2>
               
               <p className="text-xl text-[#2D2D2D]/70 mb-8 leading-relaxed">
-                We're creating a powerful platform for fashion sellers. 
-                Soon you'll be able to set up your store, showcase your designs, 
-                and start selling to our global community.
+                We're creating a comprehensive contact system with multiple ways to reach us. 
+                Soon you'll be able to send messages, schedule calls, and get direct responses from our team.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
                   variant="primary"
                   onClick={() => window.history.back()}
-                  className="bg-[#D4AF37] text-[#2D2D2D] hover:bg-[#B8860B]"
+                  className="bg-[#B7410E] hover:bg-[#A0350C]"
                 >
                   <ArrowLeft className="w-5 h-5 mr-2" />
                   Go Back
@@ -74,9 +73,9 @@ const SellerSignupPage: React.FC = () => {
                 <Button
                   variant="secondary"
                   onClick={() => navigate('/')}
-                  className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#2D2D2D]"
+                  className="border-[#B7410E] text-[#B7410E] hover:bg-[#B7410E] hover:text-white"
                 >
-                  <Store className="w-5 h-5 mr-2" />
+                  <Mail className="w-5 h-5 mr-2" />
                   Explore Homepage
                 </Button>
               </div>
@@ -88,4 +87,4 @@ const SellerSignupPage: React.FC = () => {
   );
 };
 
-export default SellerSignupPage;
+export default ContactPage;

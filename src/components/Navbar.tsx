@@ -30,7 +30,7 @@ const Navbar: React.FC = () => {
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center">
-              <div className="text-2xl font-bold text-primary-600">
+              <div className="text-2xl font-bold text-[#B7410E]">
                 StyleLink
               </div>
             </Link>
@@ -45,8 +45,8 @@ const Navbar: React.FC = () => {
                   to={item.href}
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActivePath(item.href)
-                      ? 'text-primary-600 bg-primary-50'
-                      : 'text-secondary-700 hover:text-primary-600 hover:bg-secondary-50'
+                      ? 'text-[#B7410E] bg-[#FAF3E0]'
+                      : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
                   }`}
                 >
                   {item.name}
@@ -59,13 +59,13 @@ const Navbar: React.FC = () => {
           <div className="hidden md:flex items-center space-x-4">
             <button 
               onClick={() => setIsSearchModalOpen(true)}
-              className="p-2 rounded-full text-secondary-600 hover:text-primary-600 hover:bg-secondary-50 transition-colors"
+              className="p-2 rounded-full text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] transition-colors"
             >
               <Search className="h-5 w-5" />
             </button>
             <Link 
               to="/activity"
-              className="p-2 rounded-full text-secondary-600 hover:text-primary-600 hover:bg-secondary-50 transition-colors"
+              className="p-2 rounded-full text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] transition-colors"
             >
               <Heart className="h-5 w-5" />
             </Link>
@@ -73,8 +73,8 @@ const Navbar: React.FC = () => {
               to="/profile"
               className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 isActivePath('/profile')
-                  ? 'text-primary-600 bg-primary-50'
-                  : 'text-secondary-700 hover:text-primary-600 hover:bg-secondary-50'
+                  ? 'text-[#B7410E] bg-[#FAF3E0]'
+                  : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
               }`}
             >
               <User className="h-4 w-4 mr-2" />
@@ -86,7 +86,7 @@ const Navbar: React.FC = () => {
           <div className="md:hidden">
             <button
               onClick={toggleMobileMenu}
-              className="inline-flex items-center justify-center p-2 rounded-md text-secondary-700 hover:text-primary-600 hover:bg-secondary-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+              className="inline-flex items-center justify-center p-2 rounded-md text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#B7410E]"
             >
               <span className="sr-only">Open main menu</span>
               {isMobileMenuOpen ? (
@@ -110,8 +110,8 @@ const Navbar: React.FC = () => {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
                   isActivePath(item.href)
-                    ? 'text-primary-600 bg-primary-50'
-                    : 'text-secondary-700 hover:text-primary-600 hover:bg-secondary-50'
+                    ? 'text-[#B7410E] bg-[#FAF3E0]'
+                    : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
                 }`}
               >
                 {item.name}
@@ -122,7 +122,7 @@ const Navbar: React.FC = () => {
                 setIsMobileMenuOpen(false);
                 setIsSearchModalOpen(true);
               }}
-              className="flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors text-secondary-700 hover:text-primary-600 hover:bg-secondary-50 w-full text-left"
+              className="flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] w-full text-left"
             >
               <Search className="h-5 w-5 mr-2" />
               Search
@@ -132,8 +132,8 @@ const Navbar: React.FC = () => {
               onClick={() => setIsMobileMenuOpen(false)}
               className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
                 isActivePath('/activity')
-                  ? 'text-primary-600 bg-primary-50'
-                  : 'text-secondary-700 hover:text-primary-600 hover:bg-secondary-50'
+                  ? 'text-[#B7410E] bg-[#FAF3E0]'
+                  : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
               }`}
             >
               <Heart className="h-5 w-5 mr-2" />
@@ -144,8 +144,8 @@ const Navbar: React.FC = () => {
               onClick={() => setIsMobileMenuOpen(false)}
               className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
                 isActivePath('/profile')
-                  ? 'text-primary-600 bg-primary-50'
-                  : 'text-secondary-700 hover:text-primary-600 hover:bg-secondary-50'
+                  ? 'text-[#B7410E] bg-[#FAF3E0]'
+                  : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
               }`}
             >
               <User className="h-5 w-5 mr-2" />
