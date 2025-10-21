@@ -17,15 +17,18 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { Button, Card } from '../components';
+import { useReducedMotion } from '../components/PageTransition';
 
 const HomePage: React.FC = () => {
+  const prefersReducedMotion = useReducedMotion();
+  
   // Enhanced animation variants
   const fadeInUp = {
     initial: { opacity: 0, y: 60 },
     animate: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
+      transition: { duration: prefersReducedMotion ? 0.3 : 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
     }
   };
 
@@ -34,7 +37,7 @@ const HomePage: React.FC = () => {
     animate: { 
       opacity: 1, 
       x: 0,
-      transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
+      transition: { duration: prefersReducedMotion ? 0.3 : 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
     }
   };
 
@@ -43,14 +46,14 @@ const HomePage: React.FC = () => {
     animate: { 
       opacity: 1, 
       x: 0,
-      transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
+      transition: { duration: prefersReducedMotion ? 0.3 : 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
     }
   };
 
   const staggerChildren = {
     animate: {
       transition: {
-        staggerChildren: 0.15,
+        staggerChildren: prefersReducedMotion ? 0.05 : 0.15,
         delayChildren: 0.1
       }
     }

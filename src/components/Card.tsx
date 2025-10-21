@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from './PageTransition';
 
 // Type definitions for Card component
 export interface CardProps {
@@ -25,6 +26,7 @@ const Card: React.FC<CardProps> = ({
   disabled = false,
   'aria-label': ariaLabel,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   // Base styles shared across all variants
   const baseStyles = `
     bg-[#FAF3E0] rounded-2xl shadow-lg
@@ -58,6 +60,14 @@ const Card: React.FC<CardProps> = ({
     ${className}
   `.trim();
 
+  // Animation variants that respect reduced motion
+  const hoverScale = prefersReducedMotion ? 1 : (disabled ? 1 : 1.02);
+  const hoverY = prefersReducedMotion ? 0 : (disabled ? 0 : -4);
+  const tapScale = prefersReducedMotion ? 1 : (disabled ? 1 : 0.98);
+  const transition = prefersReducedMotion 
+    ? { duration: 0.2 } 
+    : { type: 'spring', stiffness: 400, damping: 17 };
+
   // Render as motion.div for animations if clickable, otherwise regular div
   if (onClick) {
     return (
@@ -74,11 +84,15 @@ const Card: React.FC<CardProps> = ({
           }
         }}
         whileHover={{ 
-          scale: disabled ? 1 : 1.02,
-          y: disabled ? 0 : -4
+          scale: hoverScale,
+          y: hoverY,
+          boxShadow: disabled ? undefined : '0 20px 40px rgba(0,0,0,0.1)'
         }}
-        whileTap={{ scale: disabled ? 1 : 0.98 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+        whileTap={{ scale: tapScale }}
+        transition={transition}
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
       >
         {children}
       </motion.div>
@@ -86,9 +100,16 @@ const Card: React.FC<CardProps> = ({
   }
 
   return (
-    <div className={cardStyles} aria-label={ariaLabel}>
+    <motion.div 
+      className={cardStyles} 
+      aria-label={ariaLabel}
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={transition}
+    >
       {children}
-    </div>
+    </motion.div>
   );
 };
 

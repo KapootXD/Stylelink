@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from './PageTransition';
 
 // Type definitions for LoadingSpinner component
 export interface LoadingSpinnerProps {
@@ -19,6 +20,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   className = '',
   'aria-label': ariaLabel = 'Loading...',
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   // Size-specific dimensions
   const sizeStyles = {
     sm: 'w-4 h-4',
@@ -30,10 +32,10 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   // Animation variants for the spinner
   const spinnerVariants = {
     animate: {
-      rotate: 360,
+      rotate: prefersReducedMotion ? 0 : 360,
       transition: {
-        duration: 1,
-        repeat: Infinity,
+        duration: prefersReducedMotion ? 0 : 1,
+        repeat: prefersReducedMotion ? 0 : Infinity,
         ease: 'linear',
       },
     },
