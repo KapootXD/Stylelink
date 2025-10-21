@@ -15,6 +15,7 @@ import MainFeaturePage from './pages/MainFeaturePage';
 import ResultsPage from './pages/ResultsPage';
 import AboutPage from './pages/AboutPage';
 import ProfilePage from './pages/ProfilePage';
+import ActivityPage from './pages/ActivityPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
               <Route path="/results" element={<ResultsPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/activity" element={<ActivityPage />} />
               <Route path="/discover" element={<MainFeaturePage />} />
               
               {/* 404 Route */}
