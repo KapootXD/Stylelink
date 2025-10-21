@@ -1,10 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Heart, Clock } from 'lucide-react';
 import { Button } from '../components';
 import { useReducedMotion } from '../components/PageTransition';
 
 const AboutPage: React.FC = () => {
+  const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
 
   const fadeInUp = {
@@ -71,7 +73,7 @@ const AboutPage: React.FC = () => {
                 
                 <Button
                   variant="secondary"
-                  onClick={() => window.location.href = '/'}
+                  onClick={() => navigate('/')}
                   className="border-[#B7410E] text-[#B7410E] hover:bg-[#B7410E] hover:text-white"
                 >
                   <Heart className="w-5 h-5 mr-2" />

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
   Filter, 
@@ -14,6 +15,7 @@ import { Button, Card, Input, LoadingSpinner } from '../components';
 import { useReducedMotion } from '../components/PageTransition';
 
 const ExplorePage: React.FC = () => {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const prefersReducedMotion = useReducedMotion();
@@ -227,7 +229,7 @@ const ExplorePage: React.FC = () => {
                     <Card 
                       variant="outfit" 
                       className="overflow-hidden h-full"
-                      onClick={() => console.log('Outfit clicked:', outfit.id)}
+                      onClick={() => navigate('/results')}
                     >
                       {/* Image Placeholder */}
                       <div className="relative h-80 bg-gradient-to-br from-[#B7410E]/20 to-[#D4AF37]/20 rounded-t-2xl mb-4 overflow-hidden">
@@ -323,7 +325,7 @@ const ExplorePage: React.FC = () => {
                 <Button 
                   variant="secondary" 
                   size="lg"
-                  onClick={() => console.log('Load more clicked')}
+                  onClick={() => navigate('/results')}
                 >
                   Load More Styles
                   <ArrowRight className="w-5 h-5 ml-2" />
