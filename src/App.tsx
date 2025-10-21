@@ -25,13 +25,11 @@ function App() {
             {/* Home Route */}
             <Route path="/" element={<HomePage />} />
             
-            {/* Specific Routes - These must come before dynamic route */}
+            {/* Specific Routes */}
             <Route path="/results" element={<ResultsPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/profile" element={<ProfilePage />} />
-            
-            {/* Dynamic Main Feature Route - Must come after specific routes */}
-            <Route path="/:mainFeature" element={<MainFeaturePage />} />
+            <Route path="/discover" element={<MainFeaturePage />} />
             
             {/* 404 Route */}
             <Route path="*" element={<NotFoundPage />} />
