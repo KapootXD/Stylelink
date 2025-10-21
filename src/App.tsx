@@ -15,10 +15,16 @@ import MainFeaturePage from './pages/MainFeaturePage';
 import ResultsPage from './pages/ResultsPage';
 import AboutPage from './pages/AboutPage';
 import ProfilePage from './pages/ProfilePage';
+import ActivityPage from './pages/ActivityPage';
 import SignupPage from './pages/SignupPage';
 import CustomerSignupPage from './pages/CustomerSignupPage';
 import SellerSignupPage from './pages/SellerSignupPage';
 import FeaturesPage from './pages/FeaturesPage';
+import SupportPage from './pages/SupportPage';
+import ContactPage from './pages/ContactPage';
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
+import UploadPage from './pages/UploadPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -42,8 +48,16 @@ function App() {
               <Route path="/features" element={<FeaturesPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/activity" element={<ActivityPage />} />
               <Route path="/discover" element={<MainFeaturePage />} />
               <Route path="/results" element={<ResultsPage />} />
+              <Route path="/upload" element={<UploadPage />} />
+              
+              {/* Support Routes */}
+              <Route path="/support" element={<SupportPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/terms" element={<TermsPage />} />
               
               {/* 404 Route */}
               <Route path="*" element={<NotFoundPage />} />

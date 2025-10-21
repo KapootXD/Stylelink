@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   Camera, 
   Edit3, 
@@ -114,6 +115,7 @@ const mockOutfitPosts = [
 ];
 
 const ProfilePage: React.FC = () => {
+  const navigate = useNavigate();
   const { user, updateUser } = useUser();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -125,10 +127,19 @@ const ProfilePage: React.FC = () => {
     profilePicture: user?.profilePicture || ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [profileImage, setProfileImage] = useState<string>(user?.profilePicture || mockUser.profilePicture);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const prefersReducedMotion = useReducedMotion();
 
   // Use user data or fallback to mock data
   const currentUser = user || mockUser;
+
+  // Update profileImage when user context changes
+  useEffect(() => {
+    if (user?.profilePicture) {
+      setProfileImage(user.profilePicture);
+    }
+  }, [user?.profilePicture]);
 
   // Animation variants
   const fadeInUp = {
@@ -220,6 +231,37 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  const handleProfilePictureUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file (JPEG, PNG, GIF, etc.)');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB');
+        return;
+      }
+
+      // Create a URL for the image preview
+      const imageUrl = URL.createObjectURL(file);
+      setProfileImage(imageUrl);
+      
+      // Update the user context with the new image
+      updateUser({ profilePicture: imageUrl });
+      
+      // In a real app, you would upload the file to a server here
+      console.log('Profile picture uploaded:', file.name);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF3E0]">
       {/* Profile Header */}
@@ -238,20 +280,31 @@ const ProfilePage: React.FC = () => {
             >
               <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-2xl">
                 <img 
-                  src={currentUser.profilePicture} 
+                  src={profileImage || currentUser.profilePicture} 
                   alt={`${currentUser.displayName}'s profile`}
                   className="w-full h-full object-cover"
                 />
               </div>
               {currentUser.isOwnProfile && (
-                <motion.button
-                  className="absolute -bottom-2 -right-2 bg-[#D4AF37] text-[#2D2D2D] p-2 rounded-full shadow-lg"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  aria-label="Change profile picture"
-                >
-                  <Camera className="w-4 h-4" />
-                </motion.button>
+                <>
+                  <motion.button
+                    onClick={triggerFileInput}
+                    className="absolute -bottom-2 -right-2 bg-[#D4AF37] text-[#2D2D2D] p-2 rounded-full shadow-lg hover:bg-[#B8860B] transition-colors"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    aria-label="Change profile picture"
+                  >
+                    <Camera className="w-4 h-4" />
+                  </motion.button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfilePictureUpload}
+                    className="hidden"
+                    aria-label="Upload profile picture"
+                  />
+                </>
               )}
             </motion.div>
 
@@ -365,7 +418,7 @@ const ProfilePage: React.FC = () => {
                   <Card 
                     variant="outfit" 
                     className="overflow-hidden h-full"
-                    onClick={() => console.log('Post clicked:', post.id)}
+                    onClick={() => navigate('/results')}
                   >
                     {/* Image Placeholder */}
                     <div className="relative h-80 bg-gradient-to-br from-[#B7410E]/20 to-[#D4AF37]/20 rounded-t-2xl overflow-hidden">
@@ -487,7 +540,7 @@ const ProfilePage: React.FC = () => {
                 <Button
                   variant="primary"
                   size="lg"
-                  onClick={() => console.log('Navigate to upload')}
+                  onClick={() => navigate('/upload')}
                 >
                   <Plus className="w-5 h-5 mr-2" />
                   Share Your First Look
@@ -536,13 +589,6 @@ const ProfilePage: React.FC = () => {
             placeholder="Where are you based?"
             value={editForm.location}
             onChange={(e) => handleInputChange('location', e.target.value)}
-          />
-
-          <Input
-            label="Profile Picture URL"
-            placeholder="https://example.com/image.jpg"
-            value={editForm.profilePicture}
-            onChange={(e) => handleInputChange('profilePicture', e.target.value)}
           />
 
           <div className="flex gap-4 pt-6">
