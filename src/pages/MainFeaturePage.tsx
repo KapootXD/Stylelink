@@ -14,6 +14,16 @@ import {
 import { searchOutfits } from '../services/apiService';
 import { SearchFilters } from '../types';
 import { OutfitUpload } from '../types';
+import { 
+  getLikedPosts, 
+  getSavedPosts, 
+  getComments, 
+  saveLikedPosts, 
+  saveSavedPosts, 
+  saveComments,
+  updateLastVisit 
+} from '../utils/localStorage';
+import PageErrorBoundary from '../components/PageErrorBoundary';
 
 interface FormData {
   searchQuery: string;
@@ -26,7 +36,7 @@ interface MainFeaturePageProps {
   // Props can be added here if needed for dynamic content
 }
 
-const MainFeaturePage: React.FC<MainFeaturePageProps> = () => {
+const MainFeaturePageContent: React.FC<MainFeaturePageProps> = () => {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -37,8 +47,8 @@ const MainFeaturePage: React.FC<MainFeaturePageProps> = () => {
   const [hasMore, setHasMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [currentPostIndex, setCurrentPostIndex] = useState(0);
-  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
-  const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
+  const [likedPosts, setLikedPosts] = useState<Set<string>>(getLikedPosts());
+  const [savedPosts, setSavedPosts] = useState<Set<string>>(getSavedPosts());
   const [showComments, setShowComments] = useState(false);
   const [currentPostComments, setCurrentPostComments] = useState<OutfitUpload | null>(null);
   const [commentInput, setCommentInput] = useState('');
@@ -49,7 +59,7 @@ const MainFeaturePage: React.FC<MainFeaturePageProps> = () => {
     userAvatar: string;
     text: string;
     timestamp: string;
-  }>}>({});
+  }>}>(getComments());
   const [showShopping, setShowShopping] = useState(false);
   const [currentPostShopping, setCurrentPostShopping] = useState<OutfitUpload | null>(null);
   
@@ -71,7 +81,23 @@ const MainFeaturePage: React.FC<MainFeaturePageProps> = () => {
   // Load initial data
   useEffect(() => {
     loadOutfits();
+    updateLastVisit();
   }, []);
+
+  // Save liked posts to localStorage when they change
+  useEffect(() => {
+    saveLikedPosts(likedPosts);
+  }, [likedPosts]);
+
+  // Save saved posts to localStorage when they change
+  useEffect(() => {
+    saveSavedPosts(savedPosts);
+  }, [savedPosts]);
+
+  // Save comments to localStorage when they change
+  useEffect(() => {
+    saveComments(comments);
+  }, [comments]);
 
   // Handle scroll events to update current post index
   useEffect(() => {
@@ -718,6 +744,14 @@ const MainFeaturePage: React.FC<MainFeaturePageProps> = () => {
         </div>
       )}
     </div>
+  );
+};
+
+const MainFeaturePage: React.FC = () => {
+  return (
+    <PageErrorBoundary pageName="Discover">
+      <MainFeaturePageContent />
+    </PageErrorBoundary>
   );
 };
 

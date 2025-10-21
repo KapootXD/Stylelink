@@ -80,6 +80,17 @@ const Navbar: React.FC = () => {
               <User className="h-4 w-4 mr-2" />
               Profile
             </Link>
+            <Link
+              to="/settings"
+              className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActivePath('/settings')
+                  ? 'text-[#B7410E] bg-[#FAF3E0]'
+                  : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
+              }`}
+            >
+              <User className="h-4 w-4 mr-2" />
+              Settings
+            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -150,6 +161,18 @@ const Navbar: React.FC = () => {
             >
               <User className="h-5 w-5 mr-2" />
               Profile
+            </Link>
+            <Link
+              to="/settings"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                isActivePath('/settings')
+                  ? 'text-[#B7410E] bg-[#FAF3E0]'
+                  : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
+              }`}
+            >
+              <User className="h-5 w-5 mr-2" />
+              Settings
             </Link>
           </div>
         </div>
