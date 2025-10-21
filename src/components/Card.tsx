@@ -65,10 +65,10 @@ const Card: React.FC<CardProps> = ({
         className={cardStyles}
         onClick={disabled ? undefined : onClick}
         aria-label={ariaLabel}
-        role={onClick ? 'button' : undefined}
-        tabIndex={onClick && !disabled ? 0 : undefined}
+        role="button"
+        tabIndex={!disabled ? 0 : undefined}
         onKeyDown={(e) => {
-          if (onClick && !disabled && (e.key === 'Enter' || e.key === ' ')) {
+          if (!disabled && (e.key === 'Enter' || e.key === ' ')) {
             e.preventDefault();
             onClick();
           }
