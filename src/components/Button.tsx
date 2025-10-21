@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from './PageTransition';
 
 // Type definitions for Button component
 export interface ButtonProps {
@@ -31,6 +32,7 @@ const Button: React.FC<ButtonProps> = ({
   type = 'button',
   'aria-label': ariaLabel,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   // Base styles shared across all variants
   const baseStyles = `
     inline-flex items-center justify-center
@@ -72,6 +74,13 @@ const Button: React.FC<ButtonProps> = ({
     ${className}
   `.trim();
 
+  // Animation variants that respect reduced motion
+  const hoverScale = prefersReducedMotion ? 1 : (disabled ? 1 : 1.05);
+  const tapScale = prefersReducedMotion ? 1 : (disabled ? 1 : 0.95);
+  const transition = prefersReducedMotion 
+    ? { duration: 0.2 } 
+    : { type: 'spring', stiffness: 400, damping: 17 };
+
   return (
     <motion.button
       type={type}
@@ -79,9 +88,15 @@ const Button: React.FC<ButtonProps> = ({
       disabled={disabled}
       className={buttonStyles}
       aria-label={ariaLabel}
-      whileHover={{ scale: disabled ? 1 : 1.05 }}
-      whileTap={{ scale: disabled ? 1 : 0.95 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+      whileHover={{ 
+        scale: hoverScale,
+        boxShadow: disabled ? undefined : '0 10px 25px rgba(0,0,0,0.15)'
+      }}
+      whileTap={{ scale: tapScale }}
+      transition={transition}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
     >
       {children}
     </motion.button>

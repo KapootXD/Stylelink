@@ -14,6 +14,9 @@ export type { LoadingSpinnerProps } from './LoadingSpinner';
 export { default as Modal, ConfirmModal } from './Modal';
 export type { ModalProps } from './Modal';
 
+export { default as PageTransition, useReducedMotion, createAnimationVariants } from './PageTransition';
+export type { PageTransitionProps } from './PageTransition';
+
 // Re-export existing components
 export { default as Footer } from './Footer';
 export { default as Navbar } from './Navbar';
