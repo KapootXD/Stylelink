@@ -97,7 +97,7 @@ const MainFeaturePage: React.FC<MainFeaturePageProps> = () => {
         formData.searchQuery,
         filters,
         page,
-        12
+        4
       );
       
       if (response.status === 'success') {
@@ -162,7 +162,20 @@ const MainFeaturePage: React.FC<MainFeaturePageProps> = () => {
   
   // Handle outfit click
   const handleOutfitClick = (outfit: OutfitUpload) => {
-    navigate(`/outfit/${outfit.id}`, { state: { outfit } });
+    navigate('/results', { 
+      state: { 
+        data: {
+          searchQuery: formData.searchQuery,
+          filters: {
+            styleTags: formData.selectedCategories,
+            occasion: formData.selectedOccasion || undefined,
+            season: formData.selectedSeason || undefined
+          },
+          results: [outfit],
+          totalCount: 1
+        }
+      } 
+    });
   };
   
   // Validation
@@ -373,12 +386,15 @@ const MainFeaturePage: React.FC<MainFeaturePageProps> = () => {
         {/* Loading State */}
         {isLoading && (
           <div className="flex justify-center items-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+            <div className="flex items-center space-x-3">
+              <Loader2 className="w-6 h-6 animate-spin text-primary-600" />
+              <span className="text-primary-600 font-medium">Loading more styles...</span>
+            </div>
           </div>
         )}
         
-        {/* Load More Button */}
-        {hasMore && !isLoading && (
+        {/* View More Button */}
+        {outfits.length > 0 && !isLoading && (
           <motion.div 
             className="text-center mt-8"
             initial="initial"
@@ -389,7 +405,7 @@ const MainFeaturePage: React.FC<MainFeaturePageProps> = () => {
               onClick={handleLoadMore}
               className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-8 py-3 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
             >
-              Load More Styles
+              View More Styles
             </button>
           </motion.div>
         )}

@@ -250,6 +250,44 @@ export const demoOutfits: OutfitUpload[] = [
     likes: 245,
     shares: 41,
     isPublic: true
+  },
+  {
+    id: 'outfit-9',
+    userId: 'user-1',
+    title: 'Summer Festival Fun',
+    description: 'Bright and colorful for outdoor festivals. Comfortable shoes for dancing all day.',
+    occasion: 'festival',
+    season: 'summer',
+    styleTags: ['festival', 'colorful', 'comfortable'],
+    items: [demoClothingItems[0], demoClothingItems[1], demoClothingItems[4]],
+    mainImageUrl: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=600',
+    additionalImages: [
+      'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600'
+    ],
+    createdAt: new Date('2023-12-25'),
+    updatedAt: new Date('2023-12-25'),
+    likes: 178,
+    shares: 33,
+    isPublic: true
+  },
+  {
+    id: 'outfit-10',
+    userId: 'user-2',
+    title: 'Winter Cozy Vibes',
+    description: 'Perfect for staying warm and stylish during cold winter days.',
+    occasion: 'casual',
+    season: 'winter',
+    styleTags: ['cozy', 'warm', 'winter'],
+    items: [demoClothingItems[0], demoClothingItems[1], demoClothingItems[3]],
+    mainImageUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600',
+    additionalImages: [
+      'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600'
+    ],
+    createdAt: new Date('2023-12-20'),
+    updatedAt: new Date('2023-12-20'),
+    likes: 156,
+    shares: 28,
+    isPublic: true
   }
 ];
 

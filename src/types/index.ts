@@ -101,3 +101,43 @@ export interface OutfitSearchResult {
   limit: number;
   hasMore: boolean;
 }
+
+// Results page specific types
+export interface FashionItemLabel {
+  id: string;
+  name: string;
+  x: number; // percentage position
+  y: number; // percentage position
+  confidence: number;
+}
+
+export interface ResultsPageData {
+  searchQuery?: string;
+  filters?: SearchFilters;
+  results: OutfitUpload[];
+  totalCount: number;
+  processingTime?: number;
+}
+
+export interface ResultsPageState {
+  data: ResultsPageData;
+  error?: string;
+  isLoading?: boolean;
+}
+
+export interface InteractionState {
+  likedOutfits: Set<string>;
+  savedOutfits: Set<string>;
+  commentedOutfits: Set<string>;
+  sharedOutfits: Set<string>;
+}
+
+export interface SortOption {
+  label: string;
+  value: 'newest' | 'oldest' | 'most_liked' | 'most_shared' | 'price_low_high' | 'price_high_low';
+}
+
+export interface ViewMode {
+  type: 'grid' | 'list' | 'detailed';
+  itemsPerRow?: number;
+}
