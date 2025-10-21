@@ -26,16 +26,99 @@ This document provides comprehensive testing guidelines, checklists, and templat
 - [ ] No console errors in browser developer tools
 - [ ] Environment variables are properly configured
 
-### Core Functionality Testing
+---
 
-#### Navigation & Routing
-- [ ] **Home Page**: Loads correctly at `/`
-- [ ] **About Page**: Accessible via navigation menu
-- [ ] **Profile Page**: User profile displays correctly
-- [ ] **Results Page**: Search results display properly
-- [ ] **Dynamic Routes**: Feature pages load with correct content
-- [ ] **404 Page**: Displays for invalid routes
-- [ ] **Back/Forward**: Browser navigation works correctly
+## Homepage Testing Checklist
+
+### Hero Section
+- [ ] **Title Display**: Main title "If you're looking for style, we're worth your while" displays correctly
+- [ ] **Subtitle**: Description text about StyleLink is visible and readable
+- [ ] **CTA Buttons**: "Get Started" and "Learn More" buttons are visible and functional
+- [ ] **Background Elements**: Gradient background and decorative circles display properly
+- [ ] **Responsive Layout**: Hero section adapts to different screen sizes
+- [ ] **Animation Performance**: Smooth animations load without stuttering
+
+### Features Section
+- [ ] **Section Header**: "Why Choose StyleLink?" title displays correctly
+- [ ] **Feature Cards**: All 6 feature cards display with proper icons and descriptions
+  - [ ] Outfit Posts with Shopping Links
+  - [ ] AI-Powered Recommendations  
+  - [ ] Community Discovery
+  - [ ] Monetization for Users
+  - [ ] Global Fashion Connection
+  - [ ] Authentic Style Sharing
+- [ ] **Hover Effects**: Feature cards have proper hover animations
+- [ ] **Grid Layout**: Cards arrange properly on different screen sizes
+
+### How It Works Section
+- [ ] **Section Header**: "How It Works" title displays correctly
+- [ ] **Step Cards**: All 3 steps display with proper numbering and icons
+  - [ ] Step 01: Upload Your Look
+  - [ ] Step 02: Discover & Connect
+  - [ ] Step 03: Share & Earn
+- [ ] **Connection Lines**: Visual lines between steps (desktop only)
+- [ ] **Circular Icons**: Step icons display in gradient circles
+
+### Final CTA Section
+- [ ] **Section Header**: "Ready to Transform Your Style Journey?" displays correctly
+- [ ] **CTA Buttons**: "Start Your Style Journey" and "Explore Features" buttons work
+- [ ] **Background**: Gradient background displays properly
+
+---
+
+## Main Feature Testing Checklist
+
+### Dynamic Route Testing
+- [ ] **Valid Routes**: Test various main feature routes (e.g., `/discover`, `/streetwear`, `/vintage`)
+- [ ] **Route Display**: Page title capitalizes the route parameter correctly
+- [ ] **URL Mapping**: URL parameter displays correctly in address bar
+- [ ] **Content Loading**: Page content loads without errors for valid routes
+- [ ] **Navigation**: Can navigate to main feature pages from other sections
+
+### Route Precedence
+- [ ] **Specific Routes**: `/results`, `/about`, `/profile` work as specific routes (not caught by dynamic route)
+- [ ] **Dynamic Catch**: Other routes like `/fashion` are handled by MainFeaturePage
+- [ ] **404 Handling**: Invalid routes properly redirect to 404 page
+
+### Content Structure
+- [ ] **Page Layout**: Main feature pages use consistent layout structure
+- [ ] **Styling**: Pages maintain StyleLink design system colors and fonts
+- [ ] **Responsive Design**: Layout adapts to mobile, tablet, and desktop views
+
+---
+
+## Navigation Testing Checklist
+
+### Desktop Navigation
+- [ ] **Logo**: StyleLink logo links to home page
+- [ ] **Navigation Links**: All main nav items work correctly
+  - [ ] Home → `/`
+  - [ ] Discover → `/discover` 
+  - [ ] Results → `/results`
+  - [ ] About → `/about`
+- [ ] **Active States**: Current page shows active styling (highlighted/colored)
+- [ ] **Profile Link**: Profile link in top right works correctly
+- [ ] **Icon Buttons**: Search and Heart icons are visible and clickable
+- [ ] **Hover Effects**: All navigation elements have proper hover states
+
+### Mobile Navigation
+- [ ] **Hamburger Menu**: Mobile menu button appears on small screens
+- [ ] **Menu Toggle**: Menu opens and closes when hamburger/X icon is clicked
+- [ ] **Mobile Links**: All navigation links work in mobile menu
+- [ ] **Menu Auto-close**: Mobile menu closes when a link is selected
+- [ ] **Touch Targets**: Mobile navigation items are appropriately sized for touch
+- [ ] **Menu Styling**: Mobile menu has proper background and spacing
+
+### Navigation Behavior
+- [ ] **Page Transitions**: Navigation between pages is smooth
+- [ ] **URL Updates**: Browser URL updates correctly for each navigation action
+- [ ] **Browser History**: Back/forward buttons work correctly
+- [ ] **Direct URL Access**: Typing URLs directly works for all valid routes
+- [ ] **404 Navigation**: Invalid URLs show 404 page appropriately
+
+---
+
+## Core Functionality Testing
 
 #### User Interface Components
 - [ ] **Navbar**: All links are functional and visible
@@ -47,13 +130,11 @@ This document provides comprehensive testing guidelines, checklists, and templat
 - [ ] **Animations**: Smooth transitions and hover effects
 
 #### Interactive Features
-- [ ] **Search Functionality**: Returns relevant results
-- [ ] **Filter Options**: Work as expected
-- [ ] **Sort Options**: Sort data correctly
-- [ ] **Pagination**: Navigate through multiple pages
-- [ ] **Modal Windows**: Open and close properly
-- [ ] **Dropdown Menus**: Expand and collapse correctly
-- [ ] **Toast Notifications**: Display and dismiss properly
+- [ ] **Button Interactions**: All CTA buttons respond to hover and click states
+- [ ] **Link Navigation**: Internal and external links work correctly
+- [ ] **Search Icons**: Search functionality (when implemented) works properly
+- [ ] **Profile Navigation**: Profile page access works from multiple locations
+- [ ] **Toast Notifications**: React Hot Toast displays correctly (when triggered)
 
 ### Data Validation Testing
 
@@ -147,88 +228,124 @@ This document provides comprehensive testing guidelines, checklists, and templat
 
 ---
 
-## Browser Testing Checklist
+## Browser Compatibility Checklist
 
 ### Desktop Browsers
 
 - [ ] **Chrome (Latest)**
-  - [ ] All features work correctly
-  - [ ] No console errors
-  - [ ] Performance is acceptable
-  - [ ] Responsive design works
+  - [ ] Homepage hero section displays correctly with animations
+  - [ ] Navigation menu functions properly
+  - [ ] Feature cards hover effects work
+  - [ ] Dynamic routes load correctly (MainFeaturePage)
+  - [ ] Framer Motion animations run smoothly
+  - [ ] No console errors in DevTools
 
 - [ ] **Firefox (Latest)**
-  - [ ] All features work correctly
-  - [ ] No console errors
-  - [ ] Performance is acceptable
-  - [ ] Responsive design works
+  - [ ] Gradient backgrounds render properly
+  - [ ] CSS Grid layouts display correctly
+  - [ ] Button hover states work
+  - [ ] Mobile menu toggle functions
+  - [ ] Lucide React icons display properly
 
 - [ ] **Safari (Latest)**
-  - [ ] All features work correctly
-  - [ ] No console errors
-  - [ ] Performance is acceptable
-  - [ ] Responsive design works
+  - [ ] CSS custom properties work correctly
+  - [ ] Animation performance is smooth
+  - [ ] Navigation links work properly
+  - [ ] Responsive breakpoints function correctly
+  - [ ] Footer layout displays properly
 
 - [ ] **Edge (Latest)**
-  - [ ] All features work correctly
-  - [ ] No console errors
-  - [ ] Performance is acceptable
-  - [ ] Responsive design works
+  - [ ] React Router navigation works
+  - [ ] Tailwind CSS classes render correctly
+  - [ ] All interactive elements are functional
+  - [ ] Page transitions are smooth
+  - [ ] No JavaScript errors
 
 ### Mobile Browsers
 
 - [ ] **Chrome Mobile**
-  - [ ] Touch interactions work
-  - [ ] Mobile navigation functions
-  - [ ] Performance is acceptable
-  - [ ] No horizontal scrolling issues
+  - [ ] Hamburger menu opens and closes correctly
+  - [ ] Touch targets are appropriately sized (minimum 44px)
+  - [ ] Horizontal scrolling is prevented
+  - [ ] Hero section adapts to mobile viewport
+  - [ ] Feature card grid stacks properly
 
 - [ ] **Safari Mobile**
-  - [ ] Touch interactions work
-  - [ ] Mobile navigation functions
-  - [ ] Performance is acceptable
-  - [ ] No horizontal scrolling issues
+  - [ ] Mobile navigation menu works correctly
+  - [ ] iOS safe area considerations work
+  - [ ] Touch interactions are responsive
+  - [ ] Performance is acceptable on older devices
+  - [ ] No zoom issues on form inputs
 
 ---
 
 ## Responsive Design Testing
 
-### Breakpoint Testing
+### Breakpoint Testing for Stylelink
 
 - [ ] **Mobile (320px - 768px)**
-  - [ ] Layout adapts to small screens
-  - [ ] Text remains readable
-  - [ ] Navigation is touch-friendly
-  - [ ] Images scale appropriately
+  - [ ] Hero section title text wraps properly and remains readable
+  - [ ] CTA buttons stack vertically or remain accessible
+  - [ ] Feature cards display in single column layout
+  - [ ] Navigation converts to hamburger menu correctly
+  - [ ] Footer links stack appropriately
+  - [ ] "How It Works" steps display vertically
+  - [ ] Touch targets meet minimum 44px requirement
 
 - [ ] **Tablet (768px - 1024px)**
-  - [ ] Layout uses available space efficiently
-  - [ ] Navigation is accessible
-  - [ ] Content is well-organized
-  - [ ] Interactive elements are appropriately sized
+  - [ ] Hero section maintains proper proportions
+  - [ ] Feature cards display in 2-column grid
+  - [ ] "How It Works" shows 3-column layout
+  - [ ] Navigation remains horizontal and accessible
+  - [ ] Button hover effects work correctly
+  - [ ] Content maintains readable text sizes
 
 - [ ] **Desktop (1024px+)**
-  - [ ] Layout utilizes full screen width
-  - [ ] Navigation is clear and accessible
-  - [ ] Content is well-spaced
-  - [ ] All features are easily accessible
+  - [ ] Full 3-column feature card grid displays
+  - [ ] "How It Works" connection lines appear between steps
+  - [ ] Hero section utilizes full width effectively
+  - [ ] All animations and hover effects are smooth
+  - [ ] Navigation remains fully visible and functional
+
+### Stylelink-Specific Layout Testing
+
+- [ ] **Hero Section Responsiveness**
+  - [ ] Main title scales appropriately across breakpoints
+  - [ ] Gradient background adapts to screen size
+  - [ ] Decorative circles maintain proper positioning
+  - [ ] CTA buttons remain accessible at all sizes
+
+- [ ] **Feature Cards Layout**
+  - [ ] Icons display at consistent sizes
+  - [ ] Card hover animations work across devices
+  - [ ] Text content remains readable
+  - [ ] Grid transitions smoothly between breakpoints
+
+- [ ] **Navigation Responsiveness**
+  - [ ] Desktop navigation shows all items
+  - [ ] Mobile menu includes all navigation items
+  - [ ] Logo remains visible and clickable
+  - [ ] Profile link accessible in both layouts
 
 ### Device-Specific Testing
 
 - [ ] **iPhone (Various sizes)**
-  - [ ] Touch targets are appropriate size
-  - [ ] No horizontal scrolling
-  - [ ] Performance is smooth
+  - [ ] Safe area handling works correctly
+  - [ ] Touch interactions feel native
+  - [ ] Scroll behavior is smooth
+  - [ ] No accidental zooms on form elements
 
 - [ ] **Android (Various sizes)**
-  - [ ] Touch targets are appropriate size
-  - [ ] No horizontal scrolling
-  - [ ] Performance is smooth
+  - [ ] Material Design touch feedback (if applicable)
+  - [ ] Navigation drawer behavior
+  - [ ] Performance on various Android versions
+  - [ ] Correct viewport handling
 
 - [ ] **iPad/Tablet**
-  - [ ] Layout adapts to tablet screen
-  - [ ] Touch interactions work
-  - [ ] Performance is acceptable
+  - [ ] Landscape and portrait orientations
+  - [ ] Touch targets appropriate for tablet
+  - [ ] Navigation remains functional in both orientations
+  - [ ] Content utilizes available screen space effectively
 
 ## Accessibility Testing
 
