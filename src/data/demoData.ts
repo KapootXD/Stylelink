@@ -107,10 +107,10 @@ export const demoOutfits: OutfitUpload[] = [
     season: 'fall',
     styleTags: ['casual', 'professional', 'minimalist'],
     items: [demoClothingItems[0], demoClothingItems[1], demoClothingItems[3]],
-    mainImageUrl: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600',
+    mainImageUrl: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=600',
     additionalImages: [
-      'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600',
-      'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600'
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600',
+      'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600'
     ],
     createdAt: new Date('2024-01-15'),
     updatedAt: new Date('2024-01-15'),
@@ -127,9 +127,9 @@ export const demoOutfits: OutfitUpload[] = [
     season: 'spring',
     styleTags: ['casual', 'weekend', 'comfortable'],
     items: [demoClothingItems[0], demoClothingItems[1], demoClothingItems[4]],
-    mainImageUrl: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=600',
+    mainImageUrl: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=600',
     additionalImages: [
-      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600'
+      'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=600'
     ],
     createdAt: new Date('2024-01-12'),
     updatedAt: new Date('2024-01-12'),
@@ -146,7 +146,7 @@ export const demoOutfits: OutfitUpload[] = [
     season: 'winter',
     styleTags: ['elegant', 'romantic', 'sophisticated'],
     items: [demoClothingItems[0], demoClothingItems[1], demoClothingItems[2], demoClothingItems[4]],
-    mainImageUrl: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600',
+    mainImageUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600',
     additionalImages: [
       'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600',
       'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600'
@@ -166,7 +166,7 @@ export const demoOutfits: OutfitUpload[] = [
     season: 'spring',
     styleTags: ['minimalist', 'professional', 'clean'],
     items: [demoClothingItems[0], demoClothingItems[1]],
-    mainImageUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600',
+    mainImageUrl: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=600',
     additionalImages: [],
     createdAt: new Date('2024-01-08'),
     updatedAt: new Date('2024-01-08'),
@@ -183,7 +183,7 @@ export const demoOutfits: OutfitUpload[] = [
     season: 'summer',
     styleTags: ['creative', 'comfortable', 'artistic'],
     items: [demoClothingItems[0], demoClothingItems[1], demoClothingItems[4]],
-    mainImageUrl: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=600',
+    mainImageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600',
     additionalImages: [
       'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600'
     ],
@@ -202,7 +202,7 @@ export const demoOutfits: OutfitUpload[] = [
     season: 'fall',
     styleTags: ['weekend', 'comfortable', 'versatile'],
     items: [demoClothingItems[0], demoClothingItems[1], demoClothingItems[2]],
-    mainImageUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600',
+    mainImageUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600',
     additionalImages: [
       'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600'
     ],
@@ -221,7 +221,7 @@ export const demoOutfits: OutfitUpload[] = [
     season: 'winter',
     styleTags: ['professional', 'networking', 'sharp'],
     items: [demoClothingItems[0], demoClothingItems[1], demoClothingItems[3], demoClothingItems[4]],
-    mainImageUrl: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600',
+    mainImageUrl: 'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?w=600',
     additionalImages: [
       'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600',
       'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600'
@@ -241,7 +241,7 @@ export const demoOutfits: OutfitUpload[] = [
     season: 'spring',
     styleTags: ['sophisticated', 'cultural', 'elegant'],
     items: [demoClothingItems[0], demoClothingItems[1], demoClothingItems[4]],
-    mainImageUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600',
+    mainImageUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600',
     additionalImages: [
       'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600'
     ],
@@ -260,7 +260,7 @@ export const demoOutfits: OutfitUpload[] = [
     season: 'summer',
     styleTags: ['festival', 'colorful', 'comfortable'],
     items: [demoClothingItems[0], demoClothingItems[1], demoClothingItems[4]],
-    mainImageUrl: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=600',
+    mainImageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600',
     additionalImages: [
       'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600'
     ],
@@ -279,7 +279,7 @@ export const demoOutfits: OutfitUpload[] = [
     season: 'winter',
     styleTags: ['cozy', 'warm', 'winter'],
     items: [demoClothingItems[0], demoClothingItems[1], demoClothingItems[3]],
-    mainImageUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600',
+    mainImageUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600',
     additionalImages: [
       'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600'
     ],
