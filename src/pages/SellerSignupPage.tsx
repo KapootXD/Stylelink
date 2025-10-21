@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Heart, Clock } from 'lucide-react';
+import { ArrowLeft, Store, Clock } from 'lucide-react';
 import { Button } from '../components';
 import { useReducedMotion } from '../components/PageTransition';
 
-const AboutPage: React.FC = () => {
+const SellerSignupPage: React.FC = () => {
   const prefersReducedMotion = useReducedMotion();
 
   const fadeInUp = {
@@ -19,7 +19,7 @@ const AboutPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FAF3E0]">
       {/* Header */}
-      <section className="py-16 px-4 bg-gradient-to-br from-[#B7410E] to-[#8B5E3C]">
+      <section className="py-16 px-4 bg-gradient-to-br from-[#D4AF37] to-[#8B5E3C]">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial="initial"
@@ -27,10 +27,10 @@ const AboutPage: React.FC = () => {
             variants={fadeInUp}
           >
             <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
-              About StyleLink
+              Seller Sign-Up
             </h1>
             <p className="text-xl text-white/90 max-w-2xl mx-auto">
-              Learn more about our mission to connect global fashion with local creativity.
+              Grow your fashion brand and reach customers worldwide with StyleLink.
             </p>
           </motion.div>
         </div>
@@ -50,20 +50,20 @@ const AboutPage: React.FC = () => {
               </div>
               
               <h2 className="text-4xl font-bold text-[#2D2D2D] mb-6">
-                About Page Coming Soon!
+                Coming Soon!
               </h2>
               
               <p className="text-xl text-[#2D2D2D]/70 mb-8 leading-relaxed">
-                We're crafting a comprehensive about page that will tell the story of StyleLink, 
-                our mission, team, and vision for the future of fashion discovery. 
-                Stay tuned for an inspiring look into what drives us.
+                We're creating a powerful platform for fashion sellers. 
+                Soon you'll be able to set up your store, showcase your designs, 
+                and start selling to our global community.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
                   variant="primary"
                   onClick={() => window.history.back()}
-                  className="bg-[#B7410E] hover:bg-[#A0350C]"
+                  className="bg-[#D4AF37] text-[#2D2D2D] hover:bg-[#B8860B]"
                 >
                   <ArrowLeft className="w-5 h-5 mr-2" />
                   Go Back
@@ -72,9 +72,9 @@ const AboutPage: React.FC = () => {
                 <Button
                   variant="secondary"
                   onClick={() => window.location.href = '/'}
-                  className="border-[#B7410E] text-[#B7410E] hover:bg-[#B7410E] hover:text-white"
+                  className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#2D2D2D]"
                 >
-                  <Heart className="w-5 h-5 mr-2" />
+                  <Store className="w-5 h-5 mr-2" />
                   Explore Homepage
                 </Button>
               </div>
@@ -86,4 +86,4 @@ const AboutPage: React.FC = () => {
   );
 };
 
-export default AboutPage;
+export default SellerSignupPage;
