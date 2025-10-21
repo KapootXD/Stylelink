@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, User, Search, Heart } from 'lucide-react';
+import SearchModal from './SearchModal';
 
 const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const location = useLocation();
 
   const navigation = [
     { name: 'Home', href: '/' },
     { name: 'Discover', href: '/discover' },
-    { name: 'About', href: '/about' },
   ];
 
   const isActivePath = (path: string) => {
@@ -56,15 +57,18 @@ const Navbar: React.FC = () => {
 
           {/* User Menu & Search */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link 
-              to="/discover"
+            <button 
+              onClick={() => setIsSearchModalOpen(true)}
               className="p-2 rounded-full text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] transition-colors"
             >
               <Search className="h-5 w-5" />
-            </Link>
-            <button className="p-2 rounded-full text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] transition-colors">
-              <Heart className="h-5 w-5" />
             </button>
+            <Link 
+              to="/activity"
+              className="p-2 rounded-full text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] transition-colors"
+            >
+              <Heart className="h-5 w-5" />
+            </Link>
             <Link
               to="/profile"
               className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -113,17 +117,27 @@ const Navbar: React.FC = () => {
                 {item.name}
               </Link>
             ))}
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                setIsSearchModalOpen(true);
+              }}
+              className="flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] w-full text-left"
+            >
+              <Search className="h-5 w-5 mr-2" />
+              Search
+            </button>
             <Link
-              to="/discover"
+              to="/activity"
               onClick={() => setIsMobileMenuOpen(false)}
               className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                isActivePath('/discover')
+                isActivePath('/activity')
                   ? 'text-[#B7410E] bg-[#FAF3E0]'
                   : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
               }`}
             >
-              <Search className="h-5 w-5 mr-2" />
-              Search
+              <Heart className="h-5 w-5 mr-2" />
+              Activity
             </Link>
             <Link
               to="/profile"
@@ -140,6 +154,12 @@ const Navbar: React.FC = () => {
           </div>
         </div>
       )}
+      
+      {/* Search Modal */}
+      <SearchModal 
+        isOpen={isSearchModalOpen} 
+        onClose={() => setIsSearchModalOpen(false)} 
+      />
     </nav>
   );
 };

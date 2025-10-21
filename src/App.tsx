@@ -15,6 +15,7 @@ import MainFeaturePage from './pages/MainFeaturePage';
 import ResultsPage from './pages/ResultsPage';
 import AboutPage from './pages/AboutPage';
 import ProfilePage from './pages/ProfilePage';
+import ActivityPage from './pages/ActivityPage';
 import SignupPage from './pages/SignupPage';
 import CustomerSignupPage from './pages/CustomerSignupPage';
 import SellerSignupPage from './pages/SellerSignupPage';
@@ -47,6 +48,7 @@ function App() {
               <Route path="/features" element={<FeaturesPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/activity" element={<ActivityPage />} />
               <Route path="/discover" element={<MainFeaturePage />} />
               <Route path="/results" element={<ResultsPage />} />
               <Route path="/upload" element={<UploadPage />} />
