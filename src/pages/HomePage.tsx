@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   Camera, 
   Users, 
@@ -20,6 +21,7 @@ import { Button, Card } from '../components';
 import { useReducedMotion } from '../components/PageTransition';
 
 const HomePage: React.FC = () => {
+  const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
   
   // Enhanced animation variants
@@ -193,7 +195,7 @@ const HomePage: React.FC = () => {
             <Button 
               variant="primary" 
               size="lg"
-              onClick={() => console.log('Get Started clicked')}
+              onClick={() => navigate('/signup')}
               className="shadow-2xl"
             >
               Get Started
@@ -203,7 +205,7 @@ const HomePage: React.FC = () => {
             <Button 
               variant="secondary" 
               size="lg"
-              onClick={() => console.log('Learn More clicked')}
+              onClick={() => navigate('/about')}
               className="bg-white/20 border-white/50 text-white hover:bg-white hover:text-[#2D2D2D] backdrop-blur-sm"
             >
               Learn More
@@ -371,7 +373,7 @@ const HomePage: React.FC = () => {
               <Button 
                 variant="primary" 
                 size="lg"
-                onClick={() => console.log('Start Journey clicked')}
+                onClick={() => navigate('/signup')}
                 className="shadow-2xl bg-[#FAF3E0] text-[#2D2D2D] hover:bg-white text-xl px-12 py-5"
               >
                 Start Your Style Journey
@@ -381,7 +383,7 @@ const HomePage: React.FC = () => {
               <Button 
                 variant="secondary" 
                 size="lg"
-                onClick={() => console.log('Explore Features clicked')}
+                onClick={() => navigate('/features')}
                 className="border-2 border-white/50 text-white hover:bg-white hover:text-[#2D2D2D] text-xl px-12 py-5 backdrop-blur-sm"
               >
                 Explore Features
