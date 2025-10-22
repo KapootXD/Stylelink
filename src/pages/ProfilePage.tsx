@@ -254,7 +254,9 @@ const ProfilePage: React.FC = () => {
       updateUser({ profilePicture: imageUrl });
       
       // In a real app, you would upload the file to a server here
-      console.log('Profile picture uploaded:', file.name);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Profile picture uploaded:', file.name);
+      }
     }
   };
 

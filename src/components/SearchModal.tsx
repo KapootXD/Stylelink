@@ -122,10 +122,14 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
     // Navigate to profile or style page
     if (result.type === 'profile') {
       // In a real app, this would navigate to the profile page
-      console.log('Navigate to profile:', result.username);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Navigate to profile:', result.username);
+      }
     } else {
       // Navigate to style page
-      console.log('Navigate to style:', result.name);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Navigate to style:', result.name);
+      }
     }
     onClose();
   };

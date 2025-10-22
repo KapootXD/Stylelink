@@ -26,7 +26,7 @@ const Footer: React.FC = () => {
 
   return (
     <motion.footer 
-      className="bg-white border-t border-secondary-200"
+      className="bg-white border-t border-gray-200"
       initial="initial"
       animate="animate"
       variants={fadeInUp}
