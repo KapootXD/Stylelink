@@ -37,16 +37,64 @@ The main signup page presents two clear options:
   - Build a loyal customer base
   - Get featured in style recommendations
 
-### 3. Placeholder Pages
-**Files:** `src/pages/CustomerSignupPage.tsx`, `src/pages/SellerSignupPage.tsx`
+### 3. Seller Signup Page
+**File:** `src/pages/SellerSignupPage.tsx`
 
-Both signup pages currently show "Coming Soon" messages with:
-- Clear branding and messaging
-- Navigation back to previous page
-- Link to homepage for exploration
-- Consistent styling with StyleLink palette
+A comprehensive seller signup form with a modern two-column layout:
 
-### 4. Supporting Pages
+#### Left Column - Form
+- **Shop Logo Upload:** Visual upload area with file picker
+- **Shop Details:**
+  - Shop Name input field
+  - Shop Bio textarea with placeholder text
+- **Verification Steps:**
+  - Business ID confirmation status (completed)
+  - Address verification status (pending)
+  - Complete Verification button
+- **Payment Setup:**
+  - Bank Account Number input
+  - Routing Number input
+  - Connect Payment Account button
+- **Complete Setup:** Primary action button to finalize registration
+
+#### Right Column - Visual
+- Full-height vintage clothing store image
+- Provides context and aesthetic appeal
+- Hidden on mobile, displayed on desktop
+
+#### Features
+- Form state management with React hooks
+- Real-time input handling
+- Back navigation to signup selection page
+- Form submission handling
+- Responsive design for all screen sizes
+- Smooth animations with Framer Motion
+
+### 4. Customer Signup Page
+**File:** `src/pages/CustomerSignupPage.tsx`
+
+A comprehensive customer profile creation page with centered layout:
+
+#### Features
+- **Profile Picture Upload:** Circular profile image with camera icon placeholder and "Change Photo" functionality
+- **Display Name Field:** Input for user's display name with placeholder
+- **Username Field:** Input for unique username with @ symbol formatting
+- **Style Preferences:** Grid of 8 selectable style tags:
+  - Streetwear, Y2K, Minimalist, Bohemian
+  - Vintage, Formal, Casual, Athleisure
+  - Multiple selections supported with visual feedback
+- **Continue Button:** Primary action button to proceed to profile page
+- **Form Features:**
+  - Form state management with React hooks
+  - Profile image upload with preview
+  - Style tag selection with toggle functionality
+  - Form validation (button disabled until required fields filled)
+  - Back navigation to signup selection page
+  - Responsive design for all screen sizes
+  - Smooth animations with Framer Motion
+  - Pre-selected default styles (Streetwear, Minimalist)
+
+### 5. Supporting Pages
 **Files:** `src/pages/FeaturesPage.tsx`, `src/pages/AboutPage.tsx`
 
 Placeholder pages for features and about sections with:
