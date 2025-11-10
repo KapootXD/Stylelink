@@ -7,6 +7,7 @@
     "@types/react": "^18.2.42",
     "@types/react-dom": "^18.2.17",
     "axios": "^1.6.2",
+    "firebase": "^12.5.0",
     "framer-motion": "^10.18.0",
     "lucide-react": "^0.292.0",
     "react": "^18.2.0",
@@ -22,7 +23,8 @@
     "build": "CI=false react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "build:analyze": "npm run build && npx serve -s build"
+    "build:analyze": "npm run build && npx serve -s build",
+    "seed:firebase": "ts-node -r dotenv/config scripts/seedFirebase.ts"
   },
   "eslintConfig": {
     "extends": [
