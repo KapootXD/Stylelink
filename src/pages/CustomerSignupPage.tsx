@@ -4,16 +4,29 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Camera } from 'lucide-react';
 import { Button, Input } from '../components';
 import { useReducedMotion } from '../components/PageTransition';
+import { useAuth } from '../contexts/AuthContext';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const CustomerSignupPage: React.FC = () => {
   const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
+  const { signup, loading } = useAuth();
 
   // Form state
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
-  const [selectedStyles, setSelectedStyles] = useState<string[]>(['Streetwear', 'Minimalist']);
+  const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<{
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+    displayName?: string;
+    username?: string;
+  }>({});
 
   // Available style options
   const styleOptions = [
@@ -63,16 +76,69 @@ const CustomerSignupPage: React.FC = () => {
     }
   };
 
-  const handleContinue = () => {
-    // Handle form submission here
-    // eslint-disable-next-line no-console
-    console.log('Customer signup data:', {
-      displayName,
-      username,
-      selectedStyles
-    });
-    // Navigate to next step or profile page
-    navigate('/');
+  // Validate form
+  const validateForm = (): boolean => {
+    const errors: {
+      email?: string;
+      password?: string;
+      confirmPassword?: string;
+      displayName?: string;
+      username?: string;
+    } = {};
+
+    if (!email) {
+      errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      errors.email = 'Email is invalid';
+    }
+
+    if (!password) {
+      errors.password = 'Password is required';
+    } else if (password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+
+    if (!confirmPassword) {
+      errors.confirmPassword = 'Please confirm your password';
+    } else if (password !== confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+
+    if (!displayName) {
+      errors.displayName = 'Display name is required';
+    }
+
+    if (!username) {
+      errors.username = 'Username is required';
+    } else if (username.length < 3) {
+      errors.username = 'Username must be at least 3 characters';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Handle form submission
+  const handleContinue = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      // Create Firebase Auth account
+      await signup(email, password, displayName);
+      
+      // TODO: Create user profile in Firestore with username, selectedStyles, profileImage
+      // This would typically be done in a separate service or after successful signup
+      
+      // Navigate to profile page or home
+      navigate('/profile');
+    } catch (error) {
+      // Error is handled by AuthContext and displayed via toast
+      console.error('Signup error:', error);
+    }
   };
 
   return (
@@ -135,67 +201,140 @@ const CustomerSignupPage: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Form Fields */}
-          <motion.div
-            variants={fadeIn}
-            className="space-y-6 mb-8"
-          >
-            <Input
-              label="Display Name"
-              placeholder="Your Name"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              required
-            />
-            
-            <Input
-              label="Username"
-              placeholder="@yourstyle"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          </motion.div>
-
-          {/* Style Preferences */}
-          <motion.div
-            variants={fadeIn}
-            className="mb-8"
-          >
-            <label className="block text-lg font-medium text-[#2D2D2D] mb-4">
-              Your Style Preferences
-            </label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {styleOptions.map((style) => (
-                <button
-                  key={style}
-                  onClick={() => toggleStyle(style)}
-                  className={`px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
-                    selectedStyles.includes(style)
-                      ? 'bg-[#8B5E3C] text-white shadow-md'
-                      : 'bg-white text-[#2D2D2D] hover:bg-gray-50 border border-gray-200'
-                  }`}
-                >
-                  {style}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Continue Button */}
-          <motion.div
-            variants={fadeIn}
-          >
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={handleContinue}
-              className="w-full bg-[#8B5E3C] hover:bg-[#B7410E] text-white"
-              disabled={!displayName || !username}
+          {/* Form */}
+          <form onSubmit={handleContinue}>
+            {/* Form Fields */}
+            <motion.div
+              variants={fadeIn}
+              className="space-y-6 mb-8"
             >
-              Continue to Profile
-            </Button>
-          </motion.div>
+              <Input
+                label="Email"
+                type="email"
+                placeholder="your.email@example.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (formErrors.email) {
+                    setFormErrors({ ...formErrors, email: undefined });
+                  }
+                }}
+                error={formErrors.email}
+                required
+                disabled={loading}
+              />
+              
+              <Input
+                label="Password"
+                type="password"
+                placeholder="Create a password (min. 6 characters)"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (formErrors.password) {
+                    setFormErrors({ ...formErrors, password: undefined });
+                  }
+                }}
+                error={formErrors.password}
+                required
+                disabled={loading}
+              />
+              
+              <Input
+                label="Confirm Password"
+                type="password"
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (formErrors.confirmPassword) {
+                    setFormErrors({ ...formErrors, confirmPassword: undefined });
+                  }
+                }}
+                error={formErrors.confirmPassword}
+                required
+                disabled={loading}
+              />
+              
+              <Input
+                label="Display Name"
+                placeholder="Your Name"
+                value={displayName}
+                onChange={(e) => {
+                  setDisplayName(e.target.value);
+                  if (formErrors.displayName) {
+                    setFormErrors({ ...formErrors, displayName: undefined });
+                  }
+                }}
+                error={formErrors.displayName}
+                required
+                disabled={loading}
+              />
+              
+              <Input
+                label="Username"
+                placeholder="@yourstyle"
+                value={username}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  if (formErrors.username) {
+                    setFormErrors({ ...formErrors, username: undefined });
+                  }
+                }}
+                error={formErrors.username}
+                required
+                disabled={loading}
+              />
+            </motion.div>
+
+            {/* Style Preferences */}
+            <motion.div
+              variants={fadeIn}
+              className="mb-8"
+            >
+              <label className="block text-lg font-medium text-[#2D2D2D] mb-4">
+                Your Style Preferences (Optional)
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {styleOptions.map((style) => (
+                  <button
+                    key={style}
+                    type="button"
+                    onClick={() => toggleStyle(style)}
+                    className={`px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
+                      selectedStyles.includes(style)
+                        ? 'bg-[#8B5E3C] text-white shadow-md'
+                        : 'bg-white text-[#2D2D2D] hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    {style}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Submit Button */}
+            <motion.div
+              variants={fadeIn}
+            >
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                className="w-full bg-[#8B5E3C] hover:bg-[#B7410E] text-white"
+                disabled={loading || !email || !password || !confirmPassword || !displayName || !username}
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <LoadingSpinner size="sm" />
+                    Creating account...
+                  </span>
+                ) : (
+                  'Create Account'
+                )}
+              </Button>
+            </motion.div>
+          </form>
         </motion.div>
       </div>
     </div>

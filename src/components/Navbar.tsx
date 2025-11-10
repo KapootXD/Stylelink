@@ -1,12 +1,25 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, User, Search, Heart } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, User, Search, Heart, LogOut, LogIn } from 'lucide-react';
 import SearchModal from './SearchModal';
+import { useAuth } from '../contexts/AuthContext';
 
 const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { currentUser, logout, loading } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+      setIsMobileMenuOpen(false);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -57,40 +70,67 @@ const Navbar: React.FC = () => {
 
           {/* User Menu & Search */}
           <div className="hidden md:flex items-center space-x-4">
-            <button 
-              onClick={() => setIsSearchModalOpen(true)}
-              className="p-2 rounded-full text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] transition-colors"
-            >
-              <Search className="h-5 w-5" />
-            </button>
-            <Link 
-              to="/activity"
-              className="p-2 rounded-full text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] transition-colors"
-            >
-              <Heart className="h-5 w-5" />
-            </Link>
-            <Link
-              to="/profile"
-              className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActivePath('/profile')
-                  ? 'text-[#B7410E] bg-[#FAF3E0]'
-                  : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
-              }`}
-            >
-              <User className="h-4 w-4 mr-2" />
-              Profile
-            </Link>
-            <Link
-              to="/settings"
-              className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActivePath('/settings')
-                  ? 'text-[#B7410E] bg-[#FAF3E0]'
-                  : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
-              }`}
-            >
-              <User className="h-4 w-4 mr-2" />
-              Settings
-            </Link>
+            {currentUser ? (
+              <>
+                <button 
+                  onClick={() => setIsSearchModalOpen(true)}
+                  className="p-2 rounded-full text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] transition-colors"
+                >
+                  <Search className="h-5 w-5" />
+                </button>
+                <Link 
+                  to="/activity"
+                  className="p-2 rounded-full text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] transition-colors"
+                >
+                  <Heart className="h-5 w-5" />
+                </Link>
+                <Link
+                  to="/profile"
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActivePath('/profile')
+                      ? 'text-[#B7410E] bg-[#FAF3E0]'
+                      : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
+                  }`}
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  {currentUser.displayName || 'Profile'}
+                </Link>
+                <Link
+                  to="/settings"
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActivePath('/settings')
+                      ? 'text-[#B7410E] bg-[#FAF3E0]'
+                      : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
+                  }`}
+                >
+                  Settings
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  disabled={loading}
+                  className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-[#2D2D2D] hover:text-[#B7410E] hover:bg-[#FAF3E0] transition-colors"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-[#2D2D2D] hover:text-[#B7410E] hover:bg-[#FAF3E0] transition-colors"
+                >
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  className="px-4 py-2 rounded-md text-sm font-medium text-white bg-[#B7410E] hover:bg-[#8B5E3C] transition-colors"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -128,52 +168,84 @@ const Navbar: React.FC = () => {
                 {item.name}
               </Link>
             ))}
-            <button
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                setIsSearchModalOpen(true);
-              }}
-              className="flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] w-full text-left"
-            >
-              <Search className="h-5 w-5 mr-2" />
-              Search
-            </button>
-            <Link
-              to="/activity"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                isActivePath('/activity')
-                  ? 'text-[#B7410E] bg-[#FAF3E0]'
-                  : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
-              }`}
-            >
-              <Heart className="h-5 w-5 mr-2" />
-              Activity
-            </Link>
-            <Link
-              to="/profile"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                isActivePath('/profile')
-                  ? 'text-[#B7410E] bg-[#FAF3E0]'
-                  : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
-              }`}
-            >
-              <User className="h-5 w-5 mr-2" />
-              Profile
-            </Link>
-            <Link
-              to="/settings"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                isActivePath('/settings')
-                  ? 'text-[#B7410E] bg-[#FAF3E0]'
-                  : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
-              }`}
-            >
-              <User className="h-5 w-5 mr-2" />
-              Settings
-            </Link>
+            {currentUser ? (
+              <>
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setIsSearchModalOpen(true);
+                  }}
+                  className="flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] w-full text-left"
+                >
+                  <Search className="h-5 w-5 mr-2" />
+                  Search
+                </button>
+                <Link
+                  to="/activity"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                    isActivePath('/activity')
+                      ? 'text-[#B7410E] bg-[#FAF3E0]'
+                      : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
+                  }`}
+                >
+                  <Heart className="h-5 w-5 mr-2" />
+                  Activity
+                </Link>
+                <Link
+                  to="/profile"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                    isActivePath('/profile')
+                      ? 'text-[#B7410E] bg-[#FAF3E0]'
+                      : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
+                  }`}
+                >
+                  <User className="h-5 w-5 mr-2" />
+                  {currentUser.displayName || 'Profile'}
+                </Link>
+                <Link
+                  to="/settings"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                    isActivePath('/settings')
+                      ? 'text-[#B7410E] bg-[#FAF3E0]'
+                      : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
+                  }`}
+                >
+                  Settings
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  disabled={loading}
+                  className="flex items-center px-3 py-2 rounded-md text-base font-medium text-[#2D2D2D] hover:text-[#B7410E] hover:bg-[#FAF3E0] w-full text-left"
+                >
+                  <LogOut className="h-5 w-5 mr-2" />
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center px-3 py-2 rounded-md text-base font-medium text-[#2D2D2D] hover:text-[#B7410E] hover:bg-[#FAF3E0]"
+                >
+                  <LogIn className="h-5 w-5 mr-2" />
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center px-3 py-2 rounded-md text-base font-medium text-white bg-[#B7410E] hover:bg-[#8B5E3C]"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

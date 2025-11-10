@@ -1,6 +1,16 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getFirestore, Firestore } from 'firebase/firestore';
-import { getAuth, Auth } from 'firebase/auth';
+import { 
+  getAuth, 
+  Auth, 
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  sendPasswordResetEmail,
+  updateProfile,
+  User,
+  UserCredential
+} from 'firebase/auth';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 
 // Firebase configuration
@@ -48,6 +58,80 @@ if (getApps().length === 0) {
   storage = getStorage(app);
 }
 
+// Auth helper functions
+export const signUp = async (email: string, password: string, displayName?: string): Promise<UserCredential> => {
+  if (!auth) {
+    throw new Error('Firebase Auth is not initialized. Please check your Firebase configuration.');
+  }
+  
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    
+    // Update user profile with display name if provided
+    if (displayName && userCredential.user) {
+      await updateProfile(userCredential.user, { displayName });
+    }
+    
+    return userCredential;
+  } catch (error) {
+    console.error('Error signing up:', error);
+    throw error;
+  }
+};
+
+export const login = async (email: string, password: string): Promise<UserCredential> => {
+  if (!auth) {
+    throw new Error('Firebase Auth is not initialized. Please check your Firebase configuration.');
+  }
+  
+  try {
+    return await signInWithEmailAndPassword(auth, email, password);
+  } catch (error) {
+    console.error('Error logging in:', error);
+    throw error;
+  }
+};
+
+export const logout = async (): Promise<void> => {
+  if (!auth) {
+    throw new Error('Firebase Auth is not initialized. Please check your Firebase configuration.');
+  }
+  
+  try {
+    await signOut(auth);
+  } catch (error) {
+    console.error('Error logging out:', error);
+    throw error;
+  }
+};
+
+export const resetPassword = async (email: string): Promise<void> => {
+  if (!auth) {
+    throw new Error('Firebase Auth is not initialized. Please check your Firebase configuration.');
+  }
+  
+  try {
+    await sendPasswordResetEmail(auth, email);
+  } catch (error) {
+    console.error('Error sending password reset email:', error);
+    throw error;
+  }
+};
+
+export const updateUserProfile = async (updates: { displayName?: string; photoURL?: string }): Promise<void> => {
+  if (!auth || !auth.currentUser) {
+    throw new Error('No user is currently signed in.');
+  }
+  
+  try {
+    await updateProfile(auth.currentUser, updates);
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
+  }
+};
+
 export { app, db, auth, storage };
+export type { User };
 export default app;
 

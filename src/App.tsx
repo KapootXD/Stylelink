@@ -6,9 +6,11 @@ import { Toaster } from 'react-hot-toast';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Context
 import { UserProvider } from './contexts/UserContext';
+import { AuthProvider } from './contexts/AuthContext';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -20,6 +22,8 @@ import ActivityPage from './pages/ActivityPage';
 import SignupPage from './pages/SignupPage';
 import CustomerSignupPage from './pages/CustomerSignupPage';
 import SellerSignupPage from './pages/SellerSignupPage';
+import LoginPage from './pages/LoginPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import FeaturesPage from './pages/FeaturesPage';
 import SupportPage from './pages/SupportPage';
 import ContactPage from './pages/ContactPage';
@@ -42,57 +46,101 @@ function App() {
 
   return (
     <ErrorBoundary onError={handleError}>
-      <UserProvider>
-        <Router>
-          <div className="App min-h-screen flex flex-col">
-            <Navbar />
-            
-            <main className="flex-1">
-              <Routes>
-                {/* Home Route */}
-                <Route path="/" element={<HomePage />} />
-                
-                {/* Sign-up Routes */}
-                <Route path="/signup" element={<SignupPage />} />
-                <Route path="/signup/customer" element={<CustomerSignupPage />} />
-                <Route path="/signup/seller" element={<SellerSignupPage />} />
-                
-                {/* Feature Routes */}
-                <Route path="/features" element={<FeaturesPage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/activity" element={<ActivityPage />} />
-                <Route path="/discover" element={<MainFeaturePage />} />
-                <Route path="/results" element={<ResultsPage />} />
-                <Route path="/upload" element={<UploadPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                
-                {/* Support Routes */}
-                <Route path="/support" element={<SupportPage />} />
-                <Route path="/contact" element={<ContactPage />} />
-                <Route path="/privacy" element={<PrivacyPage />} />
-                <Route path="/terms" element={<TermsPage />} />
-                
-                {/* 404 Route */}
-                <Route path="*" element={<NotFoundPage />} />
-              </Routes>
-            </main>
-            
-            <Footer />
-            
-            <Toaster 
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#363636',
-                  color: '#fff',
-                },
-              }}
-            />
-          </div>
-        </Router>
-      </UserProvider>
+      <AuthProvider>
+        <UserProvider>
+          <Router>
+            <div className="App min-h-screen flex flex-col">
+              <Navbar />
+              
+              <main className="flex-1">
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/about" element={<AboutPage />} />
+                  <Route path="/features" element={<FeaturesPage />} />
+                  <Route path="/support" element={<SupportPage />} />
+                  <Route path="/contact" element={<ContactPage />} />
+                  <Route path="/privacy" element={<PrivacyPage />} />
+                  <Route path="/terms" element={<TermsPage />} />
+                  
+                  {/* Authentication Routes */}
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="/signup" element={<SignupPage />} />
+                  <Route path="/signup/customer" element={<CustomerSignupPage />} />
+                  <Route path="/signup/seller" element={<SellerSignupPage />} />
+                  
+                  {/* Protected Routes - Require Authentication */}
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <ProfilePage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/activity"
+                    element={
+                      <ProtectedRoute>
+                        <ActivityPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/discover"
+                    element={
+                      <ProtectedRoute>
+                        <MainFeaturePage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/results"
+                    element={
+                      <ProtectedRoute>
+                        <ResultsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/upload"
+                    element={
+                      <ProtectedRoute>
+                        <UploadPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/settings"
+                    element={
+                      <ProtectedRoute>
+                        <SettingsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  
+                  {/* 404 Route */}
+                  <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+              </main>
+              
+              <Footer />
+              
+              <Toaster 
+                position="top-right"
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    background: '#363636',
+                    color: '#fff',
+                  },
+                }}
+              />
+            </div>
+          </Router>
+        </UserProvider>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }
