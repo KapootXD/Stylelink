@@ -105,7 +105,7 @@ const SellerSignupPage: React.FC = () => {
 
     try {
       // Create Firebase Auth account
-      await signup(email, password, displayName);
+      await signup(email, password, 'seller', displayName);
       
       // TODO: Create seller profile in Firestore with shopName, shopBio, bankAccount, routingNumber
       // This would typically be done in a separate service or after successful signup

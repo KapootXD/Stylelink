@@ -1,5 +1,5 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getFirestore, Firestore } from 'firebase/firestore';
+import { getFirestore, Firestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { 
   getAuth, 
   Auth, 
@@ -59,9 +59,18 @@ if (getApps().length === 0) {
 }
 
 // Auth helper functions
-export const signUp = async (email: string, password: string, displayName?: string): Promise<UserCredential> => {
+export const signUp = async (
+  email: string, 
+  password: string, 
+  userType: 'customer' | 'seller',
+  displayName?: string
+): Promise<UserCredential> => {
   if (!auth) {
     throw new Error('Firebase Auth is not initialized. Please check your Firebase configuration.');
+  }
+  
+  if (!db) {
+    throw new Error('Firestore is not initialized. Please check your Firebase configuration.');
   }
   
   try {
@@ -70,6 +79,18 @@ export const signUp = async (email: string, password: string, displayName?: stri
     // Update user profile with display name if provided
     if (displayName && userCredential.user) {
       await updateProfile(userCredential.user, { displayName });
+    }
+    
+    // Create user document in Firestore
+    try {
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        email,
+        userType,
+        createdAt: serverTimestamp()
+      });
+    } catch (firestoreError) {
+      console.error('Error creating user document in Firestore:', firestoreError);
+      // Don't throw - auth user is already created, Firestore doc can be created later
     }
     
     return userCredential;

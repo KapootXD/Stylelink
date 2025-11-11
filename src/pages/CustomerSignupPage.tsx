@@ -128,7 +128,7 @@ const CustomerSignupPage: React.FC = () => {
 
     try {
       // Create Firebase Auth account
-      await signup(email, password, displayName);
+      await signup(email, password, 'customer', displayName);
       
       // TODO: Create user profile in Firestore with username, selectedStyles, profileImage
       // This would typically be done in a separate service or after successful signup
