@@ -213,11 +213,11 @@ const ProfilePage: React.FC = () => {
 
   const handleCancelEdit = () => {
     setEditForm({
-      displayName: currentUser.displayName,
-      username: currentUser.username,
-      bio: currentUser.bio,
-      location: currentUser.location,
-      profilePicture: currentUser.profilePicture
+      displayName: currentUser.displayName || '',
+      username: currentUser.username || '',
+      bio: currentUser.bio || '',
+      location: currentUser.location || '',
+      profilePicture: currentUser.profilePicture || ''
     });
     setErrors({});
     setIsEditModalOpen(false);
@@ -338,15 +338,15 @@ const ProfilePage: React.FC = () => {
               {/* Stats */}
               <div className="flex gap-8 justify-center md:justify-start mb-8">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{currentUser.stats.followers.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-white">{(currentUser.stats?.followers || 0).toLocaleString()}</div>
                   <div className="text-white/80">Followers</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{currentUser.stats.following}</div>
+                  <div className="text-2xl font-bold text-white">{currentUser.stats?.following || 0}</div>
                   <div className="text-white/80">Following</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{currentUser.stats.posts}</div>
+                  <div className="text-2xl font-bold text-white">{currentUser.stats?.posts || 0}</div>
                   <div className="text-white/80">Posts</div>
                 </div>
               </div>

@@ -1,5 +1,5 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getFirestore, Firestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, Firestore, doc, setDoc, getDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { 
   getAuth, 
   Auth, 
@@ -12,6 +12,7 @@ import {
   UserCredential
 } from 'firebase/auth';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
+import { UserType, DEFAULT_USER_TYPE, FirestoreUserProfile, AppUser } from '../types/user';
 
 // Firebase configuration
 // These values should be set in your .env file
@@ -81,13 +82,23 @@ export const signUp = async (
       await updateProfile(userCredential.user, { displayName });
     }
     
-    // Create user document in Firestore
+    // Create user document in Firestore with userType classification
+    // Map 'customer'/'seller' to 'regular' userType (can be upgraded later)
+    const appUserType: UserType = DEFAULT_USER_TYPE;
+    
     try {
-      await setDoc(doc(db, 'users', userCredential.user.uid), {
+      const userProfile: Omit<FirestoreUserProfile, 'createdAt'> & { createdAt: any } = {
+        uid: userCredential.user.uid,
         email,
-        userType,
+        userType: appUserType,
         createdAt: serverTimestamp()
-      });
+      };
+      
+      if (displayName) {
+        userProfile.displayName = displayName;
+      }
+      
+      await setDoc(doc(db, 'users', userCredential.user.uid), userProfile);
     } catch (firestoreError) {
       console.error('Error creating user document in Firestore:', firestoreError);
       // Don't throw - auth user is already created, Firestore doc can be created later
@@ -96,6 +107,142 @@ export const signUp = async (
     return userCredential;
   } catch (error) {
     console.error('Error signing up:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fetch user profile from Firestore
+ */
+export const getUserProfile = async (uid: string): Promise<AppUser | null> => {
+  if (!db) {
+    throw new Error('Firestore is not initialized. Please check your Firebase configuration.');
+  }
+  
+  if (!auth) {
+    return null;
+  }
+  
+  try {
+    const userDoc = await getDoc(doc(db, 'users', uid));
+    const firebaseUser = auth.currentUser;
+    
+    if (!userDoc.exists()) {
+      // User profile doesn't exist, create a default one if Firebase user exists
+      if (firebaseUser && firebaseUser.uid === uid) {
+        return createDefaultUserProfile(firebaseUser);
+      }
+      return null;
+    }
+    
+    const data = userDoc.data() as FirestoreUserProfile;
+    
+    // Convert Firestore Timestamp to Date
+    const createdAt = data.createdAt instanceof Timestamp 
+      ? data.createdAt.toDate() 
+      : data.createdAt;
+    const updatedAt = data.updatedAt instanceof Timestamp 
+      ? data.updatedAt.toDate() 
+      : data.updatedAt;
+    
+    // Use Firebase Auth user data if available, otherwise use Firestore data
+    const email = firebaseUser?.email || data.email || null;
+    const emailVerified = firebaseUser?.emailVerified || false;
+    const displayName = firebaseUser?.displayName || data.displayName || null;
+    const photoURL = firebaseUser?.photoURL || data.photoURL || data.avatarUrl || null;
+    
+    // Use photoURL or avatarUrl for profilePicture (convert null to undefined)
+    const profilePicture = photoURL || data.avatarUrl || undefined;
+    
+    return {
+      uid,
+      email,
+      emailVerified,
+      displayName,
+      photoURL,
+      userType: data.userType || DEFAULT_USER_TYPE,
+      username: data.username,
+      bio: data.bio,
+      avatarUrl: data.avatarUrl,
+      profilePicture, // Map to profilePicture for backward compatibility
+      location: data.location,
+      createdAt,
+      updatedAt,
+      stats: data.stats,
+      isOwnProfile: firebaseUser?.uid === uid
+    };
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    // Return default profile if fetch fails and Firebase user exists
+    if (auth.currentUser && auth.currentUser.uid === uid) {
+      return createDefaultUserProfile(auth.currentUser);
+    }
+    return null;
+  }
+};
+
+/**
+ * Create default user profile for users without Firestore document
+ */
+const createDefaultUserProfile = (firebaseUser: User): AppUser => {
+  return {
+    uid: firebaseUser.uid,
+    email: firebaseUser.email,
+    emailVerified: firebaseUser.emailVerified,
+    displayName: firebaseUser.displayName,
+    photoURL: firebaseUser.photoURL,
+    profilePicture: firebaseUser.photoURL || undefined, // Map photoURL to profilePicture
+    userType: DEFAULT_USER_TYPE,
+    createdAt: new Date(),
+    isOwnProfile: true
+  };
+};
+
+/**
+ * Update user type in Firestore
+ */
+export const updateUserType = async (uid: string, userType: UserType | string): Promise<void> => {
+  if (!db) {
+    throw new Error('Firestore is not initialized. Please check your Firebase configuration.');
+  }
+  
+  try {
+    await setDoc(
+      doc(db, 'users', uid),
+      {
+        userType,
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+  } catch (error) {
+    console.error('Error updating user type:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update user profile in Firestore
+ */
+export const updateUserProfileInFirestore = async (
+  uid: string,
+  updates: Partial<FirestoreUserProfile>
+): Promise<void> => {
+  if (!db) {
+    throw new Error('Firestore is not initialized. Please check your Firebase configuration.');
+  }
+  
+  try {
+    await setDoc(
+      doc(db, 'users', uid),
+      {
+        ...updates,
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+  } catch (error) {
+    console.error('Error updating user profile:', error);
     throw error;
   }
 };
@@ -151,6 +298,44 @@ export const updateUserProfile = async (updates: { displayName?: string; photoUR
     throw error;
   }
 };
+
+/**
+ * Check if Firebase Auth is initialized and ready
+ */
+export const isAuthInitialized = (): boolean => {
+  return auth !== undefined;
+};
+
+/**
+ * Get Firebase Auth instance (throws if not initialized)
+ */
+export const getAuthInstance = (): Auth => {
+  if (!auth) {
+    throw new Error('Firebase Auth is not initialized. Please check your Firebase configuration.');
+  }
+  return auth;
+};
+
+/**
+ * Check if Firebase is fully initialized
+ */
+export const isFirebaseInitialized = (): boolean => {
+  return app !== undefined && db !== undefined && auth !== undefined;
+};
+
+// Log initialization status
+if (process.env.NODE_ENV === 'development') {
+  if (isFirebaseInitialized()) {
+    console.log('✅ Firebase initialized:', {
+      app: !!app,
+      firestore: !!db,
+      auth: !!auth,
+      storage: !!storage
+    });
+  } else {
+    console.warn('⚠️ Firebase not fully initialized. Check your .env file for Firebase configuration.');
+  }
+}
 
 export { app, db, auth, storage };
 export type { User };
