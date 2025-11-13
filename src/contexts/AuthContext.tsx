@@ -1,17 +1,21 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
-import { auth, signUp, login, logout as firebaseLogout, resetPassword } from '../config/firebase';
+import { auth, signUp, login, logout as firebaseLogout, resetPassword, getUserProfile, updateUserType, isAuthInitialized } from '../config/firebase';
+import { AppUser, UserType } from '../types/user';
 import toast from 'react-hot-toast';
 
 // Auth context type
 interface AuthContextType {
   currentUser: User | null;
+  userProfile: AppUser | null;
   loading: boolean;
   error: string | null;
   signup: (email: string, password: string, userType: 'customer' | 'seller', displayName?: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  updateUserType: (userType: UserType | string) => Promise<void>;
+  refreshUserProfile: () => Promise<void>;
   clearError: () => void;
 }
 
@@ -21,22 +25,62 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Auth provider component
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch user profile from Firestore
+  const fetchUserProfile = async (user: User | null): Promise<void> => {
+    if (!user) {
+      setUserProfile(null);
+      return;
+    }
+
+    try {
+      const profile = await getUserProfile(user.uid);
+      setUserProfile(profile);
+    } catch (err: any) {
+      console.error('Error fetching user profile:', err);
+      // Set default profile if fetch fails
+      setUserProfile({
+        uid: user.uid,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        profilePicture: user.photoURL || undefined, // Map photoURL to profilePicture
+        userType: 'regular' as UserType,
+        createdAt: new Date(),
+        isOwnProfile: true
+      });
+    }
+  };
+
   // Listen for auth state changes
   useEffect(() => {
-    if (!auth) {
+    // Check if Firebase Auth is initialized
+    if (!isAuthInitialized() || !auth) {
+      console.warn('Firebase Auth is not initialized. Authentication features will not work.');
       setLoading(false);
       return;
     }
 
+    // Set up auth state listener
     const unsubscribe = onAuthStateChanged(
       auth,
-      (user) => {
+      async (user) => {
         setCurrentUser(user);
-        setLoading(false);
         setError(null);
+        
+        // Fetch user profile when user logs in
+        if (user) {
+          setLoading(true);
+          await fetchUserProfile(user);
+        } else {
+          setUserProfile(null);
+        }
+        
+        setLoading(false);
       },
       (error) => {
         console.error('Auth state change error:', error);
@@ -59,7 +103,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setError(null);
       setLoading(true);
-      await signUp(email, password, userType, displayName);
+      const userCredential = await signUp(email, password, userType, displayName);
+      
+      // Fetch user profile after signup
+      if (userCredential.user) {
+        await fetchUserProfile(userCredential.user);
+      }
+      
       toast.success('Account created successfully!');
     } catch (err: any) {
       const errorMessage = getErrorMessage(err);
@@ -76,7 +126,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setError(null);
       setLoading(true);
-      await login(email, password);
+      const userCredential = await login(email, password);
+      
+      // Fetch user profile after login
+      if (userCredential.user) {
+        await fetchUserProfile(userCredential.user);
+      }
+      
       toast.success('Welcome back!');
     } catch (err: any) {
       const errorMessage = getErrorMessage(err);
@@ -93,12 +149,51 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setError(null);
       await firebaseLogout();
+      setUserProfile(null);
       toast.success('Logged out successfully');
     } catch (err: any) {
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       toast.error(errorMessage);
       throw err;
+    }
+  };
+
+  // Update user type function
+  const handleUpdateUserType = async (newUserType: UserType | string): Promise<void> => {
+    if (!currentUser) {
+      throw new Error('No user is currently signed in.');
+    }
+
+    try {
+      setError(null);
+      setLoading(true);
+      await updateUserType(currentUser.uid, newUserType);
+      
+      // Refresh user profile
+      await fetchUserProfile(currentUser);
+      
+      toast.success('User type updated successfully!');
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to update user type. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Refresh user profile function
+  const handleRefreshUserProfile = async (): Promise<void> => {
+    if (!currentUser) {
+      return;
+    }
+
+    try {
+      await fetchUserProfile(currentUser);
+    } catch (err: any) {
+      console.error('Error refreshing user profile:', err);
     }
   };
 
@@ -157,12 +252,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const value: AuthContextType = {
     currentUser,
+    userProfile,
     loading,
     error,
     signup: handleSignup,
     login: handleLogin,
     logout: handleLogout,
     resetPassword: handleResetPassword,
+    updateUserType: handleUpdateUserType,
+    refreshUserProfile: handleRefreshUserProfile,
     clearError,
   };
 

@@ -1,30 +1,17 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-
-// User type definition
-export interface User {
-  id: string;
-  displayName: string;
-  username: string;
-  bio: string;
-  profilePicture: string;
-  location: string;
-  joinDate: string;
-  stats: {
-    followers: number;
-    following: number;
-    posts: number;
-  };
-  isOwnProfile: boolean;
-}
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useAuth } from './AuthContext';
+import { AppUser, UserType } from '../types/user';
 
 // User context type
 interface UserContextType {
-  user: User | null;
-  setUser: (user: User | null) => void;
-  updateUser: (updates: Partial<User>) => void;
+  user: AppUser | null;
+  setUser: (user: AppUser | null) => void;
+  updateUser: (updates: Partial<AppUser>) => void;
   isLoggedIn: boolean;
-  login: (user: User) => void;
+  userType: UserType | string | null;
+  login: (user: AppUser) => void;
   logout: () => void;
+  isLoading: boolean;
 }
 
 // Create context
@@ -32,30 +19,25 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // User provider component
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Mock user data - replace with actual authentication logic
-  const [user, setUser] = useState<User | null>({
-    id: '1',
-    displayName: 'Alex Chen',
-    username: '@alexstyle',
-    bio: 'Fashion enthusiast sharing authentic streetwear from Tokyo to NYC. Always on the hunt for unique local brands! 🌟',
-    profilePicture: '/api/placeholder/150/150',
-    location: 'Tokyo, Japan',
-    joinDate: 'March 2023',
-    stats: {
-      followers: 2847,
-      following: 156,
-      posts: 42
-    },
-    isOwnProfile: true
-  });
+  const { userProfile, currentUser, loading: authLoading } = useAuth();
+  const [user, setUser] = useState<AppUser | null>(null);
 
-  const updateUser = (updates: Partial<User>) => {
+  // Sync user profile from AuthContext
+  useEffect(() => {
+    if (userProfile) {
+      setUser(userProfile);
+    } else {
+      setUser(null);
+    }
+  }, [userProfile]);
+
+  const updateUser = (updates: Partial<AppUser>) => {
     if (user) {
       setUser({ ...user, ...updates });
     }
   };
 
-  const login = (userData: User) => {
+  const login = (userData: AppUser) => {
     setUser(userData);
   };
 
@@ -67,9 +49,11 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     user,
     setUser,
     updateUser,
-    isLoggedIn: !!user,
+    isLoggedIn: !!user && !!currentUser,
+    userType: user?.userType || null,
     login,
-    logout
+    logout,
+    isLoading: authLoading
   };
 
   return (
