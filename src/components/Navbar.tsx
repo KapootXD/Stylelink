@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, User, Search, Heart, LogOut, LogIn } from 'lucide-react';
+import { Menu, X, User, Search, Heart, LogOut, LogIn, Crown, Upload } from 'lucide-react';
 import SearchModal from './SearchModal';
 import { useAuth } from '../contexts/AuthContext';
+import { useAccessControl } from '../hooks/useAccessControl';
 
 const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -10,6 +11,7 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser, logout, loading } = useAuth();
+  const { canAccess, isPremium, isAdmin } = useAccessControl();
 
   const handleLogout = async () => {
     try {
@@ -78,12 +80,27 @@ const Navbar: React.FC = () => {
                 >
                   <Search className="h-5 w-5" />
                 </button>
-                <Link 
-                  to="/activity"
-                  className="p-2 rounded-full text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] transition-colors"
-                >
-                  <Heart className="h-5 w-5" />
-                </Link>
+                {canAccess('basic') && (
+                  <Link 
+                    to="/activity"
+                    className="p-2 rounded-full text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] transition-colors"
+                  >
+                    <Heart className="h-5 w-5" />
+                  </Link>
+                )}
+                {canAccess('upload') && (
+                  <Link
+                    to="/upload"
+                    className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActivePath('/upload')
+                        ? 'text-[#B7410E] bg-[#FAF3E0]'
+                        : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
+                    }`}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload
+                  </Link>
+                )}
                 <Link
                   to="/profile"
                   className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -95,16 +112,33 @@ const Navbar: React.FC = () => {
                   <User className="h-4 w-4 mr-2" />
                   {currentUser.displayName || 'Profile'}
                 </Link>
-                <Link
-                  to="/settings"
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActivePath('/settings')
-                      ? 'text-[#B7410E] bg-[#FAF3E0]'
-                      : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
-                  }`}
-                >
-                  Settings
-                </Link>
+                {canAccess('settings') && (
+                  <Link
+                    to="/settings"
+                    className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActivePath('/settings')
+                        ? 'text-[#B7410E] bg-[#FAF3E0]'
+                        : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
+                    }`}
+                  >
+                    Settings
+                  </Link>
+                )}
+                {!isPremium() && (
+                  <Link
+                    to="/settings"
+                    className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-white bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 transition-colors"
+                  >
+                    <Crown className="h-4 w-4 mr-2" />
+                    Upgrade
+                  </Link>
+                )}
+                {isAdmin() && (
+                  <span className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-white bg-gradient-to-r from-red-500 to-red-600">
+                    <User className="h-4 w-4 mr-2" />
+                    Admin
+                  </span>
+                )}
                 <button
                   onClick={handleLogout}
                   disabled={loading}
@@ -180,18 +214,34 @@ const Navbar: React.FC = () => {
                   <Search className="h-5 w-5 mr-2" />
                   Search
                 </button>
-                <Link
-                  to="/activity"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                    isActivePath('/activity')
-                      ? 'text-[#B7410E] bg-[#FAF3E0]'
-                      : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
-                  }`}
-                >
-                  <Heart className="h-5 w-5 mr-2" />
-                  Activity
-                </Link>
+                {canAccess('basic') && (
+                  <Link
+                    to="/activity"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                      isActivePath('/activity')
+                        ? 'text-[#B7410E] bg-[#FAF3E0]'
+                        : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
+                    }`}
+                  >
+                    <Heart className="h-5 w-5 mr-2" />
+                    Activity
+                  </Link>
+                )}
+                {canAccess('upload') && (
+                  <Link
+                    to="/upload"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                      isActivePath('/upload')
+                        ? 'text-[#B7410E] bg-[#FAF3E0]'
+                        : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
+                    }`}
+                  >
+                    <Upload className="h-5 w-5 mr-2" />
+                    Upload
+                  </Link>
+                )}
                 <Link
                   to="/profile"
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -204,17 +254,35 @@ const Navbar: React.FC = () => {
                   <User className="h-5 w-5 mr-2" />
                   {currentUser.displayName || 'Profile'}
                 </Link>
-                <Link
-                  to="/settings"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                    isActivePath('/settings')
-                      ? 'text-[#B7410E] bg-[#FAF3E0]'
-                      : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
-                  }`}
-                >
-                  Settings
-                </Link>
+                {canAccess('settings') && (
+                  <Link
+                    to="/settings"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                      isActivePath('/settings')
+                        ? 'text-[#B7410E] bg-[#FAF3E0]'
+                        : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
+                    }`}
+                  >
+                    Settings
+                  </Link>
+                )}
+                {!isPremium() && (
+                  <Link
+                    to="/settings"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center px-3 py-2 rounded-md text-base font-medium text-white bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 transition-colors"
+                  >
+                    <Crown className="h-5 w-5 mr-2" />
+                    Upgrade to Premium
+                  </Link>
+                )}
+                {isAdmin() && (
+                  <div className="flex items-center px-3 py-2 rounded-md text-base font-medium text-white bg-gradient-to-r from-red-500 to-red-600">
+                    <User className="h-5 w-5 mr-2" />
+                    Admin
+                  </div>
+                )}
                 <button
                   onClick={() => {
                     handleLogout();

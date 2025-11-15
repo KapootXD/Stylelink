@@ -20,3 +20,5 @@ export type { PageTransitionProps } from './PageTransition';
 // Re-export existing components
 export { default as Footer } from './Footer';
 export { default as Navbar } from './Navbar';
+export { default as ProtectedFeature } from './ProtectedFeature';
+export type { ProtectedFeatureProps } from './ProtectedFeature';
