@@ -36,17 +36,41 @@ let storage: FirebaseStorage | undefined;
 if (getApps().length === 0) {
   // Validate that all required environment variables are present
   if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-    console.warn(
+    console.error(
       'Firebase configuration is missing. Please set REACT_APP_FIREBASE_API_KEY and REACT_APP_FIREBASE_PROJECT_ID in your .env file.'
     );
+    console.error('Current config:', {
+      apiKey: firebaseConfig.apiKey ? 'present' : 'missing',
+      projectId: firebaseConfig.projectId ? 'present' : 'missing',
+      authDomain: firebaseConfig.authDomain ? 'present' : 'missing'
+    });
     console.warn('App will run in demo mode with mock data.');
   } else {
     try {
+      // Log config for debugging (without exposing full API key)
+      console.log('Initializing Firebase with config:', {
+        apiKey: firebaseConfig.apiKey ? `${firebaseConfig.apiKey.substring(0, 10)}...` : 'missing',
+        authDomain: firebaseConfig.authDomain,
+        projectId: firebaseConfig.projectId
+      });
+      
       app = initializeApp(firebaseConfig);
       db = getFirestore(app);
       auth = getAuth(app);
       storage = getStorage(app);
-      console.log('Firebase initialized successfully');
+      
+      // Verify auth is properly initialized
+      if (!auth) {
+        throw new Error('Firebase Auth instance is null after initialization');
+      }
+      
+      console.log('✅ Firebase initialized successfully:', {
+        app: !!app,
+        firestore: !!db,
+        auth: !!auth,
+        storage: !!storage,
+        authApp: auth?.app?.name || 'unknown'
+      });
     } catch (error) {
       console.error('Error initializing Firebase:', error);
       console.warn('App will run in demo mode with mock data.');
@@ -57,6 +81,7 @@ if (getApps().length === 0) {
   db = getFirestore(app);
   auth = getAuth(app);
   storage = getStorage(app);
+  console.log('✅ Firebase already initialized, using existing instance');
 }
 
 // Auth helper functions
@@ -75,6 +100,13 @@ export const signUp = async (
   }
   
   try {
+    // Ensure auth is properly linked to the app
+    if (!auth.app) {
+      console.error('Auth instance is not linked to an app');
+      throw new Error('Firebase Auth configuration error: Auth instance not properly initialized');
+    }
+    
+    console.log('Attempting to create user with email:', email);
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     
     // Update user profile with display name if provided
