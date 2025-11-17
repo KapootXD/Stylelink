@@ -1,0 +1,84 @@
+mutation CreateDemoData @transaction @auth(level: PUBLIC, insecureReason: "This mutation is used to seed data in the database and is not user specific.") {
+  user_insertMany(data: [
+    {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      username: "demouser1",
+      email: "demouser1@example.com",
+      createdAt: "2024-04-29T12:00:00Z",
+      displayName: "Demo User One",
+      bio: "Example bio for demo user one",
+      avatarUrl: "https://example.com/avatar1.jpg"
+    },
+    {
+      id: "550e8400-e29b-41d4-a716-446655440001",
+      username: "demouser2",
+      email: "demouser2@example.com",
+      createdAt: "2024-04-29T13:00:00Z",
+      displayName: "Demo User Two",
+      bio: "Example bio for demo user two",
+      avatarUrl: "https://example.com/avatar2.jpg"
+    }
+  ])
+  video_insertMany(data: [
+    {
+      id: "650e8400-e29b-41d4-a716-446655440000",
+      userId: "550e8400-e29b-41d4-a716-446655440000",
+      caption: "Example video 1",
+      createdAt: "2024-04-29T14:00:00Z",
+      videoUrl: "https://example.com/video1.mp4",
+      thumbnailUrl: "https://example.com/thumbnail1.jpg",
+      musicTrack: "Example music track 1"
+    },
+    {
+      id: "650e8400-e29b-41d4-a716-446655440001",
+      userId: "550e8400-e29b-41d4-a716-446655440001",
+      caption: "Example video 2",
+      createdAt: "2024-04-29T15:00:00Z",
+      videoUrl: "https://example.com/video2.mp4",
+      thumbnailUrl: "https://example.com/thumbnail2.jpg",
+      musicTrack: "Example music track 2"
+    }
+  ])
+  comment_insertMany(data: [
+    {
+      id: "750e8400-e29b-41d4-a716-446655440000",
+      userId: "550e8400-e29b-41d4-a716-446655440000",
+      videoId: "650e8400-e29b-41d4-a716-446655440000",
+      content: "Example comment from demouser1 on video1",
+      createdAt: "2024-04-29T16:00:00Z"
+    },
+    {
+      id: "750e8400-e29b-41d4-a716-446655440001",
+      userId: "550e8400-e29b-41d4-a716-446655440001",
+      videoId: "650e8400-e29b-41d4-a716-446655440001",
+      content: "Example comment from demouser2 on video2",
+      createdAt: "2024-04-29T17:00:00Z"
+    }
+  ])
+  like_insertMany(data: [
+    {
+      userId: "550e8400-e29b-41d4-a716-446655440000",
+      videoId: "650e8400-e29b-41d4-a716-446655440000",
+      createdAt: "2024-04-29T18:00:00Z"
+    },
+    {
+      userId: "550e8400-e29b-41d4-a716-446655440001",
+      videoId: "650e8400-e29b-41d4-a716-446655440001",
+      createdAt: "2024-04-29T19:00:00Z"
+    }
+  ])
+  follow_insertMany(data: [
+    {
+      followerId: "550e8400-e29b-41d4-a716-446655440000",
+      followedId: "550e8400-e29b-41d4-a716-446655440001",
+      createdAt: "2024-04-29T20:00:00Z"
+    }
+  ])
+  savedVideo_insertMany(data: [
+    {
+      userId: "550e8400-e29b-41d4-a716-446655440000",
+      videoId: "650e8400-e29b-41d4-a716-446655440000",
+      createdAt: "2024-04-29T21:00:00Z"
+    }
+  ])
+}

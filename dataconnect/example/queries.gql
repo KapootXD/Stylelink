@@ -1,0 +1,34 @@
+mutation CreateUser @auth(level: USER) {
+  user_insert(data: {
+    username: "newuser",
+    email: "newuser@example.com",
+    createdAt_expr: "request.time",
+    displayName: "New User"
+  })
+}
+
+query GetVideos @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public") {
+  videos {
+    id
+    caption
+    videoUrl
+  }
+}
+
+mutation LikeVideo($videoId: UUID!) @auth(level: USER) {
+  like_insert(data: {
+    videoId: $videoId,
+    userId_expr: "auth.uid",
+    createdAt_expr: "request.time"
+  })
+}
+
+query GetMySavedVideos @auth(level: USER) {
+  savedVideos(where: {userId: {eq_expr: "auth.uid"}}) {
+    video {
+      id
+      caption
+      videoUrl
+    }
+  }
+}

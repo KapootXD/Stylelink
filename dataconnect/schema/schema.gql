@@ -1,0 +1,42 @@
+type User @table {
+  username: String!
+  email: String!
+  createdAt: Timestamp!
+  displayName: String
+  avatarUrl: String
+  bio: String
+}
+
+type Video @table {
+  videoUrl: String!
+  caption: String!
+  createdAt: Timestamp!
+  thumbnailUrl: String
+  musicTrack: String
+  user: User
+}
+
+type Comment @table {
+  content: String!
+  createdAt: Timestamp!
+  user: User
+  video: Video
+}
+
+type Like @table(key: ["user", "video"]) {
+  createdAt: Timestamp!
+  user: User!
+  video: Video!
+}
+
+type Follow @table(key: ["follower", "followed"]) {
+  createdAt: Timestamp!
+  follower: User!
+  followed: User!
+}
+
+type SavedVideo @table(key: ["user", "video"]) {
+  createdAt: Timestamp!
+  user: User!
+  video: Video!
+}
