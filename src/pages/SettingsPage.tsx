@@ -5,9 +5,15 @@ import {
   Trash2, 
   Database,
   AlertTriangle,
-  Info
+  Info,
+  BarChart3,
+  Users,
+  Shield,
+  Crown
 } from 'lucide-react';
 import Button from '../components/Button';
+import ProtectedFeature from '../components/ProtectedFeature';
+import { useAccessControl } from '../hooks/useAccessControl';
 import { 
   clearPersistedData, 
   getStorageInfo,
@@ -21,6 +27,7 @@ const SettingsPage: React.FC = () => {
   const [preferences, setPreferences] = useState(getUserPreferences());
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const { isPremium, isAdmin } = useAccessControl();
 
   useEffect(() => {
     setStorageInfo(getStorageInfo());
@@ -185,11 +192,109 @@ const SettingsPage: React.FC = () => {
           </div>
         </motion.div>
 
+        {/* Premium Features Section - Advanced Analytics */}
+        <ProtectedFeature feature="premium">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-lg shadow-sm border p-6 mb-6"
+          >
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="p-2 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg">
+                <Crown className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Advanced Analytics</h2>
+                <p className="text-sm text-gray-600">Premium feature - Track your style insights</p>
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg p-6 border border-yellow-200">
+              <div className="flex items-center space-x-4 mb-4">
+                <BarChart3 className="w-8 h-8 text-yellow-600" />
+                <div>
+                  <h3 className="font-semibold text-gray-900">Style Analytics Dashboard</h3>
+                  <p className="text-sm text-gray-600">Get insights into your style preferences and trends</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div className="bg-white rounded-lg p-4 border border-yellow-200">
+                  <div className="text-2xl font-bold text-gray-900">1,234</div>
+                  <div className="text-sm text-gray-600">Total Views</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 border border-yellow-200">
+                  <div className="text-2xl font-bold text-gray-900">567</div>
+                  <div className="text-sm text-gray-600">Likes Received</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 border border-yellow-200">
+                  <div className="text-2xl font-bold text-gray-900">89</div>
+                  <div className="text-sm text-gray-600">Outfits Shared</div>
+                </div>
+              </div>
+              
+              <p className="text-xs text-gray-500 mt-4">
+                {isPremium() ? 'You have access to premium analytics!' : 'Upgrade to Premium to unlock advanced analytics.'}
+              </p>
+            </div>
+          </motion.div>
+        </ProtectedFeature>
+
+        {/* Admin Features Section - User Management */}
+        <ProtectedFeature feature="admin">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white rounded-lg shadow-sm border p-6 mb-6 border-red-200"
+          >
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="p-2 bg-gradient-to-br from-red-500 to-red-700 rounded-lg">
+                <Shield className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">User Management</h2>
+                <p className="text-sm text-gray-600">Admin only - Manage users and permissions</p>
+              </div>
+            </div>
+            
+            <div className="bg-red-50 rounded-lg p-6 border border-red-200">
+              <div className="flex items-center space-x-4 mb-4">
+                <Users className="w-8 h-8 text-red-600" />
+                <div>
+                  <h3 className="font-semibold text-gray-900">Admin Dashboard</h3>
+                  <p className="text-sm text-gray-600">Manage user accounts, permissions, and system settings</p>
+                </div>
+              </div>
+              
+              <div className="space-y-3 mt-4">
+                <button className="w-full bg-white hover:bg-red-50 border border-red-300 rounded-lg p-3 text-left transition-colors">
+                  <div className="font-medium text-gray-900">View All Users</div>
+                  <div className="text-sm text-gray-600">Browse and manage user accounts</div>
+                </button>
+                <button className="w-full bg-white hover:bg-red-50 border border-red-300 rounded-lg p-3 text-left transition-colors">
+                  <div className="font-medium text-gray-900">Content Moderation</div>
+                  <div className="text-sm text-gray-600">Review and moderate user content</div>
+                </button>
+                <button className="w-full bg-white hover:bg-red-50 border border-red-300 rounded-lg p-3 text-left transition-colors">
+                  <div className="font-medium text-gray-900">System Settings</div>
+                  <div className="text-sm text-gray-600">Configure application settings</div>
+                </button>
+              </div>
+              
+              <p className="text-xs text-gray-500 mt-4">
+                {isAdmin() ? 'You have admin access to manage the system.' : 'Admin access required.'}
+              </p>
+            </div>
+          </motion.div>
+        </ProtectedFeature>
+
         {/* Info Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.4 }}
           className="bg-blue-50 rounded-lg border border-blue-200 p-6"
         >
           <div className="flex items-start space-x-3">
