@@ -11,7 +11,7 @@ import {
   User,
   UserCredential
 } from 'firebase/auth';
-import { getStorage, FirebaseStorage } from 'firebase/storage';
+import { getStorage, FirebaseStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { UserType, DEFAULT_USER_TYPE, FirestoreUserProfile, AppUser } from '../types/user';
 
 // Firebase configuration
@@ -265,16 +265,40 @@ export const updateUserProfileInFirestore = async (
   }
   
   try {
+    // Filter out undefined values
+    const cleanUpdates: any = {
+      ...updates,
+      updatedAt: serverTimestamp()
+    };
+    
+    // Remove undefined values
+    Object.keys(cleanUpdates).forEach(key => {
+      if (cleanUpdates[key] === undefined) {
+        delete cleanUpdates[key];
+      }
+    });
+
+    console.log('🔥 Writing to Firestore:', { uid, updates: cleanUpdates });
+
     await setDoc(
       doc(db, 'users', uid),
-      {
-        ...updates,
-        updatedAt: serverTimestamp()
-      },
+      cleanUpdates,
       { merge: true }
     );
-  } catch (error) {
-    console.error('Error updating user profile:', error);
+
+    console.log('✅ Firestore update successful');
+  } catch (error: any) {
+    console.error('❌ Error updating user profile:', error);
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
+    
+    // Provide more helpful error messages
+    if (error.code === 'permission-denied') {
+      throw new Error('Permission denied: Check Firestore security rules. You can only update your own profile.');
+    } else if (error.code === 'unavailable') {
+      throw new Error('Firestore is unavailable. Please check your internet connection.');
+    }
+    
     throw error;
   }
 };
@@ -327,6 +351,68 @@ export const updateUserProfile = async (updates: { displayName?: string; photoUR
     await updateProfile(auth.currentUser, updates);
   } catch (error) {
     console.error('Error updating user profile:', error);
+    throw error;
+  }
+};
+
+/**
+ * Upload a file to Firebase Storage (for profile pictures, etc.)
+ * @param file - The file to upload
+ * @param userId - The user ID
+ * @param folder - The folder path in storage (e.g., 'profile', 'outfits')
+ * @param onProgress - Optional callback for upload progress
+ * @returns Promise with the download URL
+ */
+export const uploadFile = async (
+  file: File,
+  userId: string,
+  folder: string = 'profile',
+  onProgress?: (progress: number) => void
+): Promise<string> => {
+  if (!storage) {
+    throw new Error('Firebase Storage is not initialized. Please check your Firebase configuration.');
+  }
+  
+  try {
+    // Create a unique filename
+    const timestamp = Date.now();
+    const fileExtension = file.name.split('.').pop() || 'jpg';
+    const fileName = `${userId}/${folder}/${timestamp}_${Math.random().toString(36).substring(7)}.${fileExtension}`;
+    
+    // Create storage reference
+    const storageRef = ref(storage, fileName);
+    
+    // Upload file with progress tracking
+    const uploadTask = uploadBytesResumable(storageRef, file);
+    
+    return new Promise((resolve, reject) => {
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          // Track upload progress
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          if (onProgress) {
+            onProgress(progress);
+          }
+        },
+        (error) => {
+          console.error('Error uploading file:', error);
+          reject(error);
+        },
+        async () => {
+          // Upload completed successfully
+          try {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            resolve(downloadURL);
+          } catch (error) {
+            console.error('Error getting download URL:', error);
+            reject(error);
+          }
+        }
+      );
+    });
+  } catch (error) {
+    console.error('Error uploading file:', error);
     throw error;
   }
 };

@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // User profiles - public read, own write
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Outfits - public read, authenticated write
+    match /outfits/{outfitId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Likes - authenticated only
+    match /likes/{likeId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Shares - authenticated only
+    match /shares/{shareId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}
+
