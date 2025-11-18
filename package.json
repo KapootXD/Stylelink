@@ -21,11 +21,14 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "CI=false react-scripts build",
+    "build": "cross-env CI=false react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "build:analyze": "npm run build && npx serve -s build",
-    "seed:firebase": "ts-node -r dotenv/config scripts/seedFirebase.ts"
+    "seed:firebase": "ts-node -r dotenv/config scripts/seedFirebase.ts",
+    "deploy": "npm run build && firebase deploy --only hosting",
+    "deploy:hosting": "firebase deploy --only hosting",
+    "deploy:all": "npm run build && firebase deploy"
   },
   "eslintConfig": {
     "extends": [
@@ -47,6 +50,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.16",
+    "cross-env": "^7.0.3",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.3.6"
   },

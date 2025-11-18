@@ -18,7 +18,8 @@ import {
   increment,
   Firestore
 } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../config/firebase';
 import {
   OutfitUpload,
   UserProfile,
@@ -44,6 +45,14 @@ const ensureDb = (): Firestore => {
     throw new Error('Firebase is not initialized. Please check your Firebase configuration.');
   }
   return db;
+};
+
+// Helper function to ensure Firebase Storage is initialized
+const ensureStorage = () => {
+  if (!storage) {
+    throw new Error('Firebase Storage is not initialized. Please check your Firebase configuration.');
+  }
+  return storage;
 };
 
 // Helper function to convert Firestore timestamp to Date
@@ -487,6 +496,249 @@ export const batchUploadUsers = async (users: UserProfile[]): Promise<void> => {
     await batch.commit();
   } catch (error) {
     console.error('Error batch uploading users:', error);
+    throw error;
+  }
+};
+
+/**
+ * Upload a file (image or video) to Firebase Storage
+ * @param file - The file to upload (should be compressed for images)
+ * @param userId - The user ID
+ * @param folder - The folder path in storage (e.g., 'outfits', 'profile')
+ * @param onProgress - Optional callback for upload progress
+ * @returns Promise with the download URL
+ */
+export const uploadFile = async (
+  file: File,
+  userId: string,
+  folder: string = 'outfits',
+  onProgress?: (progress: number) => void
+): Promise<string> => {
+  try {
+    const storageInstance = ensureStorage();
+    
+    // Validate file
+    if (!file || file.size === 0) {
+      throw new Error('Invalid file: file is empty or undefined');
+    }
+    
+    // Create a unique filename
+    const timestamp = Date.now();
+    const fileExtension = file.name.split('.').pop() || 'jpg';
+    const fileName = `${userId}/${folder}/${timestamp}_${Math.random().toString(36).substring(7)}.${fileExtension}`;
+    
+    console.log(`📤 Uploading file: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB) to ${fileName}`);
+    
+    // Create storage reference
+    const storageRef = ref(storageInstance, fileName);
+    
+    // Upload file with progress tracking
+    // Note: For images, file should be compressed before calling this function
+    const uploadTask = uploadBytesResumable(storageRef, file);
+    
+    return new Promise((resolve, reject) => {
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          // Track upload progress
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          if (onProgress) {
+            onProgress(progress);
+          }
+        },
+        (error) => {
+          console.error('❌ Error uploading file:', error);
+          console.error('Error code:', error.code);
+          console.error('Error message:', error.message);
+          
+          // Provide more helpful error messages
+          if (error.code === 'storage/unauthorized') {
+            reject(new Error('Storage unauthorized: Check Firebase Storage security rules. They should allow authenticated users to write.'));
+          } else if (error.code === 'storage/quota-exceeded') {
+            reject(new Error('Storage quota exceeded: Your Firebase Storage quota has been reached.'));
+          } else if (error.code === 'storage/unauthenticated') {
+            reject(new Error('User not authenticated: Please log in to upload files.'));
+          } else {
+            reject(error);
+          }
+        },
+        async () => {
+          // Upload completed successfully
+          try {
+            console.log('✅ File uploaded successfully, getting download URL...');
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            console.log('✅ Download URL obtained:', downloadURL.substring(0, 50) + '...');
+            resolve(downloadURL);
+          } catch (error) {
+            console.error('❌ Error getting download URL:', error);
+            reject(error);
+          }
+        }
+      );
+    });
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    throw error;
+  }
+};
+
+/**
+ * Upload multiple files (images or videos) to Firebase Storage
+ * @param files - Array of files to upload
+ * @param userId - The user ID
+ * @param folder - The folder path in storage
+ * @param onProgress - Optional callback for overall progress
+ * @returns Promise with array of download URLs
+ */
+export const uploadMultipleFiles = async (
+  files: File[],
+  userId: string,
+  folder: string = 'outfits',
+  onProgress?: (progress: number) => void
+): Promise<string[]> => {
+  try {
+    const uploadPromises = files.map((file, index) => 
+      uploadFile(file, userId, folder, (fileProgress) => {
+        // Calculate overall progress
+        if (onProgress) {
+          const overallProgress = ((index + fileProgress / 100) / files.length) * 100;
+          onProgress(overallProgress);
+        }
+      })
+    );
+    
+    const downloadURLs = await Promise.all(uploadPromises);
+    return downloadURLs;
+  } catch (error) {
+    console.error('Error uploading multiple files:', error);
+    throw error;
+  }
+};
+
+/**
+ * Create an outfit with uploaded media files
+ * @param userInput - The outfit data
+ * @param userId - The user ID
+ * @param imageFiles - Array of image files to upload (will be compressed)
+ * @param videoFiles - Optional array of video files to upload
+ * @param onProgress - Optional callback for upload progress
+ * @returns Promise with the created outfit
+ */
+export const createOutfitWithMedia = async (
+  userInput: Omit<UserInput, 'mainImageUrl' | 'additionalImages'>,
+  userId: string,
+  imageFiles: File[],
+  videoFiles: File[] = [],
+  onProgress?: (progress: number) => void
+): Promise<OutfitUpload> => {
+  try {
+    if (imageFiles.length === 0 && videoFiles.length === 0) {
+      throw new Error('At least one image or video file is required');
+    }
+
+    let uploadedImageUrls: string[] = [];
+    let uploadedVideoUrls: string[] = [];
+    let currentProgress = 0;
+
+    // Compress and upload images
+    if (imageFiles.length > 0) {
+      let imagesToUpload: File[] = imageFiles;
+      
+      try {
+        // Import compression utility dynamically to avoid circular dependencies
+        const { compressImages } = await import('../utils/imageCompression');
+        
+        // Compress images first (10% of progress)
+        if (onProgress) {
+          onProgress(5);
+        }
+        
+        try {
+          const compressedImages = await Promise.race([
+            compressImages(
+              imageFiles,
+              {
+                maxWidth: 1920,
+                maxHeight: 1920,
+                quality: 0.8,
+                maxSizeMB: 2
+              },
+              (compressProgress) => {
+                // Compression takes 10% of total progress
+                if (onProgress) {
+                  onProgress(5 + (compressProgress * 0.05));
+                }
+              }
+            ),
+            // Timeout after 30 seconds - use original files if compression takes too long
+            new Promise<File[]>((_, reject) => 
+              setTimeout(() => reject(new Error('Compression timeout')), 30000)
+            )
+          ]);
+          
+          imagesToUpload = compressedImages;
+          console.log('✅ Images compressed successfully');
+        } catch (compressionError) {
+          console.warn('⚠️ Image compression failed or timed out, using original files:', compressionError);
+          // Use original files if compression fails
+          imagesToUpload = imageFiles;
+          if (onProgress) {
+            onProgress(10); // Skip compression progress
+          }
+        }
+      } catch (importError) {
+        console.error('Error importing compression utility:', importError);
+        // Use original files if compression utility can't be loaded
+        imagesToUpload = imageFiles;
+        if (onProgress) {
+          onProgress(10); // Skip compression progress
+        }
+      }
+
+      // Upload images (60% of progress)
+      const imageProgressCallback = (progress: number) => {
+        currentProgress = 10 + (progress * 0.6); // Images upload takes 60% of progress
+        if (onProgress) {
+          onProgress(currentProgress);
+        }
+      };
+      uploadedImageUrls = await uploadMultipleFiles(imagesToUpload, userId, 'outfits/images', imageProgressCallback);
+    }
+
+    // Upload videos
+    if (videoFiles.length > 0) {
+      const videoProgressCallback = (progress: number) => {
+        currentProgress = 70 + (progress * 0.3); // Videos take 30% of progress
+        if (onProgress) {
+          onProgress(currentProgress);
+        }
+      };
+      uploadedVideoUrls = await uploadMultipleFiles(videoFiles, userId, 'outfits/videos', videoProgressCallback);
+    }
+
+    // Set main image (first image or first video thumbnail)
+    const mainImageUrl = uploadedImageUrls[0] || uploadedVideoUrls[0];
+
+    // Create outfit data
+    const outfitData: UserInput = {
+      ...userInput,
+      mainImageUrl,
+      additionalImages: [...uploadedImageUrls.slice(1), ...uploadedVideoUrls]
+    };
+
+    // Create outfit in Firestore
+    if (onProgress) {
+      onProgress(95);
+    }
+    const outfit = await createOutfit(outfitData, userId);
+    
+    if (onProgress) {
+      onProgress(100);
+    }
+
+    return outfit;
+  } catch (error) {
+    console.error('Error creating outfit with media:', error);
     throw error;
   }
 };
