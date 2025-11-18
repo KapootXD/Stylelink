@@ -22,3 +22,5 @@ export { default as Footer } from './Footer';
 export { default as Navbar } from './Navbar';
 export { default as ProtectedFeature } from './ProtectedFeature';
 export type { ProtectedFeatureProps } from './ProtectedFeature';
+
+export { default as EditProfileModal } from './EditProfileModal';

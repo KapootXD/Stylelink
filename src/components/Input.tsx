@@ -31,6 +31,10 @@ export interface InputProps {
   className?: string;
   /** ARIA describedby for error messages */
   'aria-describedby'?: string;
+  /** Maximum length of input */
+  maxLength?: number;
+  /** Help text to display below input */
+  helpText?: string;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -48,6 +52,8 @@ const Input: React.FC<InputProps> = ({
   id,
   className = '',
   'aria-describedby': ariaDescribedby,
+  maxLength,
+  helpText,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -132,6 +138,7 @@ const Input: React.FC<InputProps> = ({
         onBlur={handleBlur}
         disabled={disabled}
         required={required}
+        maxLength={maxLength}
         className={inputStyles}
         aria-invalid={error ? 'true' : 'false'}
         aria-describedby={errorId || ariaDescribedby}
@@ -140,6 +147,18 @@ const Input: React.FC<InputProps> = ({
         transition={{ duration: 0.2 }}
         whileFocus={{ scale: 1.01 }}
       />
+
+      {/* Help Text */}
+      {helpText && !error && (
+        <motion.p
+          className="text-xs text-[#2D2D2D]/60 mt-1"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2 }}
+        >
+          {helpText}
+        </motion.p>
+      )}
 
       {/* Error Message */}
       {error && (

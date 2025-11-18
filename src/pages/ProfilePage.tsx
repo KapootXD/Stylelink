@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { 
   Camera, 
   Edit3, 
@@ -17,9 +17,11 @@ import {
   Mail,
   Link as LinkIcon
 } from 'lucide-react';
-import { Button, Card, Input, Modal, LoadingSpinner } from '../components';
+import { Button, Card, LoadingSpinner, EditProfileModal } from '../components';
 import { useReducedMotion } from '../components/PageTransition';
-import { useUser } from '../contexts/UserContext';
+import { useAuth } from '../contexts/AuthContext';
+import { getUserProfile } from '../config/firebase';
+import toast from 'react-hot-toast';
 
 // Mock user data - replace with actual user context when backend is implemented
 const mockUser = {
@@ -116,30 +118,82 @@ const mockOutfitPosts = [
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, updateUser } = useUser();
+  const { userId } = useParams<{ userId?: string }>();
+  const { currentUser, userProfile, refreshUserProfile, loading: authLoading } = useAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [editForm, setEditForm] = useState({
-    displayName: user?.displayName || '',
-    username: user?.username || '',
-    bio: user?.bio || '',
-    location: user?.location || '',
-    profilePicture: user?.profilePicture || ''
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [profileImage, setProfileImage] = useState<string>(user?.profilePicture || mockUser.profilePicture);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [profileData, setProfileData] = useState<typeof mockUser | null>(null);
+  const [profileImage, setProfileImage] = useState<string>(mockUser.profilePicture);
   const prefersReducedMotion = useReducedMotion();
+  
+  // Determine which user's profile to show
+  // If userId param exists, view that user's profile, otherwise view own profile
+  const targetUserId = userId || currentUser?.uid;
+  const isViewingOwnProfile = !userId || userId === currentUser?.uid;
 
-  // Use user data or fallback to mock data
-  const currentUser = user || mockUser;
-
-  // Update profileImage when user context changes
+  // Fetch user profile from Firebase
   useEffect(() => {
-    if (user?.profilePicture) {
-      setProfileImage(user.profilePicture);
+    const fetchProfile = async () => {
+      if (!targetUserId) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const profile = await getUserProfile(targetUserId);
+        
+        if (profile) {
+          const formattedProfile = {
+            id: profile.uid,
+            displayName: profile.displayName || 'User',
+            username: profile.username ? `@${profile.username}` : '@user',
+            bio: profile.bio || 'No bio yet. Click edit to add one!',
+            profilePicture: profile.profilePicture || profile.photoURL || profile.avatarUrl || mockUser.profilePicture,
+            location: profile.location || 'Not set',
+            joinDate: profile.createdAt 
+              ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+              : 'Recently',
+            stats: profile.stats || {
+              followers: 0,
+              following: 0,
+              posts: 0
+            },
+            isOwnProfile: isViewingOwnProfile
+          };
+          
+          setProfileData(formattedProfile);
+          setProfileImage(formattedProfile.profilePicture);
+        } else {
+          // No profile found, use defaults
+          setProfileData({
+            ...mockUser,
+            id: targetUserId,
+            displayName: currentUser?.displayName || 'User',
+            username: '@user',
+            isOwnProfile: isViewingOwnProfile
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        toast.error('Failed to load profile');
+        setProfileData({
+          ...mockUser,
+          id: targetUserId,
+          isOwnProfile: targetUserId === currentUser?.uid
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (!authLoading) {
+      fetchProfile();
     }
-  }, [user?.profilePicture]);
+  }, [targetUserId, currentUser, userProfile, authLoading]);
+
+  // Use Firebase profile data or fallback to mock
+  const currentUserData = profileData || mockUser;
 
   // Animation variants
   const fadeInUp = {
@@ -173,95 +227,49 @@ const ProfilePage: React.FC = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleSaveProfile = async () => {
-    setIsLoading(true);
-    setErrors({});
-
-    // Basic validation
-    const newErrors: Record<string, string> = {};
-    if (!editForm.displayName.trim()) {
-      newErrors.displayName = 'Display name is required';
-    }
-    if (!editForm.username.trim()) {
-      newErrors.username = 'Username is required';
-    }
-    if (editForm.username && !editForm.username.startsWith('@')) {
-      newErrors.username = 'Username must start with @';
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      setIsLoading(false);
-      return;
-    }
-
-    // Simulate API call
-    setTimeout(() => {
-      // Update user context with new data
-      updateUser({
-        displayName: editForm.displayName,
-        username: editForm.username,
-        bio: editForm.bio,
-        location: editForm.location,
-        profilePicture: editForm.profilePicture
-      });
-      
-      setIsLoading(false);
-      setIsEditModalOpen(false);
-    }, 1500);
-  };
-
-  const handleCancelEdit = () => {
-    setEditForm({
-      displayName: currentUser.displayName || '',
-      username: currentUser.username || '',
-      bio: currentUser.bio || '',
-      location: currentUser.location || '',
-      profilePicture: currentUser.profilePicture || ''
-    });
-    setErrors({});
-    setIsEditModalOpen(false);
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setEditForm(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
-
-  const handleProfilePictureUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        alert('Please select an image file (JPEG, PNG, GIF, etc.)');
-        return;
-      }
-
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size must be less than 5MB');
-        return;
-      }
-
-      // Create a URL for the image preview
-      const imageUrl = URL.createObjectURL(file);
-      setProfileImage(imageUrl);
-      
-      // Update the user context with the new image
-      updateUser({ profilePicture: imageUrl });
-      
-      // In a real app, you would upload the file to a server here
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Profile picture uploaded:', file.name);
+  const handleProfileSaved = async () => {
+    console.log('🔄 Profile saved, refreshing data...');
+    
+    // Refresh profile data after save
+    await refreshUserProfile();
+    
+    // Re-fetch profile to get updated data
+    if (targetUserId) {
+      try {
+        console.log('📥 Fetching updated profile for:', targetUserId);
+        const profile = await getUserProfile(targetUserId);
+        console.log('📥 Fetched profile:', profile);
+        
+        if (profile) {
+          const formattedProfile = {
+            id: profile.uid,
+            displayName: profile.displayName || 'User',
+            username: profile.username ? `@${profile.username}` : '@user',
+            bio: profile.bio || 'No bio yet. Click edit to add one!',
+            profilePicture: profile.profilePicture || profile.photoURL || profile.avatarUrl || mockUser.profilePicture,
+            location: profile.location || 'Not set',
+            joinDate: profile.createdAt 
+              ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+              : 'Recently',
+            stats: profile.stats || {
+              followers: 0,
+              following: 0,
+              posts: 0
+            },
+            isOwnProfile: isViewingOwnProfile
+          };
+          
+          console.log('✅ Setting profile data:', formattedProfile);
+          setProfileData(formattedProfile);
+          setProfileImage(formattedProfile.profilePicture);
+        } else {
+          console.warn('⚠️ No profile returned from getUserProfile');
+        }
+      } catch (error) {
+        console.error('❌ Error refreshing profile:', error);
+        toast.error('Profile updated but failed to refresh. Please reload the page.');
       }
     }
-  };
-
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
   };
 
   return (
@@ -280,34 +288,17 @@ const ProfilePage: React.FC = () => {
               className="relative"
               variants={slideInLeft}
             >
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-2xl">
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-2xl bg-gradient-to-br from-[#B7410E]/20 to-[#D4AF37]/20">
                 <img 
-                  src={profileImage || currentUser.profilePicture} 
-                  alt={`${currentUser.displayName}'s profile`}
+                  src={profileImage || currentUserData.profilePicture} 
+                  alt={`${currentUserData.displayName}'s profile`}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback to placeholder if image fails to load
+                    (e.target as HTMLImageElement).src = mockUser.profilePicture;
+                  }}
                 />
               </div>
-              {currentUser.isOwnProfile && (
-                <>
-                  <motion.button
-                    onClick={triggerFileInput}
-                    className="absolute -bottom-2 -right-2 bg-[#D4AF37] text-[#2D2D2D] p-2 rounded-full shadow-lg hover:bg-[#B8860B] transition-colors"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    aria-label="Change profile picture"
-                  >
-                    <Camera className="w-4 h-4" />
-                  </motion.button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleProfilePictureUpload}
-                    className="hidden"
-                    aria-label="Upload profile picture"
-                  />
-                </>
-              )}
             </motion.div>
 
             {/* Profile Info */}
@@ -316,44 +307,44 @@ const ProfilePage: React.FC = () => {
               variants={fadeInUp}
             >
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-                {currentUser.displayName}
-        </h1>
-              <p className="text-xl text-white/90 mb-4">{currentUser.username}</p>
+                {currentUserData.displayName}
+              </h1>
+              <p className="text-xl text-white/90 mb-4">{currentUserData.username}</p>
               
               <p className="text-lg text-white/80 mb-6 max-w-2xl leading-relaxed">
-                {currentUser.bio}
+                {currentUserData.bio}
               </p>
 
               <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
                 <div className="flex items-center gap-2 text-white/80">
                   <MapPin className="w-5 h-5" />
-                  <span>{currentUser.location}</span>
+                  <span>{currentUserData.location}</span>
                 </div>
                 <div className="flex items-center gap-2 text-white/80">
                   <Calendar className="w-5 h-5" />
-                  <span>Joined {currentUser.joinDate}</span>
+                  <span>Joined {currentUserData.joinDate}</span>
                 </div>
               </div>
 
               {/* Stats */}
               <div className="flex gap-8 justify-center md:justify-start mb-8">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{(currentUser.stats?.followers || 0).toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-white">{(currentUserData.stats?.followers || 0).toLocaleString()}</div>
                   <div className="text-white/80">Followers</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{currentUser.stats?.following || 0}</div>
+                  <div className="text-2xl font-bold text-white">{currentUserData.stats?.following || 0}</div>
                   <div className="text-white/80">Following</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{currentUser.stats?.posts || 0}</div>
+                  <div className="text-2xl font-bold text-white">{currentUserData.stats?.posts || 0}</div>
                   <div className="text-white/80">Posts</div>
                 </div>
               </div>
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
-                {currentUser.isOwnProfile ? (
+                {currentUserData.isOwnProfile && currentUser ? (
                   <Button
                     variant="primary"
                     size="lg"
@@ -400,7 +391,7 @@ const ProfilePage: React.FC = () => {
               Style Posts
             </h2>
             <p className="text-[#2D2D2D]/70 text-lg">
-              {currentUser.isOwnProfile ? 'Your shared looks' : `${currentUser.displayName}'s style collection`}
+              {currentUserData.isOwnProfile ? 'Your shared looks' : `${currentUserData.displayName}'s style collection`}
             </p>
           </motion.div>
 
@@ -554,71 +545,27 @@ const ProfilePage: React.FC = () => {
       </section>
 
       {/* Edit Profile Modal */}
-      <Modal
-        isOpen={isEditModalOpen}
-        onClose={handleCancelEdit}
-        title="Edit Profile"
-        size="lg"
-      >
-        <div className="space-y-6">
-          <Input
-            label="Display Name"
-            placeholder="Enter your display name"
-            value={editForm.displayName}
-            onChange={(e) => handleInputChange('displayName', e.target.value)}
-            error={errors.displayName}
-            required
-          />
+      {currentUser && (
+        <EditProfileModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSave={handleProfileSaved}
+          initialData={{
+            displayName: currentUserData.displayName,
+            username: currentUserData.username?.replace('@', '') || '',
+            bio: currentUserData.bio,
+            location: currentUserData.location,
+            profilePicture: currentUserData.profilePicture
+          }}
+        />
+      )}
 
-          <Input
-            label="Username"
-            placeholder="@username"
-            value={editForm.username}
-            onChange={(e) => handleInputChange('username', e.target.value)}
-            error={errors.username}
-            required
-          />
-
-          <Input
-            label="Bio"
-            placeholder="Tell us about yourself..."
-            value={editForm.bio}
-            onChange={(e) => handleInputChange('bio', e.target.value)}
-          />
-
-          <Input
-            label="Location"
-            placeholder="Where are you based?"
-            value={editForm.location}
-            onChange={(e) => handleInputChange('location', e.target.value)}
-          />
-
-          <div className="flex gap-4 pt-6">
-            <Button
-              variant="secondary"
-              onClick={handleCancelEdit}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleSaveProfile}
-              disabled={isLoading}
-              className="flex-1"
-            >
-              {isLoading ? (
-                <>
-                  <LoadingSpinner size="sm" color="#2D2D2D" />
-                  <span className="ml-2">Saving...</span>
-                </>
-              ) : (
-                'Save Changes'
-              )}
-            </Button>
-          </div>
-      </div>
-      </Modal>
+      {/* Loading Overlay */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <LoadingSpinner size="lg" />
+        </div>
+      )}
     </div>
   );
 };
