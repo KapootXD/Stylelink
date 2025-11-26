@@ -23,6 +23,11 @@
     "start": "react-scripts start",
     "build": "cross-env CI=false react-scripts build",
     "test": "react-scripts test",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:report": "playwright show-report",
     "eject": "react-scripts eject",
     "build:analyze": "npm run build && npx serve -s build",
     "seed:firebase": "ts-node -r dotenv/config scripts/seedFirebase.ts",
@@ -49,6 +54,7 @@
     ]
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "autoprefixer": "^10.4.16",
     "cross-env": "^7.0.3",
     "postcss": "^8.4.32",

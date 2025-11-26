@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { X, Camera, Upload, Loader } from 'lucide-react';
 import { Button, Input, Modal, LoadingSpinner } from './index';
 import { useAuth } from '../contexts/AuthContext';

@@ -125,7 +125,16 @@ export const useReducedMotion = () => {
 };
 
 // Animation variants that respect reduced motion
-export const createAnimationVariants = (baseVariants: any, reducedMotion: boolean) => {
+type AnimationVariants = {
+  initial: Record<string, unknown>;
+  animate: Record<string, unknown>;
+  exit: Record<string, unknown>;
+};
+
+export const createAnimationVariants = (
+  baseVariants: AnimationVariants,
+  reducedMotion: boolean
+) => {
   if (reducedMotion) {
     return {
       initial: { opacity: 0 },

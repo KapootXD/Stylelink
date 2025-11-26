@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ErrorInfo } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
@@ -34,14 +34,12 @@ import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
-  const handleError = (error: Error, errorInfo: any) => {
-    // Log error to console in development
+  const handleError = (error: Error, errorInfo: ErrorInfo) => {
+    // In production, forward to monitoring; in development, surface in console for quick diagnosis.
     if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
       console.error('App Error:', error, errorInfo);
     }
-    
-    // In production, you might want to send this to an error reporting service
-    // Example: Sentry.captureException(error, { extra: errorInfo });
   };
 
   return (
