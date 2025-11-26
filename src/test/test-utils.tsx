@@ -1,7 +1,7 @@
 import React, { ReactElement, ReactNode } from 'react';
 import { render, RenderOptions, RenderResult } from '@testing-library/react';
 import { BrowserRouter, MemoryRouter, MemoryRouterProps } from 'react-router-dom';
-import { vi } from 'vitest';
+import { vi, beforeEach, afterEach } from 'vitest';
 import { User } from 'firebase/auth';
 import { AppUser, UserType } from '../types/user';
 
