@@ -16,66 +16,65 @@ interface SearchResult {
   tags?: string[];
 }
 
+const mockProfiles: SearchResult[] = [
+  {
+    id: '1',
+    type: 'profile',
+    name: 'Sarah Johnson',
+    username: '@sarahj',
+    description: 'Fashion enthusiast and streetwear lover',
+    avatar: '',
+    tags: ['streetwear', 'sneakers', 'urban']
+  },
+  {
+    id: '2',
+    type: 'profile',
+    name: 'Mike Chen',
+    username: '@mikechen',
+    description: 'Minimalist fashion photographer',
+    avatar: '',
+    tags: ['minimalist', 'photography', 'neutral']
+  },
+  {
+    id: '3',
+    type: 'profile',
+    name: 'Emma Wilson',
+    username: '@emmaw',
+    description: 'Vintage style curator',
+    avatar: '',
+    tags: ['vintage', 'retro', 'classic']
+  }
+];
+
+const mockStyles: SearchResult[] = [
+  {
+    id: '1',
+    type: 'style',
+    name: 'Streetwear',
+    description: 'Urban and casual fashion style',
+    tags: ['casual', 'urban', 'sneakers', 'hoodie']
+  },
+  {
+    id: '2',
+    type: 'style',
+    name: 'Vintage 90s',
+    description: 'Retro fashion from the 1990s',
+    tags: ['retro', '90s', 'grunge', 'denim']
+  },
+  {
+    id: '3',
+    type: 'style',
+    name: 'Minimalist',
+    description: 'Clean and simple fashion approach',
+    tags: ['minimal', 'clean', 'neutral', 'simple']
+  }
+];
+
 const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
   const [searchType, setSearchType] = useState<'profile' | 'style'>('profile');
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Mock data - in a real app, this would come from an API
-  const mockProfiles: SearchResult[] = [
-    {
-      id: '1',
-      type: 'profile',
-      name: 'Sarah Johnson',
-      username: '@sarahj',
-      description: 'Fashion enthusiast and streetwear lover',
-      avatar: '',
-      tags: ['streetwear', 'sneakers', 'urban']
-    },
-    {
-      id: '2',
-      type: 'profile',
-      name: 'Mike Chen',
-      username: '@mikechen',
-      description: 'Minimalist fashion photographer',
-      avatar: '',
-      tags: ['minimalist', 'photography', 'neutral']
-    },
-    {
-      id: '3',
-      type: 'profile',
-      name: 'Emma Wilson',
-      username: '@emmaw',
-      description: 'Vintage style curator',
-      avatar: '',
-      tags: ['vintage', 'retro', 'classic']
-    }
-  ];
-
-  const mockStyles: SearchResult[] = [
-    {
-      id: '1',
-      type: 'style',
-      name: 'Streetwear',
-      description: 'Urban and casual fashion style',
-      tags: ['casual', 'urban', 'sneakers', 'hoodie']
-    },
-    {
-      id: '2',
-      type: 'style',
-      name: 'Vintage 90s',
-      description: 'Retro fashion from the 1990s',
-      tags: ['retro', '90s', 'grunge', 'denim']
-    },
-    {
-      id: '3',
-      type: 'style',
-      name: 'Minimalist',
-      description: 'Clean and simple fashion approach',
-      tags: ['minimal', 'clean', 'neutral', 'simple']
-    }
-  ];
 
   // Handle search
   useEffect(() => {
@@ -120,17 +119,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
 
   const handleResultClick = (result: SearchResult) => {
     // Navigate to profile or style page
-    if (result.type === 'profile') {
-      // In a real app, this would navigate to the profile page
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Navigate to profile:', result.username);
-      }
-    } else {
-      // Navigate to style page
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Navigate to style:', result.name);
-      }
-    }
+    // In a real app, this would navigate using the router
     onClose();
   };
 
