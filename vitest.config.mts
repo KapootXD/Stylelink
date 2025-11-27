@@ -12,7 +12,7 @@ export default defineConfig({
     exclude: ['node_modules', 'build', 'dist', 'tests/e2e/**'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'html', 'json'],
+      reporter: ['text', 'html', 'json', 'cobertura'],
       reportsDirectory: './coverage',
       // Only report coverage for files that are actually exercised by tests.
       // This prevents untouched entry points and large feature stubs from dragging the global % down.
@@ -40,4 +40,3 @@ export default defineConfig({
     },
   },
 });
-

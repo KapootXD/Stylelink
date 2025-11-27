@@ -32,6 +32,7 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:report": "playwright show-report",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "eject": "react-scripts eject",
     "build:analyze": "npm run build && npx serve -s build",
     "seed:firebase": "ts-node -r dotenv/config scripts/seedFirebase.ts",
