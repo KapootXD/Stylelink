@@ -35,6 +35,11 @@
     "eject": "react-scripts eject",
     "build:analyze": "npm run build && npx serve -s build",
     "seed:firebase": "ts-node -r dotenv/config scripts/seedFirebase.ts",
+    "emulators:start": "firebase emulators:start",
+    "emulators:ui": "firebase emulators:start --only ui",
+    "emulators:exec": "firebase emulators:exec",
+    "test:emulator": "cross-env REACT_APP_USE_FIREBASE_EMULATOR=true npm test",
+    "start:emulator": "cross-env REACT_APP_USE_FIREBASE_EMULATOR=true react-scripts start",
     "deploy": "npm run build && firebase deploy --only hosting",
     "deploy:hosting": "firebase deploy --only hosting",
     "deploy:all": "npm run build && firebase deploy"
