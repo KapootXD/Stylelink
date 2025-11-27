@@ -63,13 +63,35 @@ if (getApps().length === 0) {
       if (!auth) {
         throw new Error('Firebase Auth instance is null after initialization');
       }
+      if (!db) {
+        throw new Error('Firestore instance is null after initialization');
+      }
+      if (!storage) {
+        throw new Error('Storage instance is null after initialization');
+      }
+      
+      // Connect to emulators if enabled (must be done immediately after initialization)
+      if (process.env.REACT_APP_USE_FIREBASE_EMULATOR === 'true') {
+        // At this point, we know auth, db, and storage are defined due to checks above
+        const authInstance = auth;
+        const dbInstance = db;
+        const storageInstance = storage;
+        
+        // Dynamically import to avoid circular dependencies
+        import('./firebaseEmulator').then(module => {
+          module.connectFirebaseEmulators(authInstance, dbInstance, storageInstance);
+        }).catch(error => {
+          console.error('Error connecting to emulators:', error);
+        });
+      }
       
       console.log('✅ Firebase initialized successfully:', {
         app: !!app,
         firestore: !!db,
         auth: !!auth,
         storage: !!storage,
-        authApp: auth?.app?.name || 'unknown'
+        authApp: auth?.app?.name || 'unknown',
+        emulatorMode: process.env.REACT_APP_USE_FIREBASE_EMULATOR === 'true'
       });
     } catch (error) {
       console.error('Error initializing Firebase:', error);
@@ -454,6 +476,7 @@ if (process.env.NODE_ENV === 'development') {
     console.warn('⚠️ Firebase not fully initialized. Check your .env file for Firebase configuration.');
   }
 }
+
 
 export { app, db, auth, storage };
 export type { User };
