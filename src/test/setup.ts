@@ -93,6 +93,36 @@ Object.defineProperty(window, 'sessionStorage', {
   value: localStorageMock,
 });
 
+// Mock framer-motion - using require and plain functions to avoid esbuild parsing issues
+vi.mock('framer-motion', () => {
+  const React = require('react');
+  
+  function createMockMotion(tag: any) {
+    return React.forwardRef(function MockMotion(props: any, ref: any) {
+      const allProps = Object.assign({}, props);
+      if (ref) {
+        allProps.ref = ref;
+      }
+      return React.createElement(tag, allProps, props.children);
+    });
+  }
+  
+  return {
+    motion: {
+      div: createMockMotion('div'),
+      button: createMockMotion('button'),
+      input: createMockMotion('input'),
+      label: createMockMotion('label'),
+      p: createMockMotion('p'),
+      circle: createMockMotion('circle'),
+      svg: createMockMotion('svg'),
+    },
+    AnimatePresence: function MockAnimatePresence(props: any) {
+      return props.children || null;
+    },
+  };
+});
+
 // Suppress console errors during tests (optional - comment out for debugging)
 // vi.spyOn(console, 'error').mockImplementation(() => {});
 // vi.spyOn(console, 'warn').mockImplementation(() => {});
