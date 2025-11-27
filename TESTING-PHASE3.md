@@ -66,6 +66,32 @@ Run `npm run test:coverage` to generate reports.
 - Helpers (e.g., `AuthHelper`) centralize repeated flows like login/logout.
 - Fixtures (`tests/e2e/fixtures/test-data.ts`) store sample users, inputs, and mock API payloads.
 
+## CI/CD Pipeline (GitLab)
+- Stages: install → lint → unit tests (coverage) → e2e → build (`.gitlab-ci.yml`).
+- Jobs:
+  - `install_dependencies`: `npm ci` with cache.
+  - `lint`: `npm run lint`.
+  - `unit_tests`: `npm run test:coverage` (exports Cobertura for GitLab coverage reporting).
+  - `e2e_tests`: Playwright in official image; runs `npm run test:e2e`.
+  - `build`: `npm run build`; depends on tests.
+- Coverage parsing: `/Lines\s*:\s*(\d+\.?\d*)%/` with Cobertura at `coverage/cobertura-coverage.xml`.
+- Artifacts: coverage retained 1 week; Playwright artifacts on failure.
+
+### Viewing Results in GitLab
+- Coverage and pipeline badges are in README (replace placeholder namespace/project).
+- From a job page, open “Artifacts” for coverage HTML and E2E traces/screenshots.
+- Merge requests show coverage delta automatically when Cobertura is uploaded.
+
+### Debugging CI Failures
+- Lint errors: run `npm run lint` locally.
+- Unit failures/coverage drops: run `npm run test:coverage` locally; thresholds enforced in `vitest.config.ts`.
+- E2E failures: rerun locally with `npm run test:e2e:headed` or `npm run test:e2e:debug`; inspect CI artifacts (screenshots/trace) from the failing job.
+- Build failures: run `npm run build` locally; ensure env vars and asset paths are correct.
+
+### Coverage Requirements
+- Minimum: Lines 80%, Branches 70%, Functions 70%, Statements 80%.
+- CI fails if thresholds are not met (configured in `vitest.config.ts`).
+
 ### Writing E2E Specs
 - Put specs in `tests/e2e/specs`. Keep them short and scenario-focused.
 - Use POM methods instead of raw selectors inside specs.

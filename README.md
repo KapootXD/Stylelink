@@ -1,4 +1,6 @@
 # StyleLink
+[![Pipeline Status](https://gitlab.com/your-namespace/your-project-name/badges/main/pipeline.svg)](https://gitlab.com/your-namespace/your-project-name/-/pipelines)
+[![Coverage](https://gitlab.com/your-namespace/your-project-name/badges/main/coverage.svg)](https://gitlab.com/your-namespace/your-project-name/-/pipelines)
 ## *Connecting Global Fashion with Local Creativity*
 ## *Connecting Global Fashion with Local Creativity*
 
@@ -150,6 +152,13 @@ stylelink/
 2. Make your changes with proper TypeScript types
 3. Test your changes thoroughly
 4. Submit a pull request with a clear description
+5. Ensure `npm run lint`, `npm run test:coverage`, and `npm run test:e2e` pass locally before opening a merge request.
+
+### CI/CD & Testing Requirements
+- Pipelines on merge requests and `main` run: install → lint → unit tests with coverage (Vitest) → E2E (Playwright) → build.
+- Coverage thresholds: 80% lines / 70% branches, functions, statements (enforced in `vitest.config.ts` and CI).
+- E2E artifacts (screenshots, traces) are uploaded on failures; open the GitLab job’s artifacts to inspect.
+- Keep badges updated by replacing `your-namespace/your-project-name` in the badge URLs above with your GitLab path.
 
 ### File Organization
 - Place reusable components in `/src/components/`

@@ -5,6 +5,11 @@ stages:
   - e2e
   - build
 
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
+
 cache:
   paths:
     - node_modules/
@@ -19,6 +24,9 @@ install_dependencies:
     paths:
       - node_modules/
     expire_in: 1 hour
+  only:
+    - main
+    - merge_requests
 
 lint:
   stage: lint
@@ -27,6 +35,9 @@ lint:
     - npm run lint
   needs:
     - install_dependencies
+  only:
+    - main
+    - merge_requests
 
 unit_tests:
   stage: test
@@ -44,12 +55,16 @@ unit_tests:
     expire_in: 1 week
   needs:
     - install_dependencies
+  only:
+    - main
+    - merge_requests
 
 e2e_tests:
   stage: e2e
   image: mcr.microsoft.com/playwright:v1.40.0-focal
   script:
     - npm ci --cache .npm --prefer-offline
+    - npx playwright install --with-deps
     - npm run test:e2e
   artifacts:
     when: on_failure
@@ -59,6 +74,9 @@ e2e_tests:
     expire_in: 1 week
   needs:
     - install_dependencies
+  only:
+    - main
+    - merge_requests
 
 build:
   stage: build
