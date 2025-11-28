@@ -6,6 +6,7 @@ stages:
   - test
   - build
   - quality
+  - deploy
 
 variables:
   NODE_VERSION: "18"
@@ -77,3 +78,30 @@ security_audit:
     - npm audit --audit-level=high || echo "Security audit completed with findings"
     - echo "✅ Security audit completed"
   allow_failure: true
+
+# Deploy to Firebase Hosting
+deploy_to_firebase:
+  stage: deploy
+  image: node:18-alpine
+  dependencies:
+    - build_application
+  only:
+    - main
+    - master
+  before_script:
+    - npm install -g firebase-tools
+  script:
+    - echo "🚀 Starting deployment to Firebase Hosting..."
+    - |
+      if [ -z "$FIREBASE_TOKEN" ]; then
+        echo "⚠️  FIREBASE_TOKEN not set. Skipping deployment."
+        echo "💡 To enable auto-deployment, add FIREBASE_TOKEN to GitLab CI/CD Variables"
+        exit 0
+      fi
+    - firebase use ${FIREBASE_PROJECT_ID:-stylelink-74fdf} --token $FIREBASE_TOKEN || firebase use --add --token $FIREBASE_TOKEN
+    - firebase deploy --only hosting --token $FIREBASE_TOKEN --non-interactive
+    - echo "✅ Deployment to Firebase Hosting completed successfully!"
+  environment:
+    name: production
+    url: https://stylelink-74fdf.web.app
+  when: on_success
