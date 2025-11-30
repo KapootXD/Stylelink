@@ -46,6 +46,21 @@ export class SignupPage {
       this.page.getByRole('button', { name: /seller.*upload.*promote/i })
     ).toBeVisible();
   }
+
+  async expectCustomerOptionVisible() {
+    await this.expectCustomerOption();
+  }
+
+  async expectSellerOptionVisible() {
+    await this.expectSellerOption();
+  }
+
+  async clickLoginLink() {
+    const loginLink = this.page.getByRole('link', { name: /login|sign in/i }).first();
+    if (await loginLink.count() > 0) {
+      await loginLink.click();
+    }
+  }
 }
 
 export default SignupPage;
