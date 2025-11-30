@@ -30,6 +30,8 @@ import ContactPage from './pages/ContactPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
 import UploadPage from './pages/UploadPage';
+import UploadOutfit from './pages/UploadOutfit';
+import ExplorePage from './pages/ExplorePage';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -113,9 +115,13 @@ function App() {
                     path="/upload"
                     element={
                       <ProtectedRoute>
-                        <UploadPage />
+                        <UploadOutfit />
                       </ProtectedRoute>
                     }
+                  />
+                  <Route
+                    path="/explore"
+                    element={<ExplorePage />}
                   />
                   <Route
                     path="/settings"

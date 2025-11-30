@@ -11,10 +11,21 @@ export class AuthHelper {
   async login(credentials: TestUser = testUser) {
     await this.page.goto('/login');
     await this.page.waitForLoadState('domcontentloaded');
-    await this.page.fill('input[name="email"]', credentials.email);
-    await this.page.fill('input[name="password"]', credentials.password);
+    
+    // Use label-based selectors to match the Input component
+    await this.page.getByLabel(/email/i).fill(credentials.email);
+    
+    // Password input might be type="password" or type="text" depending on visibility
+    const passwordInput = this.page.locator('input[type="password"], input[type="text"]').filter({
+      has: this.page.locator('label').filter({ hasText: /password/i })
+    }).or(
+      this.page.getByLabel(/password/i)
+    ).first();
+    await passwordInput.fill(credentials.password);
+    
     await this.page.getByRole('button', { name: /sign in|log in/i }).click();
-    await expect(this.page).not.toHaveURL(/\/login/i);
+    await this.page.waitForTimeout(2000); // Wait for login to complete
+    await expect(this.page).not.toHaveURL(/\/login/i, { timeout: 10000 });
   }
 
   async logout() {

@@ -13,17 +13,27 @@ test.describe('Stylelink smoke navigation', () => {
     const home = new HomePage(page);
 
     await home.goto();
-    await home.navigateToFeature();
-    // Features page should be accessible (or redirect to login if protected)
-    // Check if we're on features page or login page
-    const url = page.url();
-    if (url.includes('/features')) {
-      // Features page is accessible
-      await expect(page).toHaveURL(/.*\/features/);
-    } else {
-      // Redirected to login
-      await expect(page).toHaveURL(/.*\/login/);
-      await expect(page.getByLabel(/email/i)).toBeVisible();
-    }
+    await home.expectLoaded();
+    
+    // Find and click the Explore Features button
+    // It might be in the hero section or CTA section
+    const exploreFeaturesButton = page.getByRole('button', { name: /explore features/i }).first();
+    await expect(exploreFeaturesButton).toBeVisible({ timeout: 10000 });
+    
+    // Scroll button into view if needed
+    await exploreFeaturesButton.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
+    
+    // Click the button and wait for navigation
+    await exploreFeaturesButton.click();
+    
+    // Wait for navigation to features page (public route)
+    await page.waitForURL(/.*\/features/, { timeout: 10000 });
+    await expect(page).toHaveURL(/.*\/features/);
+    
+    // Verify features page loaded (shows "Features Overview Coming Soon" or similar)
+    await expect(
+      page.getByText(/features overview coming soon|coming soon/i).first()
+    ).toBeVisible({ timeout: 5000 });
   });
 });
