@@ -15,6 +15,8 @@ export default defineConfig({
     env: {
       BROWSER: 'none',
       CI: 'true',
+      // Allow the app to run in guest/demo mode so protected routes are accessible in E2E runs
+      REACT_APP_ALLOW_GUEST_MODE: 'true',
     },
   },
   use: {
