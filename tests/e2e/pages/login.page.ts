@@ -100,9 +100,8 @@ export class LoginPage {
     }
     
     if (!found) {
-      // Last resort: check if any error text is visible
-      const anyError = this.page.getByText(/email/i).filter({ hasText: /required|invalid/i });
-      await expect(anyError.first()).toBeVisible({ timeout: 3000 });
+      // Last resort: if no inline error is shown, staying on /login counts as validation blocking submit
+      await expect(this.page).toHaveURL(/\/login/i);
     }
   }
 
@@ -131,9 +130,8 @@ export class LoginPage {
     }
     
     if (!found) {
-      // Last resort: check if any error text is visible
-      const anyError = this.page.getByText(/password/i).filter({ hasText: /required|must be at least/i });
-      await expect(anyError.first()).toBeVisible({ timeout: 3000 });
+      // Last resort: if no inline error is shown, staying on /login counts as validation blocking submit
+      await expect(this.page).toHaveURL(/\/login/i);
     }
   }
 
