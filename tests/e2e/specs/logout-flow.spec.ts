@@ -14,7 +14,7 @@ test.describe('User Logout', () => {
     await page.waitForLoadState('domcontentloaded');
     
     // Click logout button
-    const logoutButton = page.getByRole('button', { name: /log out|sign out/i });
+    const logoutButton = page.getByRole('button', { name: /log\s*out|logout|sign\s*out|signout/i });
     await expect(logoutButton).toBeVisible({ timeout: 10000 });
     await logoutButton.click();
     
@@ -27,7 +27,7 @@ test.describe('User Logout', () => {
     expect(currentUrl).toMatch(/.*\/(?!profile|dashboard|settings|upload|activity|discover)/);
     
     // Verify user menu/logout button is gone
-    const logoutButtonAfter = page.getByRole('button', { name: /log out|sign out/i });
+    const logoutButtonAfter = page.getByRole('button', { name: /log\s*out|logout|sign\s*out|signout/i });
     const userMenu = page.locator('[data-testid="user-menu"]');
     
     const hasLogoutButton = await logoutButtonAfter.count() > 0;
@@ -55,7 +55,7 @@ test.describe('User Logout', () => {
     await page.waitForLoadState('domcontentloaded');
     
     // Logout
-    const logoutButton = page.getByRole('button', { name: /log out|sign out/i });
+    const logoutButton = page.getByRole('button', { name: /log\s*out|logout|sign\s*out|signout/i });
     await logoutButton.click();
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1000);
@@ -87,7 +87,7 @@ test.describe('User Logout', () => {
         await page.waitForLoadState('domcontentloaded');
         
         // Check if logout button exists
-        const logoutButton = page.getByRole('button', { name: /log out|sign out/i });
+        const logoutButton = page.getByRole('button', { name: /log\s*out|logout|sign\s*out|signout/i });
         if (await logoutButton.count() > 0) {
           await logoutButton.click();
           await page.waitForLoadState('domcontentloaded');
@@ -116,7 +116,7 @@ test.describe('User Logout', () => {
     await expect(profileLink).toBeVisible({ timeout: 10000 });
     
     // Logout
-    const logoutButton = page.getByRole('button', { name: /log out|sign out/i });
+    const logoutButton = page.getByRole('button', { name: /log\s*out|logout|sign\s*out|signout/i });
     await logoutButton.click();
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1000);

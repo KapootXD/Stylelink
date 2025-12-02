@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Search, User, Palette, X } from 'lucide-react';
 
 interface SearchModalProps {
@@ -16,65 +16,13 @@ interface SearchResult {
   tags?: string[];
 }
 
-const mockProfiles: SearchResult[] = [
-  {
-    id: '1',
-    type: 'profile',
-    name: 'Sarah Johnson',
-    username: '@sarahj',
-    description: 'Fashion enthusiast and streetwear lover',
-    avatar: '',
-    tags: ['streetwear', 'sneakers', 'urban']
-  },
-  {
-    id: '2',
-    type: 'profile',
-    name: 'Mike Chen',
-    username: '@mikechen',
-    description: 'Minimalist fashion photographer',
-    avatar: '',
-    tags: ['minimalist', 'photography', 'neutral']
-  },
-  {
-    id: '3',
-    type: 'profile',
-    name: 'Emma Wilson',
-    username: '@emmaw',
-    description: 'Vintage style curator',
-    avatar: '',
-    tags: ['vintage', 'retro', 'classic']
-  }
-];
-
-const mockStyles: SearchResult[] = [
-  {
-    id: '1',
-    type: 'style',
-    name: 'Streetwear',
-    description: 'Urban and casual fashion style',
-    tags: ['casual', 'urban', 'sneakers', 'hoodie']
-  },
-  {
-    id: '2',
-    type: 'style',
-    name: 'Vintage 90s',
-    description: 'Retro fashion from the 1990s',
-    tags: ['retro', '90s', 'grunge', 'denim']
-  },
-  {
-    id: '3',
-    type: 'style',
-    name: 'Minimalist',
-    description: 'Clean and simple fashion approach',
-    tags: ['minimal', 'clean', 'neutral', 'simple']
-  }
-];
-
 const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
   const [searchType, setSearchType] = useState<'profile' | 'style'>('profile');
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const lastFocusedElement = useRef<HTMLElement | null>(null);
 
   // Handle search
   useEffect(() => {
@@ -84,20 +32,14 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
     }
 
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      const data = searchType === 'profile' ? mockProfiles : mockStyles;
-      const filteredResults = data.filter(item =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-      
-      setResults(filteredResults);
+
+    const timeout = setTimeout(() => {
+      // No mock data – keep results empty until real search is implemented
+      setResults([]);
       setIsLoading(false);
     }, 300);
+
+    return () => clearTimeout(timeout);
   }, [searchQuery, searchType]);
 
   // Close modal on escape key
@@ -110,12 +52,53 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
+      lastFocusedElement.current = document.activeElement as HTMLElement;
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
+      lastFocusedElement.current?.focus?.();
     };
   }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (!isOpen || !dialogRef.current) return;
+
+    const focusableSelectors = [
+      'button',
+      '[href]',
+      'input',
+      'select',
+      'textarea',
+      '[tabindex]:not([tabindex="-1"])'
+    ];
+
+    const focusable = dialogRef.current.querySelectorAll<HTMLElement>(focusableSelectors.join(','));
+    const focusables = Array.from(focusable).filter(el => !el.hasAttribute('disabled'));
+
+    focusables[0]?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab' || focusables.length === 0) return;
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement as HTMLElement;
+
+      if (event.shiftKey) {
+        if (active === first) {
+          event.preventDefault();
+          last.focus();
+        }
+      } else if (active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    dialogRef.current.addEventListener('keydown', handleKeyDown);
+    return () => dialogRef.current?.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
 
   const handleResultClick = (result: SearchResult) => {
     // Navigate to profile or style page
@@ -126,14 +109,28 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 pt-16">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 pt-16"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="search-modal-title"
+      onClick={onClose}
+    >
+      <div
+        ref={dialogRef}
+        className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden"
+        tabIndex={-1}
+        onClick={(event) => event.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Search</h2>
+          <h2 id="search-modal-title" className="text-xl font-semibold text-gray-900">
+            Search
+          </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B7410E]"
+            aria-label="Close search modal"
           >
             <X className="h-5 w-5" />
           </button>

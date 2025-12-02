@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, User, Search, Heart, LogOut, LogIn, Crown, Upload } from 'lucide-react';
+import { Menu, X, User, Search, Heart, LogOut, LogIn, Upload, Crown } from 'lucide-react';
 import SearchModal from './SearchModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useAccessControl } from '../hooks/useAccessControl';
@@ -25,6 +25,7 @@ const Navbar: React.FC = () => {
 
   const navigation = [
     { name: 'Home', href: '/' },
+    { name: 'About', href: '/about' },
     { name: 'Discover', href: '/discover' },
   ];
 
@@ -37,6 +38,21 @@ const Navbar: React.FC = () => {
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
+
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMobileMenuOpen(false);
+        setIsSearchModalOpen(false);
+      }
+    };
+
+    if (isMobileMenuOpen || isSearchModalOpen) {
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isMobileMenuOpen, isSearchModalOpen]);
 
   return (
     <nav className="bg-white shadow-lg border-b border-gray-200">
@@ -74,20 +90,24 @@ const Navbar: React.FC = () => {
           <div className="hidden md:flex items-center space-x-4">
             {currentUser ? (
               <>
-                <button 
-                  onClick={() => setIsSearchModalOpen(true)}
+              <button
+                type="button"
+                onClick={() => setIsSearchModalOpen(true)}
+                className="p-2 rounded-full text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] transition-colors"
+                aria-label="Open search"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+              {canAccess('basic') && (
+                <Link
+                  to="/activity"
                   className="p-2 rounded-full text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] transition-colors"
+                  aria-label="View activity"
                 >
-                  <Search className="h-5 w-5" />
-                </button>
-                {canAccess('basic') && (
-                  <Link 
-                    to="/activity"
-                    className="p-2 rounded-full text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] transition-colors"
-                  >
-                    <Heart className="h-5 w-5" />
-                  </Link>
-                )}
+                  <Heart className="h-5 w-5" />
+                  <span className="sr-only">Activity</span>
+                </Link>
+              )}
                 {canAccess('upload') && (
                   <Link
                     to="/upload"
@@ -130,7 +150,7 @@ const Navbar: React.FC = () => {
                     className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-white bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 transition-colors"
                   >
                     <Crown className="h-4 w-4 mr-2" />
-                    Upgrade
+                    Upgrade to Seller Premium
                   </Link>
                 )}
                 {isAdmin() && (
@@ -172,8 +192,11 @@ const Navbar: React.FC = () => {
             <button
               onClick={toggleMobileMenu}
               className="inline-flex items-center justify-center p-2 rounded-md text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#B7410E]"
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-navigation"
+              aria-label={isMobileMenuOpen ? 'Close main menu' : 'Open main menu'}
             >
-              <span className="sr-only">Open main menu</span>
+              <span className="sr-only">{isMobileMenuOpen ? 'Close main menu' : 'Open main menu'}</span>
               {isMobileMenuOpen ? (
                 <X className="block h-6 w-6" />
               ) : (
@@ -186,7 +209,7 @@ const Navbar: React.FC = () => {
 
       {/* Mobile Navigation Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden">
+        <div className="md:hidden" id="mobile-navigation" role="dialog" aria-label="Mobile navigation menu">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-secondary-200">
             {navigation.map((item) => (
               <Link
@@ -274,7 +297,7 @@ const Navbar: React.FC = () => {
                     className="flex items-center px-3 py-2 rounded-md text-base font-medium text-white bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 transition-colors"
                   >
                     <Crown className="h-5 w-5 mr-2" />
-                    Upgrade to Premium
+                    Upgrade to Seller Premium
                   </Link>
                 )}
                 {isAdmin() && (

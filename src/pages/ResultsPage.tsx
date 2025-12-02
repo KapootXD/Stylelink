@@ -207,7 +207,7 @@ const ResultsPageContent: React.FC = () => {
   
   // Handle try again
   const handleTryAgain = () => {
-    navigate('/main-feature');
+    navigate('/discover');
   };
   
   // Generate fashion item labels (mockup data)
@@ -268,6 +268,7 @@ const ResultsPageContent: React.FC = () => {
       <motion.div
         key={outfit.id}
         variants={fadeInUp}
+        data-testid="outfit-card"
         className={`bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 ${
           viewMode.type === 'list' ? 'flex' : ''
         }`}
@@ -410,20 +411,22 @@ const ResultsPageContent: React.FC = () => {
             
             <div className="flex items-center space-x-4">
               {/* View Mode Toggle */}
-              <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode({ type: 'grid' })}
-                  className={`p-2 rounded transition-colors ${
-                    viewMode.type === 'grid' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode({ type: 'list' })}
-                  className={`p-2 rounded transition-colors ${
-                    viewMode.type === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                  }`}
+          <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode({ type: 'grid' })}
+              aria-label="Grid view"
+              className={`p-2 rounded transition-colors ${
+                viewMode.type === 'grid' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Grid3X3 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode({ type: 'list' })}
+              aria-label="List view"
+              className={`p-2 rounded transition-colors ${
+                viewMode.type === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
                 >
                   <List className="w-4 h-4" />
                 </button>
@@ -467,7 +470,7 @@ const ResultsPageContent: React.FC = () => {
       </div>
       
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" data-testid="results-container">
         {/* Try Again Button */}
         <div className="mb-6">
           <Button
@@ -511,7 +514,7 @@ const ResultsPageContent: React.FC = () => {
         
         {/* Loading State */}
         {isLoading && (
-          <div className="flex justify-center items-center py-8">
+          <div className="flex justify-center items-center py-8" role="status" aria-label="Loading results">
             <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
           </div>
         )}
@@ -550,6 +553,8 @@ const ResultsPageContent: React.FC = () => {
           >
             <motion.div
               className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+              role="dialog"
+              aria-label="Outfit details"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}

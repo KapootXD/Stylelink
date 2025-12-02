@@ -18,7 +18,7 @@ test.describe('User Login', () => {
     
     // Verify user is logged in (check for profile link or user menu)
     const profileLink = page.getByRole('link', { name: /profile/i });
-    const logoutButton = page.getByRole('button', { name: /log out|sign out/i });
+    const logoutButton = page.getByRole('button', { name: /log\s*out|logout|sign\s*out|signout/i });
     
     const hasProfileLink = await profileLink.count() > 0;
     const hasLogoutButton = await logoutButton.count() > 0;

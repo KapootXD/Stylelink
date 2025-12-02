@@ -17,10 +17,7 @@ test.describe('Responsive Design', () => {
     await homePage.expectLoaded();
 
     // Mobile menu button should be visible
-    const mobileMenuButton = page
-      .locator('button')
-      .filter({ has: page.locator('.sr-only', { hasText: /open main menu/i }) })
-      .first();
+    const mobileMenuButton = page.locator('button[aria-label*="main menu" i]').first();
     
     await expect(mobileMenuButton).toBeVisible();
 
@@ -108,10 +105,7 @@ test.describe('Responsive Design', () => {
     await page.setViewportSize({ width: 375, height: 667 });
     await homePage.goto();
     
-    const mobileMenuButton = page
-      .locator('button')
-      .filter({ has: page.locator('.sr-only', { hasText: /open main menu/i }) })
-      .first();
+    const mobileMenuButton = page.locator('button[aria-label*="main menu" i]').first();
     await expect(mobileMenuButton).toBeVisible();
 
     // Desktop - direct links visible - scope to navigation to avoid footer matches

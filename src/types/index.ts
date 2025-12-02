@@ -22,6 +22,7 @@ export interface OutfitUpload {
   occasion: string;
   season: 'spring' | 'summer' | 'fall' | 'winter';
   styleTags: string[];
+  hashtags?: string[];
   items: ClothingItem[];
   mainImageUrl: string;
   additionalImages: string[];
@@ -38,6 +39,7 @@ export interface UserInput {
   occasion: string;
   season: 'spring' | 'summer' | 'fall' | 'winter';
   styleTags: string[];
+  hashtags?: string[];
   items: Omit<ClothingItem, 'id'>[];
   mainImageUrl: string;
   additionalImages?: string[];
@@ -92,6 +94,7 @@ export interface SearchFilters {
   brands?: string[];
   categories?: string[];
   styleTags?: string[];
+  userId?: string;
 }
 
 export interface OutfitSearchResult {
@@ -141,3 +144,4 @@ export interface ViewMode {
   type: 'grid' | 'list' | 'detailed';
   itemsPerRow?: number;
 }
+export * from './activity';

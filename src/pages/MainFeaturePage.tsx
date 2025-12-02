@@ -268,11 +268,12 @@ const MainFeaturePageContent: React.FC<MainFeaturePageProps> = () => {
         className="h-full w-full relative overflow-y-auto feed-container snap-container"
       >
         {outfits.map((outfit, index) => (
-        <motion.div 
+          <motion.div
             key={outfit.id}
+            data-testid="outfit-card"
             className="h-screen w-full relative snap-item flex items-center justify-center"
             variants={slideIn}
-          initial="initial"
+            initial="initial"
           animate="animate"
             exit="exit"
           >
@@ -446,7 +447,7 @@ const MainFeaturePageContent: React.FC<MainFeaturePageProps> = () => {
 
         {/* Loading State */}
         {isLoading && (
-          <div className="h-screen flex items-center justify-center">
+          <div className="h-screen flex items-center justify-center" role="status" aria-label="Loading styles">
             <div className="flex items-center space-x-3 text-white">
               <Loader2 className="w-6 h-6 animate-spin" />
               <span className="font-medium">Loading more styles...</span>

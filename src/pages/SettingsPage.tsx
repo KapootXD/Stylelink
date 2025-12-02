@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  Trash2, 
+import {
+  ArrowLeft,
+  Trash2,
   Database,
   AlertTriangle,
   Info,
   BarChart3,
   Users,
   Shield,
-  Crown
+  Crown,
+  CheckCircle2
 } from 'lucide-react';
 import Button from '../components/Button';
 import ProtectedFeature from '../components/ProtectedFeature';
@@ -27,6 +28,7 @@ const SettingsPage: React.FC = () => {
   const [preferences, setPreferences] = useState(getUserPreferences());
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [showPremiumDetails, setShowPremiumDetails] = useState(false);
   const { isPremium, isAdmin } = useAccessControl();
 
   useEffect(() => {
@@ -83,6 +85,65 @@ const SettingsPage: React.FC = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Premium Upgrade */}
+        {!isPremium() && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border border-yellow-200 shadow-sm p-6 mb-6"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 text-white">
+                  <Crown className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Upgrade to Premium</h2>
+                  <p className="text-sm text-gray-700">Unlock more visibility and higher-quality uploads.</p>
+                </div>
+              </div>
+              <Button
+                variant="primary"
+                onClick={() => setShowPremiumDetails((prev) => !prev)}
+                className="flex items-center"
+              >
+                {showPremiumDetails ? 'Hide details' : 'View benefits'}
+              </Button>
+            </div>
+
+            {showPremiumDetails && (
+              <div className="mt-6 bg-white rounded-lg border border-yellow-200 p-4 shadow-inner">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Premium for $10</h3>
+                    <p className="text-sm text-gray-600">One-time upgrade to elevate your StyleLink experience.</p>
+                  </div>
+                  <div className="flex items-center text-2xl font-bold text-yellow-600">$10</div>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  {[
+                    'A verified icon appears next to your username.',
+                    'Your posts are prioritized on the Discover page.',
+                    'Upload higher-quality photos and videos.'
+                  ].map((benefit) => (
+                    <div key={benefit} className="flex items-start gap-3 text-gray-800">
+                      <CheckCircle2 className="w-5 h-5 text-yellow-600 mt-0.5" />
+                      <span className="text-sm">{benefit}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6">
+                  <Button className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700">
+                    Purchase Premium
+                  </Button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+
         {/* Data Management Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -206,7 +267,7 @@ const SettingsPage: React.FC = () => {
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">Advanced Analytics</h2>
-                <p className="text-sm text-gray-600">Premium feature - Track your style insights</p>
+                <p className="text-sm text-gray-600">Seller Premium feature - Track your style insights</p>
               </div>
             </div>
             
@@ -235,7 +296,7 @@ const SettingsPage: React.FC = () => {
               </div>
               
               <p className="text-xs text-gray-500 mt-4">
-                {isPremium() ? 'You have access to premium analytics!' : 'Upgrade to Premium to unlock advanced analytics.'}
+                {isPremium() ? 'You have access to seller premium analytics!' : 'Upgrade to Seller Premium to unlock advanced analytics.'}
               </p>
             </div>
           </motion.div>

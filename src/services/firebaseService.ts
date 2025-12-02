@@ -26,7 +26,9 @@ import {
   ClothingItem,
   StyleAnalysis,
   UserInput,
-  SearchFilters
+  SearchFilters,
+  ActivityInput,
+  ActivityRecord
 } from '../types';
 
 // Collection names
@@ -36,7 +38,8 @@ const COLLECTIONS = {
   CLOTHING_ITEMS: 'clothingItems',
   STYLE_ANALYSIS: 'styleAnalysis',
   LIKES: 'likes',
-  SHARES: 'shares'
+  SHARES: 'shares',
+  ACTIVITIES: 'activities'
 } as const;
 
 // Helper function to ensure Firebase is initialized
@@ -68,6 +71,40 @@ const convertToTimestamp = (date: Date): Timestamp => {
   return Timestamp.fromDate(date);
 };
 
+// Helper to fetch minimal user information for activity feed
+const getUserSummary = async (firestoreDb: Firestore, userId: string) => {
+  const userSnapshot = await getDoc(doc(firestoreDb, COLLECTIONS.USERS, userId));
+  const userData = userSnapshot.data();
+
+  const displayName = userData?.displayName || userData?.email || 'StyleLink user';
+  const username = userData?.username || (userData?.email ? `@${userData.email.split('@')[0]}` : undefined);
+
+  return {
+    name: displayName,
+    username,
+    avatar: userData?.profilePicture || userData?.photoURL
+  };
+};
+
+// Helper to convert Firestore document to ActivityRecord
+const convertToActivityRecord = (doc: QueryDocumentSnapshot<DocumentData>): ActivityRecord => {
+  const data = doc.data();
+
+  return {
+    id: doc.id,
+    type: data.type,
+    actorId: data.actorId,
+    actorName: data.actorName,
+    actorUsername: data.actorUsername,
+    actorAvatar: data.actorAvatar,
+    targetUserId: data.targetUserId,
+    postId: data.postId,
+    postTitle: data.postTitle,
+    content: data.content,
+    createdAt: convertTimestamp(data.createdAt || new Date())
+  };
+};
+
 // Helper function to convert Firestore document to OutfitUpload
 const convertToOutfitUpload = (doc: QueryDocumentSnapshot<DocumentData>): OutfitUpload => {
   const data = doc.data();
@@ -79,6 +116,7 @@ const convertToOutfitUpload = (doc: QueryDocumentSnapshot<DocumentData>): Outfit
     occasion: data.occasion,
     season: data.season,
     styleTags: data.styleTags || [],
+    hashtags: data.hashtags || [],
     items: data.items || [],
     mainImageUrl: data.mainImageUrl,
     additionalImages: data.additionalImages || [],
@@ -99,6 +137,7 @@ const convertOutfitToFirestore = (outfit: Partial<OutfitUpload>): DocumentData =
     occasion: outfit.occasion,
     season: outfit.season,
     styleTags: outfit.styleTags || [],
+    hashtags: outfit.hashtags || [],
     items: outfit.items || [],
     mainImageUrl: outfit.mainImageUrl,
     additionalImages: outfit.additionalImages || [],
@@ -150,6 +189,9 @@ export const getOutfits = async (
     let q = query(collection(firestoreDb, COLLECTIONS.OUTFITS));
 
     // Apply filters
+    if (filters.userId) {
+      q = query(q, where('userId', '==', filters.userId));
+    }
     if (filters.occasion) {
       q = query(q, where('occasion', '==', filters.occasion));
     }
@@ -244,6 +286,7 @@ export const createOutfit = async (userInput: UserInput, userId: string): Promis
       occasion: userInput.occasion,
       season: userInput.season,
       styleTags: userInput.styleTags,
+      hashtags: userInput.hashtags || [],
       items: userInput.items.map((item, index) => ({
         ...item,
         id: `item-${Date.now()}-${index}`
@@ -316,7 +359,14 @@ export const likeOutfit = async (outfitId: string, userId: string): Promise<numb
   try {
     const firestoreDb = ensureDb();
     const outfitRef = doc(firestoreDb, COLLECTIONS.OUTFITS, outfitId);
-    
+    const outfitSnap = await getDoc(outfitRef);
+
+    if (!outfitSnap.exists()) {
+      throw new Error('Outfit not found');
+    }
+
+    const outfitData = outfitSnap.data();
+
     // Check if user already liked this outfit
     const likeRef = doc(firestoreDb, COLLECTIONS.LIKES, `${outfitId}_${userId}`);
     const likeSnap = await getDoc(likeRef);
@@ -341,7 +391,24 @@ export const likeOutfit = async (outfitId: string, userId: string): Promise<numb
       await updateDoc(outfitRef, {
         likes: increment(1)
       });
-      
+
+      // Record activity for the outfit owner
+      if (outfitData?.userId) {
+        const actor = await getUserSummary(firestoreDb, userId);
+
+        await recordActivity({
+          type: 'like',
+          actorId: userId,
+          actorName: actor.name,
+          actorUsername: actor.username,
+          actorAvatar: actor.avatar,
+          targetUserId: outfitData.userId,
+          postId: outfitId,
+          postTitle: outfitData.title,
+          createdAt: new Date()
+        });
+      }
+
       // Get updated likes count
       const outfitSnap = await getDoc(outfitRef);
       return outfitSnap.data()?.likes || 0;
@@ -375,6 +442,47 @@ export const shareOutfit = async (outfitId: string, userId: string): Promise<num
     return outfitSnap.data()?.shares || 0;
   } catch (error) {
     console.error('Error sharing outfit:', error);
+    throw error;
+  }
+};
+
+/**
+ * Record an activity event for a user
+ */
+export const recordActivity = async (activity: ActivityInput): Promise<string> => {
+  try {
+    const firestoreDb = ensureDb();
+
+    const payload: Omit<ActivityInput, 'createdAt'> & { createdAt: Timestamp } = {
+      ...activity,
+      createdAt: convertToTimestamp(activity.createdAt || new Date())
+    };
+
+    const activityRef = await addDoc(collection(firestoreDb, COLLECTIONS.ACTIVITIES), payload);
+    return activityRef.id;
+  } catch (error) {
+    console.error('Error recording activity:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get activity feed for a specific user
+ */
+export const getActivitiesForUser = async (userId: string, maxResults: number = 50): Promise<ActivityRecord[]> => {
+  try {
+    const firestoreDb = ensureDb();
+    const activityQuery = query(
+      collection(firestoreDb, COLLECTIONS.ACTIVITIES),
+      where('targetUserId', '==', userId),
+      orderBy('createdAt', 'desc'),
+      limit(maxResults)
+    );
+
+    const snapshot = await getDocs(activityQuery);
+    return snapshot.docs.map(convertToActivityRecord);
+  } catch (error) {
+    console.error('Error fetching activities:', error);
     throw error;
   }
 };
@@ -643,16 +751,16 @@ export const createOutfitWithMedia = async (
     // Compress and upload images
     if (imageFiles.length > 0) {
       let imagesToUpload: File[] = imageFiles;
-      
+
       try {
         // Import compression utility dynamically to avoid circular dependencies
         const { compressImages } = await import('../utils/imageCompression');
-        
+
         // Compress images first (10% of progress)
         if (onProgress) {
           onProgress(5);
         }
-        
+
         try {
           const compressedImages = await Promise.race([
             compressImages(
@@ -671,11 +779,11 @@ export const createOutfitWithMedia = async (
               }
             ),
             // Timeout after 30 seconds - use original files if compression takes too long
-            new Promise<File[]>((_, reject) => 
+            new Promise<File[]>((_, reject) =>
               setTimeout(() => reject(new Error('Compression timeout')), 30000)
             )
           ]);
-          
+
           imagesToUpload = compressedImages;
           console.log('✅ Images compressed successfully');
         } catch (compressionError) {
@@ -696,6 +804,9 @@ export const createOutfitWithMedia = async (
       }
 
       // Upload images (60% of progress)
+      if (onProgress) {
+        onProgress(Math.max(currentProgress, 10));
+      }
       const imageProgressCallback = (progress: number) => {
         currentProgress = 10 + (progress * 0.6); // Images upload takes 60% of progress
         if (onProgress) {
@@ -707,6 +818,9 @@ export const createOutfitWithMedia = async (
 
     // Upload videos
     if (videoFiles.length > 0) {
+      if (onProgress) {
+        onProgress(Math.max(currentProgress, 70));
+      }
       const videoProgressCallback = (progress: number) => {
         currentProgress = 70 + (progress * 0.3); // Videos take 30% of progress
         if (onProgress) {
