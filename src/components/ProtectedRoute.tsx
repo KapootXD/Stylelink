@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { isAuthInitialized } from '../config/firebase';
 import LoadingSpinner from './LoadingSpinner';
 
 interface ProtectedRouteProps {
@@ -14,6 +15,19 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { currentUser, loading } = useAuth();
   const location = useLocation();
+  const authAvailable = isAuthInitialized();
+
+  // Default to guest/demo access unless explicitly forced
+  const requireAuth = process.env.REACT_APP_REQUIRE_AUTH === 'true';
+  const isGuestMode =
+    !requireAuth ||
+    !authAvailable ||
+    process.env.REACT_APP_ALLOW_GUEST_MODE === 'true' ||
+    process.env.NODE_ENV !== 'production';
+
+  if (isGuestMode) {
+    return children;
+  }
 
   // Show loading spinner while checking auth state
   if (loading) {

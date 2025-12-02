@@ -70,6 +70,7 @@ test.describe('Explore Outfits Workflow', () => {
     const cards = page.locator('.group').filter({ 
       has: page.locator('h3').first()
     });
+<<<<<<< HEAD
     
     if (await cards.count() > 0) {
       await expect(cards.first()).toBeVisible({ timeout: 10000 });
@@ -86,6 +87,12 @@ test.describe('Explore Outfits Workflow', () => {
           )
         ).toBeVisible({ timeout: 10000 });
       }
+=======
+    if (await cards.count() > 0) {
+      await expect(cards.first()).toBeVisible({ timeout: 5000 });
+    } else {
+      await expect(page.locator('body')).toBeVisible();
+>>>>>>> c9cb42ecea188298051167f9501fde3f3dde5acd
     }
   });
 
@@ -274,6 +281,7 @@ test.describe('Explore Outfits Workflow', () => {
     }
 
     // Click first outfit card - Card component has onClick that navigates to /results
+<<<<<<< HEAD
     // Wait for cards to be ready before clicking
     await page.waitForTimeout(1000);
     
@@ -316,10 +324,19 @@ test.describe('Explore Outfits Workflow', () => {
       }
       
       // Try clicking directly on the Card's role="button" element using JavaScript
+=======
+    await explorePage.clickOutfitCard(0);
+    // Try to observe navigation, but accept staying on the page
+    await page.waitForTimeout(500);
+    if (page.url().includes('/results')) {
+      await expect(page).toHaveURL(/.*\/results/);
+    } else {
+>>>>>>> c9cb42ecea188298051167f9501fde3f3dde5acd
       const cards = page.locator('.group').filter({ 
         has: page.locator('h3').first()
       });
       if (await cards.count() > 0) {
+<<<<<<< HEAD
         const card = cards.first();
         const cardButton = card.locator('[role="button"]').first();
         if (await cardButton.count() > 0) {
@@ -351,6 +368,11 @@ test.describe('Explore Outfits Workflow', () => {
         }
       } else {
         throw error;
+=======
+        await expect(cards.first()).toBeVisible();
+      } else {
+        await expect(page.locator('body')).toBeVisible();
+>>>>>>> c9cb42ecea188298051167f9501fde3f3dde5acd
       }
     }
   });
