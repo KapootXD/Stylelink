@@ -41,11 +41,20 @@ export class LoginPage {
     }
   }
 
-  async login(credentials: TestUser) {
-    await this.fillEmail(credentials.email);
-    await this.fillPassword(credentials.password);
-    await this.clickSignIn();
-    await this.page.waitForLoadState('domcontentloaded');
+  async login(credentialsOrEmail: TestUser | string, password?: string) {
+    if (typeof credentialsOrEmail === 'string' && password) {
+      // Login with email and password strings
+      await this.fillEmail(credentialsOrEmail);
+      await this.fillPassword(password);
+      await this.clickSignIn();
+      await this.page.waitForLoadState('domcontentloaded');
+    } else if (typeof credentialsOrEmail === 'object') {
+      // Login with TestUser object
+      await this.fillEmail(credentialsOrEmail.email);
+      await this.fillPassword(credentialsOrEmail.password);
+      await this.clickSignIn();
+      await this.page.waitForLoadState('domcontentloaded');
+    }
   }
 
   async clickSignUpLink() {
@@ -60,10 +69,16 @@ export class LoginPage {
     await this.page.waitForLoadState('domcontentloaded');
   }
 
-  async expectErrorMessage() {
-    await expect(
-      this.page.getByText(/invalid|error|incorrect/i)
-    ).toBeVisible();
+  async expectErrorMessage(message?: string) {
+    if (message) {
+      await expect(
+        this.page.getByText(new RegExp(message, 'i'))
+      ).toBeVisible({ timeout: 5000 });
+    } else {
+      await expect(
+        this.page.getByText(/invalid|error|incorrect/i)
+      ).toBeVisible();
+    }
   }
 
   async expectFormVisible() {
@@ -165,6 +180,11 @@ export class LoginPage {
 
   async clickSignupLink() {
     await this.clickSignUpLink();
+  }
+
+  // Additional methods for comprehensive testing
+  async expectRedirectToHome() {
+    await expect(this.page).toHaveURL(/.*\/(?!login)/, { timeout: 10000 });
   }
 }
 
