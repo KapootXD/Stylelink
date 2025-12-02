@@ -126,7 +126,12 @@ test.describe('Protected Routes', () => {
   });
 
   test('protected routes require authentication for different user types', async ({ page }) => {
-    const userTypes: Array<'admin' | 'premium' | 'regular'> = ['regular', 'premium', 'admin'];
+    const userTypes: Array<'admin' | 'seller_premium' | 'seller' | 'buyer'> = [
+      'buyer',
+      'seller',
+      'seller_premium',
+      'admin'
+    ];
     
     for (const userType of userTypes) {
       try {
