@@ -2,16 +2,16 @@ import { test, expect } from '@playwright/test';
 import { loginAsUser } from '../helpers/auth-helper';
 
 test.describe('User Type Access Control', () => {
-  test('regular user cannot access admin features', async ({ page }) => {
+  test('buyer cannot access admin features', async ({ page }) => {
     try {
-      await loginAsUser(page, 'regular');
+      await loginAsUser(page, 'buyer');
       await page.waitForLoadState('domcontentloaded');
       
       // Try to access admin-only features
       // Note: Style Link might not have a dedicated /admin route
       // Check for admin-specific UI elements or features
       
-      // Check if admin badge/indicator is visible (should not be for regular user)
+      // Check if admin badge/indicator is visible (should not be for buyer/basic user)
       const adminBadge = page.getByText(/admin/i).filter({ hasText: /admin panel|admin dashboard/i });
       const hasAdminBadge = await adminBadge.count() > 0;
       
@@ -22,7 +22,7 @@ test.describe('User Type Access Control', () => {
       // This depends on your app's implementation
     } catch (error) {
       // User might not exist in test environment
-      console.log('Skipping admin access test - regular user may not exist');
+      console.log('Skipping admin access test - buyer user may not exist');
     }
   });
 
@@ -51,9 +51,9 @@ test.describe('User Type Access Control', () => {
     }
   });
 
-  test('premium user can access premium features', async ({ page }) => {
+  test('seller premium user can access premium features', async ({ page }) => {
     try {
-      await loginAsUser(page, 'premium');
+      await loginAsUser(page, 'seller_premium');
       await page.waitForLoadState('domcontentloaded');
       
       // Premium user should have access to upload feature
@@ -76,13 +76,13 @@ test.describe('User Type Access Control', () => {
       // This depends on your UI implementation
     } catch (error) {
       // User might not exist in test environment
-      console.log('Skipping premium access test - premium user may not exist');
+      console.log('Skipping premium access test - seller premium user may not exist');
     }
   });
 
-  test('regular user can access basic features', async ({ page }) => {
+  test('buyer can access basic features', async ({ page }) => {
     try {
-      await loginAsUser(page, 'regular');
+      await loginAsUser(page, 'buyer');
       await page.waitForLoadState('domcontentloaded');
       
       // Regular user should have access to basic protected routes
@@ -101,13 +101,13 @@ test.describe('User Type Access Control', () => {
       await expect(profileLink).toBeVisible({ timeout: 5000 });
     } catch (error) {
       // User might not exist in test environment
-      console.log('Skipping regular user access test - regular user may not exist');
+      console.log('Skipping buyer access test - buyer user may not exist');
     }
   });
 
-  test('regular user sees upgrade prompt for premium features', async ({ page }) => {
+  test('buyer sees upgrade prompt for seller premium features', async ({ page }) => {
     try {
-      await loginAsUser(page, 'regular');
+      await loginAsUser(page, 'buyer');
       await page.waitForLoadState('domcontentloaded');
       
       // Check for upgrade prompts or locked premium features
@@ -121,14 +121,19 @@ test.describe('User Type Access Control', () => {
       // The actual implementation depends on your UI
     } catch (error) {
       // User might not exist in test environment
-      console.log('Skipping upgrade prompt test - regular user may not exist');
+      console.log('Skipping upgrade prompt test - buyer user may not exist');
     }
   });
 
   test('user type determines feature visibility in navbar', async ({ page }) => {
     try {
-      const userTypes: Array<'admin' | 'premium' | 'regular'> = ['regular', 'premium', 'admin'];
-      
+      const userTypes: Array<'admin' | 'seller_premium' | 'seller' | 'buyer'> = [
+        'buyer',
+        'seller',
+        'seller_premium',
+        'admin'
+      ];
+
       for (const userType of userTypes) {
         await loginAsUser(page, userType);
         await page.waitForLoadState('domcontentloaded');
@@ -143,7 +148,7 @@ test.describe('User Type Access Control', () => {
         await expect(profileLink).toBeVisible({ timeout: 5000 });
         
         // Upload should be visible for users with upload access
-        if (userType === 'regular' || userType === 'premium' || userType === 'admin') {
+        if (userType === 'buyer' || userType === 'seller' || userType === 'seller_premium' || userType === 'admin') {
           const hasUploadLink = await uploadLink.count() > 0;
           // Upload might be conditionally visible
         }
@@ -164,8 +169,8 @@ test.describe('User Type Access Control', () => {
 
   test('access control prevents unauthorized feature access', async ({ page }) => {
     try {
-      // Test as regular user
-      await loginAsUser(page, 'regular');
+      // Test as buyer (basic access)
+      await loginAsUser(page, 'buyer');
       await page.waitForLoadState('domcontentloaded');
       
       // Try to access premium-only features
@@ -176,7 +181,7 @@ test.describe('User Type Access Control', () => {
       // If premium features are protected, they should show appropriate messages
     } catch (error) {
       // User might not exist in test environment
-      console.log('Skipping access control test - regular user may not exist');
+      console.log('Skipping access control test - buyer user may not exist');
     }
   });
 });

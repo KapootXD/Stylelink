@@ -121,12 +121,12 @@ export class UploadOutfitPage {
       if (await occasionSelect.count() > 0) {
         const handle = await occasionSelect.elementHandle();
         if (handle) {
-          // Set value directly to avoid visibility/timeout issues
-          await this.page.evaluate((el, val) => {
-            const selectEl = el as HTMLSelectElement;
-            selectEl.value = val;
-            selectEl.dispatchEvent(new Event('change', { bubbles: true }));
-          }, handle, occasion);
+          // Set value directly on the select element to avoid visibility/timeout issues
+          await handle.evaluate((selectEl, val) => {
+            const el = selectEl as HTMLSelectElement;
+            el.value = val;
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+          }, occasion);
         } else {
           await occasionSelect.selectOption(occasion).catch(() => {});
         }

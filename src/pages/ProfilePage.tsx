@@ -29,6 +29,7 @@ const mockUser = {
   profilePicture: '/api/placeholder/150/150',
   location: 'Tokyo, Japan',
   joinDate: 'March 2023',
+  usernameChangeCount: 0,
   stats: {
     followers: 2847,
     following: 156,
@@ -89,9 +90,10 @@ const ProfilePage: React.FC = () => {
             bio: profile.bio || 'No bio yet. Click edit to add one!',
             profilePicture: profile.profilePicture || profile.photoURL || profile.avatarUrl || mockUser.profilePicture,
             location: profile.location || 'Not set',
-            joinDate: profile.createdAt 
+            joinDate: profile.createdAt
               ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
               : 'Recently',
+            usernameChangeCount: profile.usernameChangeCount ?? mockUser.usernameChangeCount,
             stats: profile.stats || {
               followers: 0,
               following: 0,

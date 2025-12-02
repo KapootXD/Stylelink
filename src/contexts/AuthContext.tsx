@@ -38,47 +38,46 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     password: process.env.REACT_APP_DEMO_PASSWORD || 'P@ssword1234!',
   };
 
-  const createDemoUser = (email: string): User => ({
-    uid: 'demo-user',
-    email,
-    displayName: 'Demo User',
-    emailVerified: true,
-    isAnonymous: false,
-    providerData: [],
-    metadata: {} as any,
-    providerId: 'password',
-    refreshToken: '',
-    phoneNumber: null,
-    photoURL: null,
-    tenantId: null,
-    delete: async () => Promise.resolve(),
-    getIdToken: async () => Promise.resolve('demo-token'),
-    getIdTokenResult: async () => Promise.resolve({} as any),
-    reload: async () => Promise.resolve(),
-    toJSON: () => ({
+  const createDemoUser = (email: string): User =>
+    ({
       uid: 'demo-user',
       email,
       displayName: 'Demo User',
       emailVerified: true,
       isAnonymous: false,
       providerData: [],
-      metadata: {},
+      metadata: {} as any,
       providerId: 'password',
       refreshToken: '',
       phoneNumber: null,
       photoURL: null,
       tenantId: null,
-    }),
-    // Unsupported methods in demo mode
-    getIdTokenResultAsync: undefined as any,
-    getIdTokenAsync: undefined as any,
-  });
+      delete: async () => Promise.resolve(),
+      getIdToken: async () => Promise.resolve('demo-token'),
+      getIdTokenResult: async () => Promise.resolve({} as any),
+      reload: async () => Promise.resolve(),
+      toJSON: () => ({
+        uid: 'demo-user',
+        email,
+        displayName: 'Demo User',
+        emailVerified: true,
+        isAnonymous: false,
+        providerData: [],
+        metadata: {},
+        providerId: 'password',
+        refreshToken: '',
+        phoneNumber: null,
+        photoURL: null,
+        tenantId: null,
+      }),
+    } as User);
 
   const createDemoProfile = (uid: string, email: string): AppUser => ({
     uid,
     email,
     emailVerified: true,
     displayName: 'Demo User',
+    photoURL: null,
     userType: DEFAULT_USER_TYPE,
     createdAt: new Date(),
     isOwnProfile: true,
@@ -168,6 +167,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           displayName: displayName || email,
           photoURL: null,
         } as unknown as User;
+        const normalizedUserType = userType === 'seller' ? UserType.SELLER : UserType.BUYER;
 
         setCurrentUser(mockUser);
         setUserProfile({
@@ -177,7 +177,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           displayName: mockUser.displayName,
           photoURL: mockUser.photoURL,
           profilePicture: mockUser.photoURL || undefined,
-          userType,
+          userType: normalizedUserType,
           createdAt: new Date(),
           isOwnProfile: true,
         });

@@ -60,24 +60,58 @@ export class AuthHelper {
  * Helper function to login with different user types
  * Note: These credentials need to exist in your test environment
  */
-export async function loginAsUser(page: Page, userType: 'admin' | 'premium' | 'regular') {
-  const credentials = {
-    admin: { email: 'admin@test.com', password: 'admin123' },
-    premium: { email: 'premium@test.com', password: 'premium123' },
-    regular: { email: 'user@test.com', password: 'user123' }
+export async function loginAsUser(
+  page: Page,
+  userType: 'admin' | 'seller_premium' | 'seller' | 'buyer' | 'premium' | 'regular'
+) {
+  const mapToCanonicalType = (
+    type: 'admin' | 'seller_premium' | 'seller' | 'buyer' | 'premium' | 'regular'
+  ): 'admin' | 'seller_premium' | 'seller' | 'buyer' => {
+    switch (type) {
+      case 'premium':
+        return 'seller_premium';
+      case 'regular':
+        return 'buyer';
+      default:
+        return type;
+    }
+  };
+
+  const normalizedType = mapToCanonicalType(userType);
+
+  const credentials: Record<
+    'admin' | 'seller_premium' | 'seller' | 'buyer',
+    { email: string; password: string }
+  > = {
+    admin: {
+      email: process.env.E2E_ADMIN_EMAIL || 'admin@test.com',
+      password: process.env.E2E_ADMIN_PASSWORD || 'admin123'
+    },
+    seller_premium: {
+      email: process.env.E2E_SELLER_PREMIUM_EMAIL || 'sellerpremium@test.com',
+      password: process.env.E2E_SELLER_PREMIUM_PASSWORD || 'sellerpremium123'
+    },
+    seller: {
+      email: process.env.E2E_SELLER_EMAIL || 'seller@test.com',
+      password: process.env.E2E_SELLER_PASSWORD || 'seller123'
+    },
+    buyer: {
+      email: process.env.E2E_BUYER_EMAIL || 'buyer@test.com',
+      password: process.env.E2E_BUYER_PASSWORD || 'buyer123'
+    }
   };
 
   await page.goto('/login');
   await page.waitForLoadState('domcontentloaded');
   
-  await page.getByLabel(/email/i).fill(credentials[userType].email);
+  await page.getByLabel(/email/i).fill(credentials[normalizedType].email);
   
   const passwordInput = page.locator('input[type="password"], input[type="text"]').filter({
     has: page.locator('label').filter({ hasText: /password/i })
   }).or(
     page.getByLabel(/password/i)
   ).first();
-  await passwordInput.fill(credentials[userType].password);
+  await passwordInput.fill(credentials[normalizedType].password);
 
   await page.getByRole('button', { name: /log in|sign in/i }).click();
 
