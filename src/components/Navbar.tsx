@@ -11,7 +11,7 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser, logout, loading } = useAuth();
-  const { canAccess, isPremium, isAdmin } = useAccessControl();
+  const { canAccess, isAdmin, isPremium } = useAccessControl();
 
   const handleLogout = async () => {
     try {
@@ -25,8 +25,8 @@ const Navbar: React.FC = () => {
 
   const navigation = [
     { name: 'Home', href: '/' },
-    { name: 'About', href: '/about' },
-    { name: 'Discover', href: '/discover' },
+    ...(currentUser ? [{ name: 'Catalog', href: '/results' }] : []),
+    { name: 'Discover', href: '/discover' }
   ];
 
   const isActivePath = (path: string) => {
@@ -55,29 +55,30 @@ const Navbar: React.FC = () => {
   }, [isMobileMenuOpen, isSearchModalOpen]);
 
   return (
-    <nav className="bg-white shadow-lg border-b border-gray-200">
+    <nav className="bg-gradient-to-r from-white via-[#FFF8F0] to-white shadow-lg border-b border-amber-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-16 gap-4">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link to="/" className="flex items-center">
-              <div className="text-2xl font-bold text-[#B7410E]">
+            <Link to="/" className="flex items-center group">
+              <div className="text-2xl font-black tracking-tight text-[#B7410E] group-hover:text-[#8B5E3C] transition-colors">
                 StyleLink
               </div>
+              <span className="ml-2 px-2 py-1 text-[11px] uppercase tracking-widest bg-[#FAF3E0] text-[#B7410E] rounded-full font-semibold">Fashion Flow</span>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-8">
+          <div className="hidden md:flex">
+            <div className="ml-6 flex items-center space-x-2 bg-white/70 backdrop-blur border border-amber-100 rounded-full px-2 py-1 shadow-sm">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                     isActivePath(item.href)
-                      ? 'text-[#B7410E] bg-[#FAF3E0]'
-                      : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
+                      ? 'text-[#B7410E] bg-[#FAF3E0] shadow-inner'
+                      : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FFF4DC]'
                   }`}
                 >
                   {item.name}
@@ -87,82 +88,84 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* User Menu & Search */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-3">
             {currentUser ? (
               <>
-              <button
-                type="button"
-                onClick={() => setIsSearchModalOpen(true)}
-                className="p-2 rounded-full text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] transition-colors"
-                aria-label="Open search"
-              >
-                <Search className="h-5 w-5" />
-              </button>
-              {canAccess('basic') && (
-                <Link
-                  to="/activity"
+                <button
+                  type="button"
+                  onClick={() => setIsSearchModalOpen(true)}
                   className="p-2 rounded-full text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] transition-colors"
-                  aria-label="View activity"
+                  aria-label="Open search"
                 >
-                  <Heart className="h-5 w-5" />
-                  <span className="sr-only">Activity</span>
-                </Link>
-              )}
-                {canAccess('upload') && (
+                  <Search className="h-5 w-5" />
+                </button>
+                {canAccess('basic') && (
                   <Link
-                    to="/upload"
-                    className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActivePath('/upload')
-                        ? 'text-[#B7410E] bg-[#FAF3E0]'
-                        : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
+                    to="/activity"
+                    className="p-2 rounded-full text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] transition-colors"
+                    aria-label="View activity"
+                  >
+                    <Heart className="h-5 w-5" />
+                    <span className="sr-only">Activity</span>
+                  </Link>
+                )}
+                <div className="flex items-center bg-white/80 backdrop-blur px-3 py-2 rounded-full border border-amber-100 shadow-sm space-x-2">
+                  {canAccess('upload') && (
+                    <Link
+                      to="/upload"
+                      className={`flex items-center px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+                        isActivePath('/upload')
+                          ? 'text-[#B7410E] bg-[#FAF3E0] shadow-inner'
+                          : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FFF4DC]'
+                      }`}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload
+                    </Link>
+                  )}
+                  <Link
+                    to="/profile"
+                    className={`flex items-center px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+                      isActivePath('/profile')
+                        ? 'text-[#B7410E] bg-[#FAF3E0] shadow-inner'
+                        : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FFF4DC]'
                     }`}
                   >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload
+                    <User className="h-4 w-4 mr-2" />
+                    {currentUser.displayName || 'Profile'}
                   </Link>
-                )}
-                <Link
-                  to="/profile"
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActivePath('/profile')
-                      ? 'text-[#B7410E] bg-[#FAF3E0]'
-                      : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
-                  }`}
-                >
-                  <User className="h-4 w-4 mr-2" />
-                  {currentUser.displayName || 'Profile'}
-                </Link>
-                {canAccess('settings') && (
-                  <Link
-                    to="/settings"
-                    className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActivePath('/settings')
-                        ? 'text-[#B7410E] bg-[#FAF3E0]'
-                        : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
-                    }`}
-                  >
-                    Settings
-                  </Link>
-                )}
-                {!isPremium() && (
-                  <Link
-                    to="/settings"
-                    className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-white bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 transition-colors"
-                  >
-                    <Crown className="h-4 w-4 mr-2" />
-                    Upgrade to Seller Premium
-                  </Link>
-                )}
+                  {canAccess('settings') && (
+                    <Link
+                      to="/settings"
+                      className={`flex items-center px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+                        isActivePath('/settings')
+                          ? 'text-[#B7410E] bg-[#FAF3E0] shadow-inner'
+                          : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FFF4DC]'
+                      }`}
+                    >
+                      Settings
+                    </Link>
+                  )}
+                </div>
                 {isAdmin() && (
-                  <span className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-white bg-gradient-to-r from-red-500 to-red-600">
+                  <span className="flex items-center px-3 py-2 rounded-full text-sm font-medium text-white bg-gradient-to-r from-red-500 to-red-600 shadow-md">
                     <User className="h-4 w-4 mr-2" />
                     Admin
                   </span>
                 )}
+                {!isPremium() && (
+                  <Link
+                    to="/settings"
+                    className="flex items-center px-3 py-2 rounded-full text-sm font-semibold text-white bg-[#B7410E] hover:bg-[#8B5E3C] shadow-md transition-colors"
+                  >
+                    <Crown className="h-4 w-4 mr-2" />
+                    Upgrade
+                  </Link>
+                )}
                 <button
                   onClick={handleLogout}
                   disabled={loading}
-                  className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-[#2D2D2D] hover:text-[#B7410E] hover:bg-[#FAF3E0] transition-colors"
+                  className="flex items-center px-3 py-2 rounded-full text-sm font-semibold text-[#2D2D2D] hover:text-[#B7410E] hover:bg-[#FAF3E0] border border-amber-100 transition-colors"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
                   Logout
@@ -172,14 +175,14 @@ const Navbar: React.FC = () => {
               <>
                 <Link
                   to="/login"
-                  className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-[#2D2D2D] hover:text-[#B7410E] hover:bg-[#FAF3E0] transition-colors"
+                  className="flex items-center px-3 py-2 rounded-full text-sm font-semibold text-[#2D2D2D] hover:text-[#B7410E] hover:bg-[#FAF3E0] border border-amber-100 transition-colors"
                 >
                   <LogIn className="h-4 w-4 mr-2" />
                   Login
                 </Link>
                 <Link
                   to="/signup"
-                  className="px-4 py-2 rounded-md text-sm font-medium text-white bg-[#B7410E] hover:bg-[#8B5E3C] transition-colors"
+                  className="px-4 py-2 rounded-full text-sm font-semibold text-white bg-[#B7410E] hover:bg-[#8B5E3C] shadow-md transition-colors"
                 >
                   Sign Up
                 </Link>
@@ -210,7 +213,7 @@ const Navbar: React.FC = () => {
       {/* Mobile Navigation Menu */}
       {isMobileMenuOpen && (
         <div className="md:hidden" id="mobile-navigation" role="dialog" aria-label="Mobile navigation menu">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-secondary-200">
+          <div className="px-3 pt-3 pb-4 space-y-2 sm:px-4 bg-white/90 backdrop-blur border-t border-secondary-200">
             {navigation.map((item) => (
               <Link
                 key={item.name}
@@ -227,16 +230,30 @@ const Navbar: React.FC = () => {
             ))}
             {currentUser ? (
               <>
-                <button
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    setIsSearchModalOpen(true);
-                  }}
-                  className="flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] w-full text-left"
-                >
-                  <Search className="h-5 w-5 mr-2" />
-                  Search
-                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setIsSearchModalOpen(true);
+                    }}
+                    className="flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0] w-full text-left border border-amber-100"
+                  >
+                    <Search className="h-5 w-5 mr-2" />
+                    Search
+                  </button>
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors border border-amber-100 ${
+                      isActivePath('/profile')
+                        ? 'text-[#B7410E] bg-[#FAF3E0]'
+                        : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
+                    }`}
+                  >
+                    <User className="h-5 w-5 mr-2" />
+                    {currentUser.displayName || 'Profile'}
+                  </Link>
+                </div>
                 {canAccess('basic') && (
                   <Link
                     to="/activity"
@@ -265,18 +282,6 @@ const Navbar: React.FC = () => {
                     Upload
                   </Link>
                 )}
-                <Link
-                  to="/profile"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                    isActivePath('/profile')
-                      ? 'text-[#B7410E] bg-[#FAF3E0]'
-                      : 'text-[#2D2D2D] hover:text-[#D4AF37] hover:bg-[#FAF3E0]'
-                  }`}
-                >
-                  <User className="h-5 w-5 mr-2" />
-                  {currentUser.displayName || 'Profile'}
-                </Link>
                 {canAccess('settings') && (
                   <Link
                     to="/settings"
@@ -290,21 +295,21 @@ const Navbar: React.FC = () => {
                     Settings
                   </Link>
                 )}
-                {!isPremium() && (
-                  <Link
-                    to="/settings"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center px-3 py-2 rounded-md text-base font-medium text-white bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 transition-colors"
-                  >
-                    <Crown className="h-5 w-5 mr-2" />
-                    Upgrade to Seller Premium
-                  </Link>
-                )}
                 {isAdmin() && (
                   <div className="flex items-center px-3 py-2 rounded-md text-base font-medium text-white bg-gradient-to-r from-red-500 to-red-600">
                     <User className="h-5 w-5 mr-2" />
                     Admin
                   </div>
+                )}
+                {!isPremium() && (
+                  <Link
+                    to="/settings"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center px-3 py-2 rounded-md text-base font-medium text-white bg-[#B7410E] hover:bg-[#8B5E3C] transition-colors"
+                  >
+                    <Crown className="h-5 w-5 mr-2" />
+                    Upgrade
+                  </Link>
                 )}
                 <button
                   onClick={() => {

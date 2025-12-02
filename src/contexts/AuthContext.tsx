@@ -10,6 +10,8 @@ interface AuthContextType {
   userProfile: AppUser | null;
   loading: boolean;
   error: string | null;
+  authReady: boolean;
+  usingDemoAuth: boolean;
   signup: (email: string, password: string, userType: 'customer' | 'seller', displayName?: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -42,7 +44,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     ({
       uid: 'demo-user',
       email,
-      displayName: 'Demo User',
+      displayName: email?.split('@')[0] || 'Demo User',
       emailVerified: true,
       isAnonymous: false,
       providerData: [],
@@ -83,6 +85,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     isOwnProfile: true,
   });
 
+  const authReady = isAuthInitialized() && !!auth;
+  const usingDemoAuth = !authReady && demoAuthEnabled;
+
   // Fetch user profile from Firestore
   const fetchUserProfile = async (user: User | null): Promise<void> => {
     if (!user) {
@@ -113,7 +118,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Listen for auth state changes
   useEffect(() => {
     // Check if Firebase Auth is initialized
-    if (!isAuthInitialized() || !auth) {
+    const authInstance = auth;
+
+    if (!isAuthInitialized() || !authInstance) {
       console.warn('Firebase Auth is not initialized. Authentication features will not work.');
       setLoading(false);
       return;
@@ -121,7 +128,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Set up auth state listener
     const unsubscribe = onAuthStateChanged(
-      auth,
+      authInstance,
       async (user) => {
         setCurrentUser(user);
         setError(null);
@@ -159,7 +166,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(true);
 
       // If Firebase isn't initialized (e.g., in local demo/test mode), simulate a signup so flows still work
-      if (!isAuthInitialized() || !auth) {
+      if (!authReady) {
+        if (!demoAuthEnabled) {
+          throw new Error('Authentication is not configured. Please add your Firebase credentials to .env');
+        }
+
         const mockUser = {
           uid: `mock-${Date.now()}`,
           email,
@@ -211,9 +222,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(true);
 
       // Allow demo/guest login when Firebase isn't configured (used in local/E2E environments)
-      if ((!isAuthInitialized() || !auth) && demoAuthEnabled) {
-        if (email !== demoCredentials.email || password !== demoCredentials.password) {
-          const errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+      if (!authReady) {
+        if (!demoAuthEnabled) {
+          const errorMessage = 'Authentication is not configured. Please add your Firebase credentials to .env';
+          setError(errorMessage);
+          toast.error(errorMessage);
+          throw new Error(errorMessage);
+        }
+
+        if (!email || !password) {
+          const errorMessage = 'Email and password are required to sign in.';
           setError(errorMessage);
           toast.error(errorMessage);
           throw new Error(errorMessage);
@@ -222,7 +240,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const demoUser = createDemoUser(email);
         setCurrentUser(demoUser);
         setUserProfile(createDemoProfile(demoUser.uid, email));
-        toast.success('Welcome back!');
+        toast.success('Signed in with demo auth (no Firebase config detected)');
         return;
       }
 
@@ -355,6 +373,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     userProfile,
     loading,
     error,
+    authReady,
+    usingDemoAuth,
     signup: handleSignup,
     login: handleLogin,
     logout: handleLogout,

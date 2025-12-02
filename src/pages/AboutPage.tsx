@@ -38,29 +38,69 @@ const AboutPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Coming Soon Content */}
+      {/* Platform Story */}
       <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-5xl mx-auto">
           <motion.div
             initial="initial"
             animate="animate"
             variants={fadeInUp}
           >
-            <div className="bg-white rounded-2xl p-12 shadow-lg">
-              <div className="w-24 h-24 bg-[#FAF3E0] rounded-full flex items-center justify-center mx-auto mb-8">
-                <Clock className="w-12 h-12 text-[#B7410E]" />
+            <div className="bg-white rounded-2xl p-10 shadow-lg space-y-10">
+              <div className="flex flex-col gap-6 text-[#2D2D2D]">
+                <div className="w-20 h-20 bg-[#FAF3E0] rounded-full flex items-center justify-center">
+                  <Clock className="w-10 h-10 text-[#B7410E]" />
+                </div>
+
+                <div className="space-y-4">
+                  <h2 className="text-4xl font-bold">The Story Behind StyleLink</h2>
+                  <p className="text-lg leading-relaxed text-[#2D2D2D]/80">
+                    StyleLink is a community-centered fashion discovery platform built for the web. It lets users upload
+                    photos of their outfits and attach direct links to where each item can be purchased, removing the guesswork
+                    from recreating looks.
+                  </p>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="p-6 bg-[#FAF3E0]/50 rounded-xl space-y-3">
+                    <h3 className="text-2xl font-semibold text-[#B7410E]">Shop by Style</h3>
+                    <p className="text-base leading-relaxed text-[#2D2D2D]/80">
+                      Browse posts by tags like streetwear, business casual, or Y2K, and instantly shop the pieces you love without
+                      hunting across the internet.
+                    </p>
+                  </div>
+                  <div className="p-6 bg-[#FAF3E0]/50 rounded-xl space-y-3">
+                    <h3 className="text-2xl font-semibold text-[#B7410E]">People-First Discovery</h3>
+                    <p className="text-base leading-relaxed text-[#2D2D2D]/80">
+                      Follow people whose style you admire, receive personalized recommendations, and discover trending aesthetics
+                      from around the world.
+                    </p>
+                  </div>
+                  <div className="p-6 bg-[#FAF3E0]/50 rounded-xl space-y-3">
+                    <h3 className="text-2xl font-semibold text-[#B7410E]">Global Cultural Connector</h3>
+                    <p className="text-base leading-relaxed text-[#2D2D2D]/80">
+                      Explore how people dress in different countries and gain insight into authentic local streetwear and cultural styles
+                      through a search system that goes beyond your region.
+                    </p>
+                  </div>
+                  <div className="p-6 bg-[#FAF3E0]/50 rounded-xl space-y-3">
+                    <h3 className="text-2xl font-semibold text-[#B7410E]">Fueling Local Brands</h3>
+                    <p className="text-base leading-relaxed text-[#2D2D2D]/80">
+                      Local clothing brands get a dedicated space to showcase their work, reaching audiences searching for unique and authentic styles
+                      while growing everyday creativity and community-driven fashion.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-6 bg-[#B7410E] text-white rounded-xl space-y-4">
+                  <h3 className="text-2xl font-semibold">Inclusive and Sustainable</h3>
+                  <p className="text-base leading-relaxed text-white/90">
+                    StyleLink encourages both influencers and everyday creators to monetize their style. When someone purchases through an outfit post,
+                    the original poster earns a commission—building a sustainable ecosystem where creativity and commerce meet.
+                  </p>
+                </div>
               </div>
-              
-              <h2 className="text-4xl font-bold text-[#2D2D2D] mb-6">
-                About Page Coming Soon!
-              </h2>
-              
-              <p className="text-xl text-[#2D2D2D]/70 mb-8 leading-relaxed">
-                We're crafting a comprehensive about page that will tell the story of StyleLink, 
-                our mission, team, and vision for the future of fashion discovery. 
-                Stay tuned for an inspiring look into what drives us.
-              </p>
-              
+
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
                   variant="primary"
@@ -70,7 +110,7 @@ const AboutPage: React.FC = () => {
                   <ArrowLeft className="w-5 h-5 mr-2" />
                   Go Back
                 </Button>
-                
+
                 <Button
                   variant="secondary"
                   onClick={() => navigate('/')}
