@@ -2,6 +2,16 @@
 
 ## 🎯 Most Efficient Fixing Workflow
 
+### Prerequisite: Ensure Playwright browsers are installed
+
+Before running any E2E command, download the browser binaries locally:
+
+```bash
+npm run playwright:install
+```
+
+If network access is restricted, run the command where downloads are allowed first to avoid launcher errors like "Executable doesn't exist" when the tests start.
+
 ### Step 1: Run Tests with UI Mode (BEST WAY)
 
 ```bash

@@ -6,6 +6,11 @@ export class HomePage {
   async goto() {
     await this.page.goto('/');
     await this.page.waitForLoadState('domcontentloaded');
+    // Ensure hero content is ready before continuing
+    await expect(
+      this.page.getByRole('heading', { name: /if you're looking for style/i, level: 1 })
+    ).toBeVisible({ timeout: 10000 });
+    await this.page.waitForLoadState('networkidle');
   }
 
   async expectLoaded() {
@@ -37,22 +42,35 @@ export class HomePage {
   }
 
   async clickGetStarted() {
-    await this.page.getByRole('button', { name: /get started/i }).first().click();
+    const button = this.page.getByRole('button', { name: /get started/i }).first();
+    await button.scrollIntoViewIfNeeded();
+    await button.click();
     await this.page.waitForLoadState('domcontentloaded');
   }
 
   async clickLearnMore() {
-    await this.page.getByRole('button', { name: /learn more/i }).click();
+    const button = this.page.getByRole('button', { name: /learn more/i }).first();
+    await button.scrollIntoViewIfNeeded();
+    await button.click();
     await this.page.waitForLoadState('domcontentloaded');
   }
 
   async clickStartYourStyleJourney() {
-    await this.page.getByRole('button', { name: /start your style journey/i }).click();
+    const button = this.page.getByRole('button', { name: /start your style journey/i }).first();
+    await button.scrollIntoViewIfNeeded();
+    await button.click();
     await this.page.waitForLoadState('domcontentloaded');
   }
 
   async clickExploreFeatures() {
-    await this.page.getByRole('button', { name: /explore features/i }).click();
+    const exploreCTA = this.page
+      .getByRole('button', { name: /explore features/i })
+      .or(this.page.getByRole('link', { name: /explore features/i }))
+      .first();
+
+    await expect(exploreCTA).toBeVisible({ timeout: 10_000 });
+    await exploreCTA.scrollIntoViewIfNeeded();
+    await exploreCTA.click();
     await this.page.waitForLoadState('domcontentloaded');
   }
 

@@ -3,24 +3,21 @@ import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   Camera, 
-  Edit3, 
-  Heart, 
-  MessageCircle, 
-  Share2, 
-  ShoppingBag,
+  Edit3,
+  Heart,
+  MessageCircle,
+  Share2,
   MapPin,
   Calendar,
-  Settings,
   Plus,
-  ArrowRight,
-  User,
-  Mail,
-  Link as LinkIcon
+  ArrowRight
 } from 'lucide-react';
 import { Button, Card, LoadingSpinner, EditProfileModal } from '../components';
 import { useReducedMotion } from '../components/PageTransition';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserProfile } from '../config/firebase';
+import { getOutfits } from '../services/firebaseService';
+import { OutfitUpload } from '../types';
 import toast from 'react-hot-toast';
 
 // Mock user data - replace with actual user context when backend is implemented
@@ -40,82 +37,6 @@ const mockUser = {
   isOwnProfile: true // For demo purposes
 };
 
-// Mock outfit posts data
-const mockOutfitPosts = [
-  {
-    id: '1',
-    image: '/api/placeholder/300/400',
-    title: 'Tokyo Streetwear Vibes',
-    description: 'Perfect for exploring the city streets',
-    likes: 1247,
-    comments: 89,
-    price: '$89',
-    brand: 'Local Tokyo Brand',
-    tags: ['streetwear', 'urban', 'casual'],
-    createdAt: '2 days ago'
-  },
-  {
-    id: '2',
-    image: '/api/placeholder/300/400',
-    title: 'Minimalist Monday',
-    description: 'Clean lines and neutral tones',
-    likes: 892,
-    comments: 45,
-    price: '$120',
-    brand: 'Nordic Design Co',
-    tags: ['minimalist', 'scandinavian', 'clean'],
-    createdAt: '5 days ago'
-  },
-  {
-    id: '3',
-    image: '/api/placeholder/300/400',
-    title: 'Vintage Denim Look',
-    description: 'Thrifted finds that never go out of style',
-    likes: 2156,
-    comments: 123,
-    price: '$45',
-    brand: 'Thrifted',
-    tags: ['vintage', 'denim', 'retro'],
-    createdAt: '1 week ago'
-  },
-  {
-    id: '4',
-    image: '/api/placeholder/300/400',
-    title: 'Bohemian Dreams',
-    description: 'Flowing fabrics and earthy tones',
-    likes: 743,
-    comments: 67,
-    price: '$65',
-    brand: 'Local Artisan',
-    tags: ['bohemian', 'flowy', 'colorful'],
-    createdAt: '2 weeks ago'
-  },
-  {
-    id: '5',
-    image: '/api/placeholder/300/400',
-    title: 'Athleisure Perfection',
-    description: 'Comfort meets style for active days',
-    likes: 1834,
-    comments: 98,
-    price: '$95',
-    brand: 'Aussie Active',
-    tags: ['athleisure', 'sporty', 'comfortable'],
-    createdAt: '3 weeks ago'
-  },
-  {
-    id: '6',
-    image: '/api/placeholder/300/400',
-    title: 'Formal Elegance',
-    description: 'Business casual that makes a statement',
-    likes: 967,
-    comments: 34,
-    price: '$180',
-    brand: 'British Tailoring',
-    tags: ['formal', 'elegant', 'business'],
-    createdAt: '1 month ago'
-  }
-];
-
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId?: string }>();
@@ -124,7 +45,24 @@ const ProfilePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [profileData, setProfileData] = useState<typeof mockUser | null>(null);
   const [profileImage, setProfileImage] = useState<string>(mockUser.profilePicture);
+  const [outfitPosts, setOutfitPosts] = useState<OutfitUpload[]>([]);
+  const [areOutfitsLoading, setAreOutfitsLoading] = useState(false);
   const prefersReducedMotion = useReducedMotion();
+
+  const formatDate = (date?: Date) => {
+    if (!date) return 'Recently';
+
+    try {
+      return new Date(date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Recently';
+    }
+  };
   
   // Determine which user's profile to show
   // If userId param exists, view that user's profile, otherwise view own profile
@@ -192,8 +130,47 @@ const ProfilePage: React.FC = () => {
     }
   }, [targetUserId, currentUser, userProfile, authLoading]);
 
-  // Use Firebase profile data or fallback to mock
-  const currentUserData = profileData || mockUser;
+  useEffect(() => {
+    const fetchOutfits = async () => {
+      if (!targetUserId) {
+        setOutfitPosts([]);
+        return;
+      }
+
+      try {
+        setAreOutfitsLoading(true);
+        const { outfits } = await getOutfits({ userId: targetUserId }, 1, 30);
+        setOutfitPosts(outfits);
+      } catch (error) {
+        console.error('Error loading outfits:', error);
+        toast.error('Failed to load style posts');
+        setOutfitPosts([]);
+      } finally {
+        setAreOutfitsLoading(false);
+      }
+    };
+
+    if (!authLoading) {
+      fetchOutfits();
+    }
+  }, [targetUserId, authLoading]);
+
+  // Use Firebase profile data or fallback to mock, but always reflect real post count
+  const currentUserData = profileData
+    ? {
+        ...profileData,
+        stats: {
+          ...profileData.stats,
+          posts: outfitPosts.length || profileData.stats?.posts || 0
+        }
+      }
+    : {
+        ...mockUser,
+        stats: {
+          ...mockUser.stats,
+          posts: outfitPosts.length || mockUser.stats.posts
+        }
+      };
 
   // Animation variants
   const fadeInUp = {
@@ -395,126 +372,142 @@ const ProfilePage: React.FC = () => {
             </p>
           </motion.div>
 
-          {mockOutfitPosts.length > 0 ? (
-            <motion.div 
+          {areOutfitsLoading ? (
+            <div className="flex justify-center py-12">
+              <LoadingSpinner size="lg" />
+            </div>
+          ) : outfitPosts.length > 0 ? (
+            <motion.div
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
               initial="initial"
               animate="animate"
               variants={staggerChildren}
             >
-              {mockOutfitPosts.map((post, index) => (
-                <motion.div
-                  key={post.id}
-                  variants={fadeInUp}
-                  className="group"
-                >
-                  <Card 
-                    variant="outfit" 
-                    className="overflow-hidden h-full"
-                    onClick={() => navigate('/results')}
+              {outfitPosts.map((post) => {
+                const primaryItem = post.items?.[0];
+                const priceLabel = primaryItem?.price ? `${primaryItem.currency || 'USD'} ${primaryItem.price}` : null;
+                const brandLabel = primaryItem?.brand || 'View details';
+
+                return (
+                  <motion.div
+                    key={post.id}
+                    variants={fadeInUp}
+                    className="group"
                   >
-                    {/* Image Placeholder */}
-                    <div className="relative h-80 bg-gradient-to-br from-[#B7410E]/20 to-[#D4AF37]/20 rounded-t-2xl overflow-hidden">
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-center">
-                          <ShoppingBag className="w-16 h-16 text-[#B7410E]/50 mx-auto mb-2" />
-                          <p className="text-[#2D2D2D]/60 text-sm">Outfit Image</p>
-                        </div>
-                      </div>
-                      
-                      {/* Overlay Actions */}
-                      <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <motion.button
-                          className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg"
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          aria-label="Like post"
-                        >
-                          <Heart className="w-4 h-4 text-[#B7410E]" />
-                        </motion.button>
-                        <motion.button
-                          className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg"
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          aria-label="Comment on post"
-                        >
-                          <MessageCircle className="w-4 h-4 text-[#B7410E]" />
-                        </motion.button>
-                        <motion.button
-                          className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg"
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          aria-label="Share post"
-                        >
-                          <Share2 className="w-4 h-4 text-[#B7410E]" />
-                        </motion.button>
-                      </div>
-
-                      {/* Price Tag */}
-                      <div className="absolute bottom-4 left-4">
-                        <span className="bg-[#D4AF37] text-[#2D2D2D] font-bold px-3 py-1 rounded-full text-sm">
-                          {post.price}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-6">
-                      <h3 className="text-xl font-bold text-[#2D2D2D] mb-2 group-hover:text-[#B7410E] transition-colors duration-300">
-                        {post.title}
-                      </h3>
-                      
-                      <p className="text-[#2D2D2D]/70 mb-4 text-sm leading-relaxed">
-                        {post.description}
-                      </p>
-
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-4 text-[#2D2D2D]/70 text-sm">
-                          <div className="flex items-center gap-1">
-                            <Heart className="w-4 h-4" />
-                            <span>{post.likes.toLocaleString()}</span>
+                    <Card
+                      variant="outfit"
+                      className="overflow-hidden h-full"
+                      onClick={() => navigate('/results')}
+                    >
+                      <div className="relative h-80 bg-gradient-to-br from-[#B7410E]/10 to-[#D4AF37]/10 rounded-t-2xl overflow-hidden">
+                        {post.mainImageUrl ? (
+                          <img
+                            src={post.mainImageUrl}
+                            alt={post.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/api/placeholder/300/400';
+                            }}
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-[#2D2D2D]/60">
+                            No image available
                           </div>
-                          <div className="flex items-center gap-1">
-                            <MessageCircle className="w-4 h-4" />
-                            <span>{post.comments}</span>
-                          </div>
-                        </div>
-                        <span className="text-[#2D2D2D]/50 text-xs">
-                          {post.createdAt}
-                        </span>
-                      </div>
+                        )}
 
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {post.tags.map((tag, tagIndex) => (
-                          <span 
-                            key={tagIndex}
-                            className="bg-[#FAF3E0] text-[#8B5E3C] px-2 py-1 rounded-full text-xs font-medium"
+                        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <motion.button
+                            className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            aria-label="Like post"
                           >
-                            #{tag}
-                          </span>
-                        ))}
+                            <Heart className="w-4 h-4 text-[#B7410E]" />
+                          </motion.button>
+                          <motion.button
+                            className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            aria-label="Comment on post"
+                          >
+                            <MessageCircle className="w-4 h-4 text-[#B7410E]" />
+                          </motion.button>
+                          <motion.button
+                            className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            aria-label="Share post"
+                          >
+                            <Share2 className="w-4 h-4 text-[#B7410E]" />
+                          </motion.button>
+                        </div>
+
+                        {priceLabel && (
+                          <div className="absolute bottom-4 left-4">
+                            <span className="bg-[#D4AF37] text-[#2D2D2D] font-bold px-3 py-1 rounded-full text-sm">
+                              {priceLabel}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
-                      <div className="flex justify-between items-center">
-                        <span className="text-[#2D2D2D]/70 text-sm font-medium">
-                          {post.brand}
-                        </span>
-                        <Button 
-                          variant="primary" 
-                          size="sm"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                        >
-                          Shop Look
-                          <ArrowRight className="w-4 h-4 ml-1" />
-                        </Button>
+                      <div className="p-6">
+                        <h3 className="text-xl font-bold text-[#2D2D2D] mb-2 group-hover:text-[#B7410E] transition-colors duration-300">
+                          {post.title}
+                        </h3>
+
+                        <p className="text-[#2D2D2D]/70 mb-4 text-sm leading-relaxed line-clamp-3">
+                          {post.description}
+                        </p>
+
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-4 text-[#2D2D2D]/70 text-sm">
+                            <div className="flex items-center gap-1">
+                              <Heart className="w-4 h-4" />
+                              <span>{post.likes.toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Share2 className="w-4 h-4" />
+                              <span>{post.shares?.toLocaleString?.() || post.shares || 0}</span>
+                            </div>
+                          </div>
+                          <span className="text-[#2D2D2D]/50 text-xs">
+                            {formatDate(post.createdAt)}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {post.styleTags?.map((tag, tagIndex) => (
+                            <span
+                              key={tagIndex}
+                              className="bg-[#FAF3E0] text-[#8B5E3C] px-2 py-1 rounded-full text-xs font-medium"
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                          <span className="text-[#2D2D2D]/70 text-sm font-medium">
+                            {brandLabel}
+                          </span>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                          >
+                            View Look
+                            <ArrowRight className="w-4 h-4 ml-1" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </Card>
-                </motion.div>
-              ))}
+                    </Card>
+                  </motion.div>
+                );
+              })}
             </motion.div>
           ) : (
-            <motion.div 
+            <motion.div
               className="text-center py-20"
               initial="initial"
               animate="animate"
@@ -555,7 +548,8 @@ const ProfilePage: React.FC = () => {
             username: currentUserData.username?.replace('@', '') || '',
             bio: currentUserData.bio,
             location: currentUserData.location,
-            profilePicture: currentUserData.profilePicture
+            profilePicture: currentUserData.profilePicture,
+            usernameChangeCount: currentUserData.usernameChangeCount
           }}
         />
       )}

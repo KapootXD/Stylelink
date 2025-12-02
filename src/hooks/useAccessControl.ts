@@ -28,7 +28,7 @@ export interface UseAccessControlReturn {
   canAccess: (feature: FeatureType) => boolean;
   /** Check if user is an Admin */
   isAdmin: () => boolean;
-  /** Check if user is Premium (or Admin) */
+  /** Check if user is Seller Premium (or Admin) */
   isPremium: () => boolean;
   /** Check if user can edit content */
   canEdit: () => boolean;

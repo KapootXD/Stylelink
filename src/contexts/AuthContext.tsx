@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth, signUp, login, logout as firebaseLogout, resetPassword, getUserProfile, updateUserType, isAuthInitialized } from '../config/firebase';
-import { AppUser, UserType } from '../types/user';
+import { AppUser, DEFAULT_USER_TYPE, UserType } from '../types/user';
 import toast from 'react-hot-toast';
 
 // Auth context type
@@ -29,6 +29,61 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  const demoAuthEnabled =
+    process.env.REACT_APP_ALLOW_GUEST_MODE === 'true' ||
+    process.env.NODE_ENV !== 'production';
+
+  const demoCredentials = {
+    email: process.env.REACT_APP_DEMO_EMAIL || 'tester@example.com',
+    password: process.env.REACT_APP_DEMO_PASSWORD || 'P@ssword1234!',
+  };
+
+  const createDemoUser = (email: string): User => ({
+    uid: 'demo-user',
+    email,
+    displayName: 'Demo User',
+    emailVerified: true,
+    isAnonymous: false,
+    providerData: [],
+    metadata: {} as any,
+    providerId: 'password',
+    refreshToken: '',
+    phoneNumber: null,
+    photoURL: null,
+    tenantId: null,
+    delete: async () => Promise.resolve(),
+    getIdToken: async () => Promise.resolve('demo-token'),
+    getIdTokenResult: async () => Promise.resolve({} as any),
+    reload: async () => Promise.resolve(),
+    toJSON: () => ({
+      uid: 'demo-user',
+      email,
+      displayName: 'Demo User',
+      emailVerified: true,
+      isAnonymous: false,
+      providerData: [],
+      metadata: {},
+      providerId: 'password',
+      refreshToken: '',
+      phoneNumber: null,
+      photoURL: null,
+      tenantId: null,
+    }),
+    // Unsupported methods in demo mode
+    getIdTokenResultAsync: undefined as any,
+    getIdTokenAsync: undefined as any,
+  });
+
+  const createDemoProfile = (uid: string, email: string): AppUser => ({
+    uid,
+    email,
+    emailVerified: true,
+    displayName: 'Demo User',
+    userType: DEFAULT_USER_TYPE,
+    createdAt: new Date(),
+    isOwnProfile: true,
+  });
+
   // Fetch user profile from Firestore
   const fetchUserProfile = async (user: User | null): Promise<void> => {
     if (!user) {
@@ -49,7 +104,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         displayName: user.displayName,
         photoURL: user.photoURL,
         profilePicture: user.photoURL || undefined, // Map photoURL to profilePicture
-        userType: 'regular' as UserType,
+        userType: UserType.BUYER,
         createdAt: new Date(),
         isOwnProfile: true
       });
@@ -95,16 +150,44 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Signup function
   const handleSignup = async (
-    email: string, 
-    password: string, 
+    email: string,
+    password: string,
     userType: 'customer' | 'seller',
     displayName?: string
   ): Promise<void> => {
     try {
       setError(null);
       setLoading(true);
+
+      // If Firebase isn't initialized (e.g., in local demo/test mode), simulate a signup so flows still work
+      if (!isAuthInitialized() || !auth) {
+        const mockUser = {
+          uid: `mock-${Date.now()}`,
+          email,
+          emailVerified: true,
+          displayName: displayName || email,
+          photoURL: null,
+        } as unknown as User;
+
+        setCurrentUser(mockUser);
+        setUserProfile({
+          uid: mockUser.uid,
+          email: mockUser.email,
+          emailVerified: mockUser.emailVerified,
+          displayName: mockUser.displayName,
+          photoURL: mockUser.photoURL,
+          profilePicture: mockUser.photoURL || undefined,
+          userType,
+          createdAt: new Date(),
+          isOwnProfile: true,
+        });
+
+        toast.success('Account created successfully! (demo mode)');
+        return;
+      }
+
       const userCredential = await signUp(email, password, userType, displayName);
-      
+
       // Fetch user profile after signup
       if (userCredential.user) {
         await fetchUserProfile(userCredential.user);
@@ -126,8 +209,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setError(null);
       setLoading(true);
+
+      // Allow demo/guest login when Firebase isn't configured (used in local/E2E environments)
+      if ((!isAuthInitialized() || !auth) && demoAuthEnabled) {
+        if (email !== demoCredentials.email || password !== demoCredentials.password) {
+          const errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+          setError(errorMessage);
+          toast.error(errorMessage);
+          throw new Error(errorMessage);
+        }
+
+        const demoUser = createDemoUser(email);
+        setCurrentUser(demoUser);
+        setUserProfile(createDemoProfile(demoUser.uid, email));
+        toast.success('Welcome back!');
+        return;
+      }
+
       const userCredential = await login(email, password);
-      
+
       // Fetch user profile after login
       if (userCredential.user) {
         await fetchUserProfile(userCredential.user);

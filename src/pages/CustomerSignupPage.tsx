@@ -202,7 +202,7 @@ const CustomerSignupPage: React.FC = () => {
           </motion.div>
 
           {/* Form */}
-          <form onSubmit={handleContinue}>
+          <form onSubmit={handleContinue} noValidate>
             {/* Form Fields */}
             <motion.div
               variants={fadeIn}

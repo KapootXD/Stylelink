@@ -149,7 +149,7 @@ test.describe('User Type Access Control', () => {
         }
         
         // Logout for next iteration
-        const logoutButton = page.getByRole('button', { name: /log out|sign out/i });
+        const logoutButton = page.getByRole('button', { name: /log\s*out|logout|sign\s*out|signout/i });
         if (await logoutButton.count() > 0) {
           await logoutButton.click();
           await page.waitForLoadState('domcontentloaded');

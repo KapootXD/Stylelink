@@ -70,6 +70,11 @@ const SignupPage: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleUserTypeSelection = (type: 'customer' | 'seller') => {
+    setUserType(type);
+    navigate(`/signup/${type}`);
+  };
+
   // Handle form submission
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
@@ -198,7 +203,7 @@ const SignupPage: React.FC = () => {
                   {/* Customer Option */}
                   <motion.button
                     type="button"
-                    onClick={() => setUserType('customer')}
+                    onClick={() => handleUserTypeSelection('customer')}
                     disabled={loading}
                     className={`
                       p-4 rounded-lg border-2 transition-all duration-300
@@ -239,7 +244,7 @@ const SignupPage: React.FC = () => {
                   {/* Seller Option */}
                   <motion.button
                     type="button"
-                    onClick={() => setUserType('seller')}
+                    onClick={() => handleUserTypeSelection('seller')}
                     disabled={loading}
                     className={`
                       p-4 rounded-lg border-2 transition-all duration-300

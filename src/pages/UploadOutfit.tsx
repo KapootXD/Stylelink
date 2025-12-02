@@ -27,12 +27,16 @@ const UploadOutfit: React.FC = () => {
     title: '',
     description: '',
     location: '',
-    tags: '',
     price: '',
     brand: '',
     occasion: '',
     season: 'spring' as 'spring' | 'summer' | 'fall' | 'winter'
   });
+  const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
+  const [styleSelection, setStyleSelection] = useState('');
+  const [customStyle, setCustomStyle] = useState('');
+  const [hashtags, setHashtags] = useState<string[]>([]);
+  const [hashtagInput, setHashtagInput] = useState('');
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [videoFiles, setVideoFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -40,6 +44,20 @@ const UploadOutfit: React.FC = () => {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const prefersReducedMotion = useReducedMotion();
+
+  const styleOptions = [
+    'Streetwear',
+    'Casual',
+    'Vintage',
+    'Minimalist',
+    'Bohemian',
+    'Formal',
+    'Athleisure',
+    'Classic',
+    'Preppy',
+    'Glam',
+    'Avant-garde'
+  ];
 
   // Animation variants
   const fadeInUp = {
@@ -82,7 +100,52 @@ const UploadOutfit: React.FC = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const addStyleTag = (style: string) => {
+    const normalizedStyle = style.trim();
+    if (!normalizedStyle) return;
+    setSelectedStyles(prev => (prev.includes(normalizedStyle) ? prev : [...prev, normalizedStyle]));
+  };
+
+  const removeStyleTag = (style: string) => {
+    setSelectedStyles(prev => prev.filter(tag => tag !== style));
+  };
+
+  const handleCustomStyleAdd = () => {
+    addStyleTag(customStyle);
+    setCustomStyle('');
+  };
+
+  const addHashtag = () => {
+    const cleaned = hashtagInput.trim().replace(/^#/, '');
+    if (!cleaned) return;
+    if (hashtags.length >= 5) {
+      toast.error('You can only add up to 5 hashtags');
+      return;
+    }
+
+    const normalized = `#${cleaned}`;
+    if (hashtags.includes(normalized)) {
+      toast.error('Hashtag already added');
+      return;
+    }
+
+    setHashtags(prev => [...prev, normalized]);
+    setHashtagInput('');
+  };
+
+  const removeHashtag = (tag: string) => {
+    setHashtags(prev => prev.filter(item => item !== tag));
+  };
+
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (videoFiles.length > 0) {
+      toast.error('You can only upload photos OR a single video, not both. Remove the video to add photos.');
+      if (imageInputRef.current) {
+        imageInputRef.current.value = '';
+      }
+      return;
+    }
+
     const files = event.target.files;
     if (files) {
       const newFiles = Array.from(files).filter(file => {
@@ -120,12 +183,32 @@ const UploadOutfit: React.FC = () => {
   };
 
   const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (imageFiles.length > 0) {
+      toast.error('You can only upload photos OR a single video, not both. Remove the photos to add a video.');
+      if (videoInputRef.current) {
+        videoInputRef.current.value = '';
+      }
+      return;
+    }
+
     const files = event.target.files;
     if (files) {
-      const newFiles = Array.from(files).filter(file => file.type.startsWith('video/'));
-      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-      setVideoFiles(prev => [...prev, ...newFiles]);
-      setVideoPreviews(prev => [...prev, ...newPreviews]);
+      if (videoFiles.length >= 1) {
+        toast.error('Only one video can be uploaded. Remove the current video to replace it.');
+        if (videoInputRef.current) {
+          videoInputRef.current.value = '';
+        }
+        return;
+      }
+
+      const validFile = Array.from(files).find(file => file.type.startsWith('video/'));
+      if (validFile) {
+        const preview = URL.createObjectURL(validFile);
+        setVideoFiles([validFile]);
+        setVideoPreviews([preview]);
+      } else {
+        toast.error('Please select a valid video file');
+      }
     }
     // Reset input to allow selecting the same file again
     if (videoInputRef.current) {
@@ -154,8 +237,13 @@ const UploadOutfit: React.FC = () => {
       return;
     }
 
-    if (imageFiles.length === 0 && videoFiles.length === 0) {
-      toast.error('Please upload at least one image or video');
+    if ((imageFiles.length > 0 && videoFiles.length > 0) || (imageFiles.length === 0 && videoFiles.length === 0)) {
+      toast.error('Upload either photos for a slideshow or one video.');
+      return;
+    }
+
+    if (hashtags.length > 5) {
+      toast.error('Please limit hashtags to 5 or fewer.');
       return;
     }
 
@@ -168,10 +256,7 @@ const UploadOutfit: React.FC = () => {
       setIsUploading(true);
       setUploadProgress(0);
 
-      // Parse style tags
-      const styleTags = formData.tags
-        ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
-        : [];
+      const styleTags = selectedStyles;
 
       // Create outfit with media
       const outfit = await createOutfitWithMedia(
@@ -181,6 +266,7 @@ const UploadOutfit: React.FC = () => {
           occasion: formData.occasion || 'casual',
           season: formData.season,
           styleTags,
+          hashtags,
           items: [], // Can be added later
           isPublic: true
         },
@@ -276,7 +362,7 @@ const UploadOutfit: React.FC = () => {
                       id="image-upload"
                       disabled={isUploading}
                     />
-                    <label 
+                    <label
                       htmlFor="image-upload"
                       className={`cursor-pointer block ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
@@ -287,38 +373,109 @@ const UploadOutfit: React.FC = () => {
                         Upload Photos
                       </h3>
                       <p className="text-[#2D2D2D]/70 text-xs">
-                        Click to select images
+                        Click to select images for your slideshow
                       </p>
                     </label>
+
+                    {imagePreviews.length > 0 && (
+                      <div className="mt-4 text-left">
+                        <h4 className="text-sm font-semibold text-[#2D2D2D] mb-2">Selected Photos ({imagePreviews.length})</h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          {imagePreviews.map((preview, index) => (
+                            <motion.div
+                              key={preview}
+                              className="relative group"
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ duration: 0.3, delay: index * 0.05 }}
+                            >
+                              <div className="aspect-square bg-gradient-to-br from-[#B7410E]/20 to-[#D4AF37]/20 rounded-xl overflow-hidden">
+                                <img
+                                  src={preview}
+                                  alt={`Outfit preview ${index + 1}`}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <motion.button
+                                className="absolute -top-2 -right-2 bg-[#B7410E] text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-lg"
+                                onClick={() => removeImage(index)}
+                                disabled={isUploading}
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                              >
+                                <X className="w-3 h-3" />
+                              </motion.button>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Video Upload Area */}
-                  <div className="border-2 border-dashed border-[#8B5E3C]/30 rounded-2xl p-6 text-center hover:border-[#B7410E]/50 transition-colors duration-300">
-                    <input
-                      ref={videoInputRef}
-                      type="file"
-                      multiple
-                      accept="video/*"
-                      onChange={handleVideoUpload}
-                      className="hidden"
-                      id="video-upload"
-                      disabled={isUploading}
-                    />
-                    <label 
-                      htmlFor="video-upload"
-                      className={`cursor-pointer block ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      <div className="bg-[#FAF3E0] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <Video className="w-6 h-6 text-[#B7410E]" />
+                {/* Video Upload Area */}
+                <div className="border-2 border-dashed border-[#8B5E3C]/30 rounded-2xl p-6 text-center hover:border-[#B7410E]/50 transition-colors duration-300">
+                  <input
+                    ref={videoInputRef}
+                    type="file"
+                    accept="video/*"
+                    onChange={handleVideoUpload}
+                    className="hidden"
+                    id="video-upload"
+                    disabled={isUploading}
+                  />
+                  <label
+                    htmlFor="video-upload"
+                    className={`cursor-pointer block ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <div className="bg-[#FAF3E0] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Video className="w-6 h-6 text-[#B7410E]" />
+                    </div>
+                    <h3 className="text-base font-semibold text-[#2D2D2D] mb-1">
+                        Upload One Video
+                    </h3>
+                    <p className="text-[#2D2D2D]/70 text-xs">
+                        Click to select a single video
+                    </p>
+                  </label>
+
+                  {videoPreviews.length > 0 && (
+                    <div className="mt-4 text-left">
+                      <h4 className="text-sm font-semibold text-[#2D2D2D] mb-2">Selected Video</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        {videoPreviews.map((preview, index) => (
+                          <motion.div
+                            key={preview}
+                            className="relative group"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.3, delay: index * 0.05 }}
+                          >
+                            <div className="aspect-square bg-gradient-to-br from-[#B7410E]/20 to-[#D4AF37]/20 rounded-xl overflow-hidden relative">
+                              <video
+                                src={preview}
+                                className="w-full h-full object-cover"
+                                controls={false}
+                                muted
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <Video className="w-8 h-8 text-white/80" />
+                              </div>
+                            </div>
+                            <motion.button
+                              className="absolute -top-2 -right-2 bg-[#B7410E] text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-lg"
+                              onClick={() => removeVideo(index)}
+                              disabled={isUploading}
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                            >
+                              <X className="w-3 h-3" />
+                            </motion.button>
+                          </motion.div>
+                        ))}
                       </div>
-                      <h3 className="text-base font-semibold text-[#2D2D2D] mb-1">
-                        Upload Videos
-                      </h3>
-                      <p className="text-[#2D2D2D]/70 text-xs">
-                        Click to select videos
-                      </p>
-                    </label>
-                  </div>
+                    </div>
+                  )}
+                </div>
                 </div>
 
                 {/* Upload Progress */}
@@ -349,88 +506,6 @@ const UploadOutfit: React.FC = () => {
                   </div>
                 )}
 
-                {/* Image Preview Grid */}
-                {imagePreviews.length > 0 && (
-                  <motion.div 
-                    className="mb-4"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <h3 className="text-sm font-semibold text-[#2D2D2D] mb-3">Images ({imagePreviews.length})</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      {imagePreviews.map((preview, index) => (
-                        <motion.div
-                          key={index}
-                          className="relative group"
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.3, delay: index * 0.05 }}
-                        >
-                          <div className="aspect-square bg-gradient-to-br from-[#B7410E]/20 to-[#D4AF37]/20 rounded-xl overflow-hidden">
-                            <img 
-                              src={preview} 
-                              alt={`Image ${index + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <motion.button
-                            className="absolute -top-2 -right-2 bg-[#B7410E] text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-lg"
-                            onClick={() => removeImage(index)}
-                            disabled={isUploading}
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                          >
-                            <X className="w-3 h-3" />
-                          </motion.button>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Video Preview Grid */}
-                {videoPreviews.length > 0 && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <h3 className="text-sm font-semibold text-[#2D2D2D] mb-3">Videos ({videoPreviews.length})</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      {videoPreviews.map((preview, index) => (
-                        <motion.div
-                          key={index}
-                          className="relative group"
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.3, delay: index * 0.05 }}
-                        >
-                          <div className="aspect-square bg-gradient-to-br from-[#B7410E]/20 to-[#D4AF37]/20 rounded-xl overflow-hidden relative">
-                            <video 
-                              src={preview} 
-                              className="w-full h-full object-cover"
-                              controls={false}
-                              muted
-                            />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <Video className="w-8 h-8 text-white/80" />
-                            </div>
-                          </div>
-                          <motion.button
-                            className="absolute -top-2 -right-2 bg-[#B7410E] text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-lg"
-                            onClick={() => removeVideo(index)}
-                            disabled={isUploading}
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                          >
-                            <X className="w-3 h-3" />
-                          </motion.button>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
               </Card>
             </motion.div>
 
@@ -480,12 +555,107 @@ const UploadOutfit: React.FC = () => {
                     onChange={(e) => handleInputChange('brand', e.target.value)}
                   />
 
-                  <Input
-                    label="Style Tags"
-                    placeholder="e.g., streetwear, casual, vintage (comma-separated)"
-                    value={formData.tags}
-                    onChange={(e) => handleInputChange('tags', e.target.value)}
-                  />
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-[#2D2D2D]">Style Tags</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <select
+                        value={styleSelection}
+                        onChange={(e) => {
+                          addStyleTag(e.target.value);
+                          setStyleSelection('');
+                        }}
+                        className="w-full px-4 py-3 rounded-lg border-2 border-[#8B5E3C]/30 bg-white text-[#2D2D2D] focus:outline-none focus:border-[#B7410E]"
+                      >
+                        <option value="">Select a style</option>
+                        {styleOptions.map((style) => (
+                          <option key={style} value={style}>
+                            {style}
+                          </option>
+                        ))}
+                      </select>
+
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={customStyle}
+                          onChange={(e) => setCustomStyle(e.target.value)}
+                          placeholder="Other style"
+                          className="w-full px-4 py-3 rounded-lg border-2 border-[#8B5E3C]/30 bg-white text-[#2D2D2D] focus:outline-none focus:border-[#B7410E]"
+                        />
+                        <Button
+                          variant="secondary"
+                          onClick={handleCustomStyleAdd}
+                          disabled={!customStyle.trim()}
+                        >
+                          Add
+                        </Button>
+                      </div>
+                    </div>
+
+                    {selectedStyles.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {selectedStyles.map((style) => (
+                          <span
+                            key={style}
+                            className="inline-flex items-center gap-2 px-3 py-1 bg-[#FAF3E0] text-[#2D2D2D] rounded-full text-sm border border-[#8B5E3C]/30"
+                          >
+                            {style}
+                            <button
+                              type="button"
+                              onClick={() => removeStyleTag(style)}
+                              className="text-[#B7410E] hover:text-[#8B5E3C]"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-[#2D2D2D]">Hashtags (max 5)</label>
+                    <div className="flex gap-3">
+                      <input
+                        type="text"
+                        value={hashtagInput}
+                        onChange={(e) => setHashtagInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ',') {
+                            e.preventDefault();
+                            addHashtag();
+                          }
+                        }}
+                        placeholder="#StreetStyle"
+                        className="w-full px-4 py-3 rounded-lg border-2 border-[#8B5E3C]/30 bg-white text-[#2D2D2D] focus:outline-none focus:border-[#B7410E]"
+                        disabled={hashtags.length >= 5}
+                      />
+                      <Button variant="secondary" onClick={addHashtag} disabled={!hashtagInput.trim() || hashtags.length >= 5}>
+                        Add
+                      </Button>
+                    </div>
+                    <p className="text-xs text-[#2D2D2D]/70">Press Enter or comma to add a hashtag. Up to 5 hashtags.</p>
+
+                    {hashtags.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {hashtags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="inline-flex items-center gap-2 px-3 py-1 bg-[#FAF3E0] text-[#2D2D2D] rounded-full text-sm border border-[#8B5E3C]/30"
+                          >
+                            {tag}
+                            <button
+                              type="button"
+                              onClick={() => removeHashtag(tag)}
+                              className="text-[#B7410E] hover:text-[#8B5E3C]"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -594,12 +764,16 @@ const UploadOutfit: React.FC = () => {
                   title: '',
                   description: '',
                   location: '',
-                  tags: '',
                   price: '',
                   brand: '',
                   occasion: '',
                   season: 'spring'
                 });
+                setSelectedStyles([]);
+                setStyleSelection('');
+                setCustomStyle('');
+                setHashtags([]);
+                setHashtagInput('');
                 setImageFiles([]);
                 setVideoFiles([]);
                 setImagePreviews([]);
@@ -617,12 +791,16 @@ const UploadOutfit: React.FC = () => {
                   title: '',
                   description: '',
                   location: '',
-                  tags: '',
                   price: '',
                   brand: '',
                   occasion: '',
                   season: 'spring'
                 });
+                setSelectedStyles([]);
+                setStyleSelection('');
+                setCustomStyle('');
+                setHashtags([]);
+                setHashtagInput('');
                 setImageFiles([]);
                 setVideoFiles([]);
                 setImagePreviews([]);
