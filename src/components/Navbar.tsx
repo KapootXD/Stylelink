@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, User, Search, Heart, LogOut, LogIn, Upload } from 'lucide-react';
+import { Menu, X, User, Search, Heart, LogOut, LogIn, Upload, Crown } from 'lucide-react';
 import SearchModal from './SearchModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useAccessControl } from '../hooks/useAccessControl';
@@ -11,7 +11,7 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser, logout, loading } = useAuth();
-  const { canAccess, isAdmin } = useAccessControl();
+  const { canAccess, isAdmin, isPremium } = useAccessControl();
 
   const handleLogout = async () => {
     try {
@@ -153,6 +153,15 @@ const Navbar: React.FC = () => {
                     Admin
                   </span>
                 )}
+                {!isPremium() && (
+                  <Link
+                    to="/settings"
+                    className="flex items-center px-3 py-2 rounded-full text-sm font-semibold text-white bg-[#B7410E] hover:bg-[#8B5E3C] shadow-md transition-colors"
+                  >
+                    <Crown className="h-4 w-4 mr-2" />
+                    Upgrade
+                  </Link>
+                )}
                 <button
                   onClick={handleLogout}
                   disabled={loading}
@@ -291,6 +300,16 @@ const Navbar: React.FC = () => {
                     <User className="h-5 w-5 mr-2" />
                     Admin
                   </div>
+                )}
+                {!isPremium() && (
+                  <Link
+                    to="/settings"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center px-3 py-2 rounded-md text-base font-medium text-white bg-[#B7410E] hover:bg-[#8B5E3C] transition-colors"
+                  >
+                    <Crown className="h-5 w-5 mr-2" />
+                    Upgrade
+                  </Link>
                 )}
                 <button
                   onClick={() => {
