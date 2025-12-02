@@ -61,6 +61,35 @@ export class SignupPage {
       await loginLink.click();
     }
   }
+
+  // Additional methods for comprehensive testing
+  async signup(email: string, password: string, confirmPassword: string, userType: 'customer' | 'seller' = 'customer') {
+    await this.page.getByLabel(/email/i).fill(email);
+    await this.page.getByLabel(/^password/i).fill(password);
+    await this.page.getByLabel(/confirm password/i).fill(confirmPassword);
+    
+    // Select user type
+    if (userType === 'customer') {
+      await this.clickCustomerSignup();
+    } else {
+      await this.clickSellerSignup();
+    }
+    
+    // Submit form
+    await this.page.getByRole('button', { name: /sign up|register|create account/i }).click();
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  async expectValidationError(field: string) {
+    await expect(
+      this.page.getByText(new RegExp(`${field}.*required|invalid|please`, 'i'))
+    ).toBeVisible({ timeout: 5000 });
+  }
+
+  async expectSuccess() {
+    // After successful signup, should redirect away from signup page
+    await expect(this.page).not.toHaveURL(/.*\/signup/, { timeout: 10000 });
+  }
 }
 
 export default SignupPage;
