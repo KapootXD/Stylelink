@@ -4,7 +4,7 @@ const isCI = !!process.env.CI;
 
 export default defineConfig({
   testDir: 'tests/e2e',
-  timeout: 30_000,
+  timeout: 60_000, // Increased to 60 seconds to handle authentication
   retries: isCI ? 2 : 0,
   reporter: [['html']],
   webServer: {
