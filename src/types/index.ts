@@ -145,3 +145,4 @@ export interface ViewMode {
   itemsPerRow?: number;
 }
 export * from './activity';
+export * from './user';

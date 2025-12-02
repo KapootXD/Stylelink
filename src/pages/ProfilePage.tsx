@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
-import { 
-  Camera, 
+import {
+  Camera,
   Edit3,
   Heart,
   MessageCircle,
@@ -12,30 +12,30 @@ import {
   Plus,
   ArrowRight
 } from 'lucide-react';
+import { User } from 'firebase/auth';
 import { Button, Card, LoadingSpinner, EditProfileModal } from '../components';
 import { useReducedMotion } from '../components/PageTransition';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserProfile } from '../config/firebase';
 import { getOutfits } from '../services/firebaseService';
-import { OutfitUpload } from '../types';
+import { AppUser, OutfitUpload } from '../types';
 import toast from 'react-hot-toast';
 
-// Mock user data - replace with actual user context when backend is implemented
-const mockUser = {
-  id: '1',
-  displayName: 'Alex Chen',
-  username: '@alexstyle',
-  bio: 'Fashion enthusiast sharing authentic streetwear from Tokyo to NYC. Always on the hunt for unique local brands! 🌟',
-  profilePicture: '/api/placeholder/150/150',
-  location: 'Tokyo, Japan',
-  joinDate: 'March 2023',
-  usernameChangeCount: 0,
+type ProfileViewData = {
+  id: string;
+  displayName: string;
+  username: string;
+  bio: string;
+  profilePicture: string;
+  location: string;
+  joinDate: string;
+  usernameChangeCount: number;
   stats: {
-    followers: 2847,
-    following: 156,
-    posts: 42
-  },
-  isOwnProfile: true // For demo purposes
+    followers: number;
+    following: number;
+    posts: number;
+  };
+  isOwnProfile: boolean;
 };
 
 const ProfilePage: React.FC = () => {
@@ -44,13 +44,13 @@ const ProfilePage: React.FC = () => {
   const { currentUser, userProfile, refreshUserProfile, loading: authLoading } = useAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [profileData, setProfileData] = useState<typeof mockUser | null>(null);
-  const [profileImage, setProfileImage] = useState<string>(mockUser.profilePicture);
+  const [profileData, setProfileData] = useState<ProfileViewData | null>(null);
+  const [profileImage, setProfileImage] = useState<string>('');
   const [outfitPosts, setOutfitPosts] = useState<OutfitUpload[]>([]);
   const [areOutfitsLoading, setAreOutfitsLoading] = useState(false);
   const prefersReducedMotion = useReducedMotion();
 
-  const formatDate = (date?: Date) => {
+  const formatDate = (date?: Date | string | number | null) => {
     if (!date) return 'Recently';
 
     try {
@@ -64,7 +64,65 @@ const ProfilePage: React.FC = () => {
       return 'Recently';
     }
   };
-  
+
+  const generateAvatarPlaceholder = (name?: string | null, email?: string | null) => {
+    const fallbackName = name || email?.split('@')[0] || 'User';
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(fallbackName)}&background=8B5E3C&color=fff`;
+  };
+
+  const buildProfileView = ({
+    profile,
+    fallbackUser,
+    targetId,
+    isOwnProfile,
+  }: {
+    profile?: AppUser | null;
+    fallbackUser?: User | null;
+    targetId?: string;
+    isOwnProfile: boolean;
+  }): ProfileViewData => {
+    const displayName =
+      profile?.displayName ||
+      fallbackUser?.displayName ||
+      profile?.email ||
+      fallbackUser?.email ||
+      'User';
+
+    const username = profile?.username
+      ? `@${profile.username}`
+      : fallbackUser?.email
+        ? `@${fallbackUser.email.split('@')[0]}`
+        : profile?.email
+          ? `@${profile.email.split('@')[0]}`
+          : `@${displayName.replace(/\s+/g, '').toLowerCase() || 'user'}`;
+
+    const profilePicture =
+      profile?.profilePicture ||
+      profile?.photoURL ||
+      profile?.avatarUrl ||
+      fallbackUser?.photoURL ||
+      generateAvatarPlaceholder(displayName, profile?.email || fallbackUser?.email || null);
+
+    const joinDateValue = profile?.createdAt || profile?.joinDate || fallbackUser?.metadata?.creationTime;
+
+    return {
+      id: profile?.uid || targetId || fallbackUser?.uid || 'unknown',
+      displayName,
+      username,
+      bio: profile?.bio || 'Tell the community about your style.',
+      profilePicture,
+      location: profile?.location || 'Add your location',
+      joinDate: formatDate(joinDateValue),
+      usernameChangeCount: profile?.usernameChangeCount ?? 0,
+      stats: profile?.stats || {
+        followers: 0,
+        following: 0,
+        posts: 0,
+      },
+      isOwnProfile,
+    };
+  };
+
   // Determine which user's profile to show
   // If userId param exists, view that user's profile, otherwise view own profile
   const targetUserId = userId || currentUser?.uid;
@@ -81,47 +139,40 @@ const ProfilePage: React.FC = () => {
       try {
         setIsLoading(true);
         const profile = await getUserProfile(targetUserId);
-        
+
         if (profile) {
-          const formattedProfile = {
-            id: profile.uid,
-            displayName: profile.displayName || 'User',
-            username: profile.username ? `@${profile.username}` : '@user',
-            bio: profile.bio || 'No bio yet. Click edit to add one!',
-            profilePicture: profile.profilePicture || profile.photoURL || profile.avatarUrl || mockUser.profilePicture,
-            location: profile.location || 'Not set',
-            joinDate: profile.createdAt
-              ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-              : 'Recently',
-            usernameChangeCount: profile.usernameChangeCount ?? mockUser.usernameChangeCount,
-            stats: profile.stats || {
-              followers: 0,
-              following: 0,
-              posts: 0
-            },
-            isOwnProfile: isViewingOwnProfile
-          };
-          
+          const formattedProfile = buildProfileView({
+            profile,
+            fallbackUser: currentUser,
+            targetId: targetUserId,
+            isOwnProfile: isViewingOwnProfile,
+          });
+
           setProfileData(formattedProfile);
           setProfileImage(formattedProfile.profilePicture);
         } else {
-          // No profile found, use defaults
-          setProfileData({
-            ...mockUser,
-            id: targetUserId,
-            displayName: currentUser?.displayName || 'User',
-            username: '@user',
-            isOwnProfile: isViewingOwnProfile
+          // No profile found, use user context data
+          const fallbackProfile = buildProfileView({
+            profile: userProfile,
+            fallbackUser: currentUser,
+            targetId: targetUserId,
+            isOwnProfile: isViewingOwnProfile,
           });
+
+          setProfileData(fallbackProfile);
+          setProfileImage(fallbackProfile.profilePicture);
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
         toast.error('Failed to load profile');
-        setProfileData({
-          ...mockUser,
-          id: targetUserId,
-          isOwnProfile: targetUserId === currentUser?.uid
+        const fallbackProfile = buildProfileView({
+          profile: userProfile,
+          fallbackUser: currentUser,
+          targetId: targetUserId,
+          isOwnProfile: targetUserId === currentUser?.uid,
         });
+        setProfileData(fallbackProfile);
+        setProfileImage(fallbackProfile.profilePicture);
       } finally {
         setIsLoading(false);
       }
@@ -157,27 +208,40 @@ const ProfilePage: React.FC = () => {
     }
   }, [targetUserId, authLoading]);
 
-  // Use Firebase profile data or fallback to mock, but always reflect real post count
-  const currentUserData = profileData
-    ? {
-        ...profileData,
-        stats: {
-          ...profileData.stats,
-          posts: outfitPosts.length || profileData.stats?.posts || 0
-        }
-      }
-    : {
-        ...mockUser,
-        stats: {
-          ...mockUser.stats,
-          posts: outfitPosts.length || mockUser.stats.posts
-        }
-      };
+  useEffect(() => {
+    if (!profileData && (userProfile || currentUser) && targetUserId) {
+      const baseProfile = buildProfileView({
+        profile: userProfile,
+        fallbackUser: currentUser,
+        targetId: targetUserId,
+        isOwnProfile: isViewingOwnProfile,
+      });
+      setProfileData(baseProfile);
+      setProfileImage(baseProfile.profilePicture);
+    }
+  }, [profileData, userProfile, currentUser, targetUserId, isViewingOwnProfile]);
+
+  // Use Firebase profile data or fallback to user context, but always reflect real post count
+  const fallbackProfileData = buildProfileView({
+    profile: userProfile,
+    fallbackUser: currentUser,
+    targetId: targetUserId,
+    isOwnProfile: isViewingOwnProfile,
+  });
+
+  const baseProfile = profileData || fallbackProfileData;
+  const currentUserData: ProfileViewData = {
+    ...baseProfile,
+    stats: {
+      ...baseProfile.stats,
+      posts: outfitPosts.length || baseProfile.stats?.posts || 0,
+    },
+  };
 
   // Animation variants
   const fadeInUp = {
     initial: { opacity: 0, y: 60 },
-    animate: { 
+    animate: {
       opacity: 1, 
       y: 0,
       transition: { duration: prefersReducedMotion ? 0.3 : 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
@@ -218,26 +282,15 @@ const ProfilePage: React.FC = () => {
         console.log('📥 Fetching updated profile for:', targetUserId);
         const profile = await getUserProfile(targetUserId);
         console.log('📥 Fetched profile:', profile);
-        
+
         if (profile) {
-          const formattedProfile = {
-            id: profile.uid,
-            displayName: profile.displayName || 'User',
-            username: profile.username ? `@${profile.username}` : '@user',
-            bio: profile.bio || 'No bio yet. Click edit to add one!',
-            profilePicture: profile.profilePicture || profile.photoURL || profile.avatarUrl || mockUser.profilePicture,
-            location: profile.location || 'Not set',
-            joinDate: profile.createdAt 
-              ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-              : 'Recently',
-            stats: profile.stats || {
-              followers: 0,
-              following: 0,
-              posts: 0
-            },
-            isOwnProfile: isViewingOwnProfile
-          };
-          
+          const formattedProfile = buildProfileView({
+            profile,
+            fallbackUser: currentUser,
+            targetId: targetUserId,
+            isOwnProfile: isViewingOwnProfile,
+          });
+
           console.log('✅ Setting profile data:', formattedProfile);
           setProfileData(formattedProfile);
           setProfileImage(formattedProfile.profilePicture);
@@ -268,13 +321,16 @@ const ProfilePage: React.FC = () => {
               variants={slideInLeft}
             >
               <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-2xl bg-gradient-to-br from-[#B7410E]/20 to-[#D4AF37]/20">
-                <img 
-                  src={profileImage || currentUserData.profilePicture} 
+                <img
+                  src={profileImage || currentUserData.profilePicture}
                   alt={`${currentUserData.displayName}'s profile`}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     // Fallback to placeholder if image fails to load
-                    (e.target as HTMLImageElement).src = mockUser.profilePicture;
+                    (e.target as HTMLImageElement).src = generateAvatarPlaceholder(
+                      currentUserData.displayName,
+                      currentUser?.email || userProfile?.email || null,
+                    );
                   }}
                 />
               </div>

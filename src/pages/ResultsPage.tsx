@@ -1,55 +1,46 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Heart, 
-  MessageCircle, 
-  Share2, 
-  Bookmark, 
-  ArrowLeft, 
-  Filter, 
-  SortAsc, 
-  Grid3X3, 
-  List, 
-  Eye,
+import {
+  Heart,
+  MessageCircle,
+  Share2,
+  Bookmark,
+  ArrowLeft,
+  SortAsc,
+  Grid3X3,
+  List,
   Loader2,
   AlertCircle,
-  Search,
+  RefreshCw,
   X,
   ChevronDown
 } from 'lucide-react';
 import Card from '../components/Card';
 import Button from '../components/Button';
-import { 
-  OutfitUpload, 
-  ResultsPageState, 
-  InteractionState, 
-  SortOption, 
+import {
+  OutfitUpload,
+  ResultsPageState,
+  InteractionState,
+  SortOption,
   ViewMode,
-  FashionItemLabel 
+  FashionItemLabel
 } from '../types';
-import { DEMO_DATA } from '../data/demoData';
 import { likeOutfit, shareOutfit } from '../services/apiService';
-import { 
-  getLikedPosts, 
-  getSavedPosts, 
-  getComments, 
-  saveLikedPosts, 
-  saveSavedPosts, 
-  saveComments 
-} from '../utils/localStorage';
+import { getOutfits } from '../services/firebaseService';
+import { getLikedPosts, getSavedPosts, saveLikedPosts, saveSavedPosts } from '../utils/localStorage';
 import PageErrorBoundary from '../components/PageErrorBoundary';
 
 const ResultsPageContent: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Get data from navigation state or use demo data as fallback
+  // Get data from navigation state when available
   const navigationData = location.state as ResultsPageState;
-  
+
   // State management
   const [results, setResults] = useState<OutfitUpload[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [viewMode, setViewMode] = useState<ViewMode>({ type: 'grid' });
   const [sortBy, setSortBy] = useState<SortOption['value']>('newest');
@@ -90,15 +81,30 @@ const ResultsPageContent: React.FC = () => {
     }
   };
   
-  // Initialize data
-  useEffect(() => {
-    if (navigationData?.data?.results) {
-      setResults(navigationData.data.results);
-    } else {
-      // Fallback to demo data if no navigation state
-      setResults(DEMO_DATA.outfits.slice(0, 8));
+  const fetchCatalog = useCallback(async () => {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      if (navigationData?.data?.results && navigationData.data.results.length > 0) {
+        setResults(navigationData.data.results);
+      } else {
+        const { outfits } = await getOutfits({}, 1, 30);
+        setResults(outfits);
+      }
+    } catch (catalogError) {
+      console.error('Error loading catalog:', catalogError);
+      setError('Unable to load the catalog right now. Please try again in a moment.');
+      setResults([]);
+    } finally {
+      setIsLoading(false);
     }
   }, [navigationData]);
+
+  // Initialize data
+  useEffect(() => {
+    fetchCatalog();
+  }, [fetchCatalog]);
   
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -205,12 +211,12 @@ const ResultsPageContent: React.FC = () => {
     setShowDetailedView(true);
   };
   
-  // Handle try again
-  const handleTryAgain = () => {
-    navigate('/discover');
+  // Refresh catalog content
+  const handleRefreshCatalog = () => {
+    fetchCatalog();
   };
   
-  // Generate fashion item labels (mockup data)
+  // Generate fashion item labels from outfit items
   const generateFashionLabels = (outfit: OutfitUpload): FashionItemLabel[] => {
     return outfit.items.slice(0, 3).map((item, index) => {
       // Create more realistic label positions
@@ -400,33 +406,31 @@ const ResultsPageContent: React.FC = () => {
                 <span>Back</span>
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Style Results
-        </h1>
+                <h1 className="text-2xl font-bold text-gray-900">Catalog</h1>
                 <p className="text-sm text-gray-600">
-                  {sortedResults.length} outfits found
+                  Shop {sortedResults.length} looks uploaded by our community
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               {/* View Mode Toggle */}
-          <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode({ type: 'grid' })}
-              aria-label="Grid view"
-              className={`p-2 rounded transition-colors ${
-                viewMode.type === 'grid' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Grid3X3 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode({ type: 'list' })}
-              aria-label="List view"
-              className={`p-2 rounded transition-colors ${
-                viewMode.type === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-              }`}
+              <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode({ type: 'grid' })}
+                  aria-label="Grid view"
+                  className={`p-2 rounded transition-colors ${
+                    viewMode.type === 'grid' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <Grid3X3 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode({ type: 'list' })}
+                  aria-label="List view"
+                  className={`p-2 rounded transition-colors ${
+                    viewMode.type === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                  }`}
                 >
                   <List className="w-4 h-4" />
                 </button>
@@ -471,16 +475,16 @@ const ResultsPageContent: React.FC = () => {
       
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" data-testid="results-container">
-        {/* Try Again Button */}
-        <div className="mb-6">
+        {/* Catalog Actions */}
+        <div className="mb-6 flex flex-wrap gap-3">
           <Button
-            onClick={handleTryAgain}
+            onClick={handleRefreshCatalog}
             variant="secondary"
             size="md"
             className="flex items-center space-x-2"
           >
-            <Search className="w-4 h-4" />
-            <span>Try Another Search</span>
+            <RefreshCw className="w-4 h-4" />
+            <span>Refresh Catalog</span>
           </Button>
         </div>
         
@@ -521,7 +525,7 @@ const ResultsPageContent: React.FC = () => {
         
         {/* Empty State */}
         {!isLoading && sortedResults.length === 0 && !error && (
-          <motion.div 
+          <motion.div
             className="text-center py-12"
             initial="initial"
             animate="animate"
@@ -532,10 +536,10 @@ const ResultsPageContent: React.FC = () => {
               No outfits found
             </h3>
             <p className="text-gray-600 mb-6">
-              Try adjusting your search terms or filters
+              Once outfits are uploaded, you can shop them here.
             </p>
-            <Button onClick={handleTryAgain} variant="primary">
-              Try Again
+            <Button onClick={handleRefreshCatalog} variant="primary">
+              Refresh Catalog
             </Button>
           </motion.div>
         )}

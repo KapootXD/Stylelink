@@ -445,6 +445,21 @@ const MainFeaturePageContent: React.FC<MainFeaturePageProps> = () => {
           </motion.div>
         ))}
 
+        {!isLoading && outfits.length === 0 && (
+          <div className="h-screen flex items-center justify-center text-white text-center px-6">
+            <div className="space-y-3">
+              <p className="text-2xl font-bold">No outfits to discover yet</p>
+              <p className="text-white/80">Upload a look to start the community feed or check back soon for new styles.</p>
+              <button
+                onClick={() => navigate('/upload')}
+                className="mt-2 inline-flex items-center px-6 py-3 bg-white/20 backdrop-blur-sm rounded-full font-semibold hover:bg-white/30 transition"
+              >
+                Share your first outfit
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Loading State */}
         {isLoading && (
           <div className="h-screen flex items-center justify-center" role="status" aria-label="Loading styles">
