@@ -82,6 +82,17 @@ e2e_tests:
 build:
   stage: build
   image: node:18
+  variables:
+    # Ensure emulators are disabled for production builds
+    REACT_APP_USE_FIREBASE_EMULATOR: "false"
+    # Firebase config will be set from GitLab CI/CD variables
+    REACT_APP_FIREBASE_API_KEY: $FIREBASE_API_KEY
+    REACT_APP_FIREBASE_AUTH_DOMAIN: $FIREBASE_AUTH_DOMAIN
+    REACT_APP_FIREBASE_PROJECT_ID: $FIREBASE_PROJECT_ID
+    REACT_APP_FIREBASE_STORAGE_BUCKET: $FIREBASE_STORAGE_BUCKET
+    REACT_APP_FIREBASE_MESSAGING_SENDER_ID: $FIREBASE_MESSAGING_SENDER_ID
+    REACT_APP_FIREBASE_APP_ID: $FIREBASE_APP_ID
+    REACT_APP_FIREBASE_MEASUREMENT_ID: $FIREBASE_MEASUREMENT_ID
   script:
     - npm run build
   artifacts:
