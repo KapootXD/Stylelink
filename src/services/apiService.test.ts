@@ -54,7 +54,8 @@ describe('apiService', () => {
           color: 'Blue',
           category: 'top',
           imageUrl: 'https://example.com/item.jpg',
-          directLink: 'https://example.com'
+          directLink: 'https://example.com',
+          availability: 'in-stock'
         }
       ],
       mainImageUrl: 'https://example.com/image.jpg',
