@@ -18,6 +18,7 @@ test.describe('Navigation', () => {
   test('can navigate from homepage to all public pages', async ({ page }) => {
     await homePage.goto();
     await homePage.expectLoaded();
+    await navbar.expectNavbarVisible();
 
     // Navigate to About page
     await navbar.clickHomeLink(); // Ensure we're on home
@@ -27,23 +28,28 @@ test.describe('Navigation', () => {
 
     // Navigate to About via navbar
     await page.goto('/');
+    await page.waitForLoadState('networkidle');
     await navbar.clickHomeLink();
     await expect(page).toHaveURL(/.*\/$/);
 
     // Test About page navigation
     await page.goto('/about');
+    await page.waitForLoadState('networkidle');
     await expect(page).toHaveURL(/.*\/about/);
 
     // Test Features page navigation
     await page.goto('/features');
+    await page.waitForLoadState('networkidle');
     await expect(page).toHaveURL(/.*\/features/);
 
     // Test Support page navigation
     await page.goto('/support');
+    await page.waitForLoadState('networkidle');
     await expect(page).toHaveURL(/.*\/support/);
 
     // Test Contact page navigation
     await page.goto('/contact');
+    await page.waitForLoadState('networkidle');
     await expect(page).toHaveURL(/.*\/contact/);
 
     // Navigate back to home
@@ -53,6 +59,7 @@ test.describe('Navigation', () => {
 
   test('navbar logo navigates to homepage', async ({ page }) => {
     await page.goto('/about');
+    await page.waitForLoadState('networkidle');
     await navbar.expectLogoVisible();
     await navbar.clickLogo();
     await expect(page).toHaveURL(/.*\/$/);
@@ -65,6 +72,7 @@ test.describe('Navigation', () => {
 
     await homePage.goto();
     await homePage.expectLoaded();
+    await navbar.expectNavbarVisible();
 
     // Open mobile menu
     await navbar.openMobileMenu();
@@ -96,6 +104,10 @@ test.describe('Navigation', () => {
     await expect(page).toHaveURL(/.*\/$/);
 
     // Menu should be closed (mobile menu closes after navigation)
+    await page.waitForTimeout(300);
+    await expect(
+      page.locator('nav .md\\:hidden').getByRole('link', { name: /discover/i })
+    ).toHaveCount(0);
   });
 
   test('browser back button works', async ({ page }) => {
@@ -208,6 +220,7 @@ test.describe('Navigation', () => {
     
     // Page should reload at top
     await expect(page).toHaveURL(/.*\/$/);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).resolves.toBeLessThan(20);
   });
 
   test('can navigate through authentication flow', async ({ page }) => {
@@ -248,8 +261,15 @@ test.describe('Navigation', () => {
     await homePage.goto();
     await navbar.expectActiveLink('Home');
 
-    await page.goto('/about');
-    // Note: About may not be in main nav, so this test may need adjustment
-    // Focus on testing that home link is highlighted when on home
+    // Discover is the other primary nav link; verify highlight when accessible
+    await navbar.clickDiscoverLink();
+    const url = page.url();
+    if (url.includes('/discover')) {
+      await navbar.expectActiveLink('Discover');
+    } else {
+      // If redirected (e.g., to login), ensure home remains active on return
+      await navbar.clickLogo();
+      await navbar.expectActiveLink('Home');
+    }
   });
 });

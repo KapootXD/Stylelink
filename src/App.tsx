@@ -36,6 +36,10 @@ import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
+  // Deployment test - verify automatic deployment is working
+  // eslint-disable-next-line no-console
+  console.log('🚀 StyleLink App Loaded - Auto-deploy test v1.0.0');
+  
   const handleError = (error: Error, errorInfo: ErrorInfo) => {
     // In production, forward to monitoring; in development, surface in console for quick diagnosis.
     if (process.env.NODE_ENV === 'development') {

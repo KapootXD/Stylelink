@@ -84,7 +84,11 @@ const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FAF3E0]">
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <section
+        id="hero"
+        className="relative min-h-screen flex items-center justify-center overflow-hidden"
+        aria-labelledby="hero-heading"
+      >
         {/* Enhanced Gradient Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#B7410E] via-[#D4AF37] to-[#8B5E3C]"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10"></div>
@@ -147,12 +151,19 @@ const HomePage: React.FC = () => {
             </span>
           </motion.div>
           
-          <motion.h1 
-            className="text-6xl md:text-8xl font-bold text-white mb-8 leading-tight tracking-tight"
+          <motion.h1
+            id="hero-heading"
+            className="slogan-art text-5xl md:text-7xl font-semibold text-white mb-10 leading-tight tracking-[0.12em] drop-shadow-2xl"
             variants={fadeInUp}
           >
-            If you're looking for style,<br />
-            <span className="text-[#D4AF37] drop-shadow-lg">we're worth your while.</span>
+            <span className="inline-flex flex-col gap-3 items-center">
+              <span className="px-6 py-4 rounded-2xl bg-white/10 border border-white/30 backdrop-blur-xl shadow-[0_15px_50px_rgba(0,0,0,0.4)]">
+                If you're looking for style,
+              </span>
+              <span className="px-6 py-4 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/60 text-[#F8E7BD] shadow-[0_20px_60px_rgba(212,175,55,0.4)]">
+                we're worth your while.
+              </span>
+            </span>
           </motion.h1>
           
           <motion.p 
@@ -167,21 +178,23 @@ const HomePage: React.FC = () => {
             className="flex flex-col sm:flex-row gap-6 justify-center items-center"
             variants={fadeInUp}
           >
-            <Button 
-              variant="primary" 
+            <Button
+              variant="primary"
               size="lg"
               onClick={() => navigate('/signup')}
               className="shadow-2xl"
+              aria-label="Get Started with StyleLink"
             >
               Get Started
               <ArrowRight className="inline-block ml-2 w-5 h-5" />
             </Button>
             
-            <Button 
-              variant="secondary" 
+            <Button
+              variant="secondary"
               size="lg"
               onClick={() => navigate('/about')}
               className="bg-white/20 border-white/50 text-white hover:bg-white hover:text-[#2D2D2D] backdrop-blur-sm"
+              aria-label="Learn more about StyleLink"
             >
               Learn More
             </Button>
@@ -190,7 +203,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-24 px-4 bg-white">
+      <section id="features" className="py-24 px-4 bg-white" aria-labelledby="features-heading">
         <div className="max-w-7xl mx-auto">
           <motion.div 
             className="text-center mb-20"
@@ -204,7 +217,7 @@ const HomePage: React.FC = () => {
                 Features
               </span>
             </div>
-            <h2 className="text-5xl md:text-6xl font-bold text-[#2D2D2D] mb-6">
+            <h2 id="features-heading" className="text-5xl md:text-6xl font-bold text-[#2D2D2D] mb-6">
               Why Choose StyleLink?
             </h2>
             <p className="text-xl text-[#2D2D2D]/80 max-w-3xl mx-auto leading-relaxed">
@@ -245,7 +258,11 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-24 px-4 bg-gradient-to-br from-[#FAF3E0] to-white">
+      <section
+        id="how-it-works"
+        className="py-24 px-4 bg-gradient-to-br from-[#FAF3E0] to-white"
+        aria-labelledby="how-it-works-heading"
+      >
         <div className="max-w-6xl mx-auto">
           <motion.div 
             className="text-center mb-20"
@@ -259,7 +276,7 @@ const HomePage: React.FC = () => {
                 How It Works
               </span>
             </div>
-            <h2 className="text-5xl md:text-6xl font-bold text-[#2D2D2D] mb-6">
+            <h2 id="how-it-works-heading" className="text-5xl md:text-6xl font-bold text-[#2D2D2D] mb-6">
               Three Simple Steps
             </h2>
             <p className="text-xl text-[#2D2D2D]/80 max-w-3xl mx-auto leading-relaxed">
@@ -314,7 +331,11 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Final CTA Section */}
-      <section className="py-24 px-4 bg-gradient-to-br from-[#B7410E] via-[#D4AF37] to-[#8B5E3C] relative overflow-hidden">
+      <section
+        id="cta"
+        className="py-24 px-4 bg-gradient-to-br from-[#B7410E] via-[#D4AF37] to-[#8B5E3C] relative overflow-hidden"
+        aria-labelledby="cta-heading"
+      >
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full"></div>
@@ -335,7 +356,7 @@ const HomePage: React.FC = () => {
               </span>
             </div>
             
-            <h2 className="text-5xl md:text-7xl font-bold text-white mb-8 leading-tight">
+            <h2 id="cta-heading" className="text-5xl md:text-7xl font-bold text-white mb-8 leading-tight">
               Join the community where<br />
               <span className="text-[#FAF3E0] drop-shadow-lg">creativity meets culture</span>
             </h2>
@@ -345,21 +366,23 @@ const HomePage: React.FC = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-              <Button 
-                variant="primary" 
+              <Button
+                variant="primary"
                 size="lg"
                 onClick={() => navigate('/signup')}
                 className="shadow-2xl bg-[#FAF3E0] text-[#2D2D2D] hover:bg-white text-xl px-12 py-5"
+                aria-label="Start your StyleLink journey"
               >
                 Start Your Style Journey
                 <ArrowRight className="inline-block ml-3 w-6 h-6" />
               </Button>
-              
-              <Button 
-                variant="secondary" 
+
+              <Button
+                variant="secondary"
                 size="lg"
                 onClick={() => navigate('/features')}
                 className="border-2 border-white/50 text-white hover:bg-white hover:text-[#2D2D2D] text-xl px-12 py-5 backdrop-blur-sm"
+                aria-label="Explore StyleLink features"
               >
                 Explore Features
               </Button>

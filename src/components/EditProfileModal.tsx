@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Camera, Upload, Loader } from 'lucide-react';
 import { Button, Input, Modal, LoadingSpinner } from './index';
 import { useAuth } from '../contexts/AuthContext';
-import { updateUserProfileInFirestore, uploadFile, updateUserProfile } from '../config/firebase';
+import { isUsernameAvailable, updateUserProfileInFirestore, uploadFile, updateUserProfile } from '../config/firebase';
 import toast from 'react-hot-toast';
 import { compressImage } from '../utils/imageCompression';
 
@@ -16,8 +16,22 @@ interface EditProfileModalProps {
     bio?: string;
     location?: string;
     profilePicture?: string;
+    usernameChangeCount?: number;
   };
 }
+
+const COUNTRY_OPTIONS = [
+  'United States',
+  'Canada',
+  'United Kingdom',
+  'Australia',
+  'Germany',
+  'France',
+  'India',
+  'Japan',
+  'China',
+  'Brazil'
+];
 
 const EditProfileModal: React.FC<EditProfileModalProps> = ({
   isOpen,
@@ -37,6 +51,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(initialData.profilePicture || null);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingPicture, setIsUploadingPicture] = useState(false);
+  const [profilePictureRemoved, setProfilePictureRemoved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Update form when initialData changes
@@ -50,10 +65,22 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     setProfilePicture(initialData.profilePicture || null);
     setProfilePicturePreview(initialData.profilePicture || null);
     setProfilePictureFile(null);
+    setProfilePictureRemoved(false);
   }, [initialData, isOpen]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleBioChange = (value: string) => {
+    const wordCount = value.trim() ? value.trim().split(/\s+/).length : 0;
+
+    if (wordCount > 50) {
+      toast.error('Bio must be 50 words or fewer');
+      return;
+    }
+
+    handleInputChange('bio', value);
   };
 
   const handleProfilePictureChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,6 +111,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       });
 
       setProfilePictureFile(compressedFile);
+      setProfilePictureRemoved(false);
       
       // Create preview
       const preview = URL.createObjectURL(compressedFile);
@@ -149,6 +177,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         }
       }
 
+      if (profilePictureRemoved && !profilePictureFile) {
+        profilePictureUrl = null;
+      }
+
       // Prepare update data - only include non-empty values
       const updateData: any = {
         uid: currentUser.uid,
@@ -159,8 +191,29 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       if (formData.displayName && formData.displayName.trim()) {
         updateData.displayName = formData.displayName.trim();
       }
-      if (formData.username && formData.username.trim()) {
-        updateData.username = formData.username.trim();
+      const normalizedUsername = formData.username.trim();
+      const initialUsername = initialData.username?.trim();
+      const usernameChanged = normalizedUsername && normalizedUsername !== initialUsername;
+      const usernameChangeCount = initialData.usernameChangeCount || 0;
+
+      if (usernameChanged) {
+        if (usernameChangeCount >= 3) {
+          toast.error('Username can only be changed 3 times.');
+          setIsSaving(false);
+          return;
+        }
+
+        const available = await isUsernameAvailable(normalizedUsername, currentUser.uid);
+        if (!available) {
+          toast.error('This username is already taken.');
+          setIsSaving(false);
+          return;
+        }
+
+        updateData.username = normalizedUsername;
+        updateData.usernameChangeCount = usernameChangeCount + 1;
+      } else if (normalizedUsername) {
+        updateData.username = normalizedUsername;
       }
       if (formData.bio && formData.bio.trim()) {
         updateData.bio = formData.bio.trim();
@@ -168,21 +221,25 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       if (formData.location && formData.location.trim()) {
         updateData.location = formData.location.trim();
       }
-      if (profilePictureUrl) {
+      if (profilePictureUrl !== undefined) {
         updateData.avatarUrl = profilePictureUrl;
-        updateData.photoURL = profilePictureUrl;
+        updateData.photoURL = profilePictureUrl || null;
       }
 
       console.log('📝 Updating profile with data:', updateData);
 
       // Update Firestore profile
       await updateUserProfileInFirestore(currentUser.uid, updateData);
-      
+
       console.log('✅ Profile updated in Firestore');
 
       // Update Firebase Auth display name
       if (formData.displayName) {
         await updateUserProfile({ displayName: formData.displayName });
+      }
+
+      if (profilePictureRemoved && !profilePictureFile) {
+        await updateUserProfile({ photoURL: null });
       }
 
       // Refresh user profile in context
@@ -211,6 +268,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     setProfilePictureFile(null);
     setProfilePicturePreview(null);
     setProfilePicture(null);
+    setProfilePictureRemoved(true);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -254,17 +312,16 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
               id="profile-picture-upload"
               disabled={isUploadingPicture}
             />
-            <label htmlFor="profile-picture-upload">
-              <Button
-                variant="secondary"
-                size="sm"
-                className="cursor-pointer"
-                disabled={isUploadingPicture}
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                {profilePicturePreview ? 'Change' : 'Upload'} Photo
-              </Button>
-            </label>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="cursor-pointer"
+              disabled={isUploadingPicture}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              {profilePicturePreview ? 'Change' : 'Upload'} Photo
+            </Button>
             {profilePicturePreview && (
               <Button
                 variant="secondary"
@@ -306,22 +363,33 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
               className="w-full px-4 py-2 border border-[#8B5E3C]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B7410E] resize-none"
               placeholder="Tell us about yourself..."
               value={formData.bio}
-              onChange={(e) => handleInputChange('bio', e.target.value)}
+              onChange={(e) => handleBioChange(e.target.value)}
               rows={4}
-              maxLength={500}
+              maxLength={1000}
             />
             <p className="text-xs text-[#2D2D2D]/60 mt-1">
-              {formData.bio.length}/500 characters
+              {formData.bio.trim() ? formData.bio.trim().split(/\s+/).length : 0}/50 words
             </p>
           </div>
 
-          <Input
-            label="Location"
-            placeholder="City, Country (e.g., Tokyo, Japan)"
-            value={formData.location}
-            onChange={(e) => handleInputChange('location', e.target.value)}
-            maxLength={100}
-          />
+          <div>
+            <label className="block text-sm font-medium text-[#2D2D2D] mb-2">Location</label>
+            <select
+              className="w-full px-4 py-2 border border-[#8B5E3C]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B7410E] bg-white"
+              value={formData.location}
+              onChange={(e) => handleInputChange('location', e.target.value)}
+            >
+              <option value="">Select your country</option>
+              {COUNTRY_OPTIONS.map(country => (
+                <option key={country} value={country}>
+                  {country}
+                </option>
+              ))}
+              {formData.location && !COUNTRY_OPTIONS.includes(formData.location) && (
+                <option value={formData.location}>{formData.location}</option>
+              )}
+            </select>
+          </div>
         </div>
 
         {/* Action Buttons */}

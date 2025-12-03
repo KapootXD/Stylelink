@@ -51,6 +51,8 @@ export const createMockAuthContext = (overrides = {}) => ({
   userProfile: null,
   loading: false,
   error: null,
+  authReady: true,
+  usingDemoAuth: false,
   signup: vi.fn(),
   login: vi.fn(),
   logout: vi.fn(),

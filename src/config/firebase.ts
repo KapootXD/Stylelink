@@ -1,5 +1,5 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getFirestore, Firestore, doc, setDoc, getDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { getFirestore, Firestore, doc, setDoc, getDoc, serverTimestamp, Timestamp, getDocs, collection, query, where } from 'firebase/firestore';
 import { 
   getAuth, 
   Auth, 
@@ -137,8 +137,8 @@ export const signUp = async (
     }
     
     // Create user document in Firestore with userType classification
-    // Map 'customer'/'seller' to 'regular' userType (can be upgraded later)
-    const appUserType: UserType = DEFAULT_USER_TYPE;
+    // Map signup selection to new user roles
+    const appUserType: UserType = userType === 'seller' ? UserType.SELLER : DEFAULT_USER_TYPE;
     
     try {
       const userProfile: Omit<FirestoreUserProfile, 'createdAt'> & { createdAt: any } = {
@@ -216,6 +216,7 @@ export const getUserProfile = async (uid: string): Promise<AppUser | null> => {
       photoURL,
       userType: data.userType || DEFAULT_USER_TYPE,
       username: data.username,
+      usernameChangeCount: data.usernameChangeCount,
       bio: data.bio,
       avatarUrl: data.avatarUrl,
       profilePicture, // Map to profilePicture for backward compatibility
@@ -247,6 +248,7 @@ const createDefaultUserProfile = (firebaseUser: User): AppUser => {
     photoURL: firebaseUser.photoURL,
     profilePicture: firebaseUser.photoURL || undefined, // Map photoURL to profilePicture
     userType: DEFAULT_USER_TYPE,
+    usernameChangeCount: 0,
     createdAt: new Date(),
     isOwnProfile: true
   };
@@ -364,7 +366,7 @@ export const resetPassword = async (email: string): Promise<void> => {
   }
 };
 
-export const updateUserProfile = async (updates: { displayName?: string; photoURL?: string }): Promise<void> => {
+export const updateUserProfile = async (updates: { displayName?: string; photoURL?: string | null }): Promise<void> => {
   if (!auth || !auth.currentUser) {
     throw new Error('No user is currently signed in.');
   }
@@ -373,6 +375,32 @@ export const updateUserProfile = async (updates: { displayName?: string; photoUR
     await updateProfile(auth.currentUser, updates);
   } catch (error) {
     console.error('Error updating user profile:', error);
+    throw error;
+  }
+};
+
+export const isUsernameAvailable = async (username: string, currentUid?: string): Promise<boolean> => {
+  if (!db) {
+    throw new Error('Firestore is not initialized. Please check your Firebase configuration.');
+  }
+
+  const normalizedUsername = username.trim();
+  if (!normalizedUsername) {
+    return false;
+  }
+
+  try {
+    const usersRef = collection(db, 'users');
+    const usernameQuery = query(usersRef, where('username', '==', normalizedUsername));
+    const snapshot = await getDocs(usernameQuery);
+
+    if (snapshot.empty) {
+      return true;
+    }
+
+    return snapshot.docs.every(docSnapshot => docSnapshot.id === currentUid);
+  } catch (error) {
+    console.error('Error checking username availability:', error);
     throw error;
   }
 };

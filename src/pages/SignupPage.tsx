@@ -1,94 +1,33 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShoppingBag, Store, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { Button, Input } from '../components';
+import { ShoppingBag, Store, CheckCircle2 } from 'lucide-react';
+import { Button } from '../components';
 import { useAuth } from '../contexts/AuthContext';
 import { useReducedMotion } from '../components/PageTransition';
-import LoadingSpinner from '../components/LoadingSpinner';
 
 const SignupPage: React.FC = () => {
   const navigate = useNavigate();
-  const { signup, loading } = useAuth();
+  const { usingDemoAuth } = useAuth();
   const prefersReducedMotion = useReducedMotion();
 
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [confirmPassword, setConfirmPassword] = useState<string>('');
-  const [userType, setUserType] = useState<'customer' | 'seller' | ''>('');
-  const [errors, setErrors] = useState<{ 
-    email?: string; 
-    password?: string; 
-    confirmPassword?: string; 
-    userType?: string; 
-    general?: string 
-  }>({});
+  const [userType, setUserType] = useState<'customer' | 'seller' | null>(null);
+  const [selectionError, setSelectionError] = useState<string | null>(null);
 
-  // Email validation
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  const handleUserTypeSelection = (type: 'customer' | 'seller') => {
+    setSelectionError(null);
+    setUserType(type);
   };
 
-  // Password strength validation
-  const validatePassword = (password: string): boolean => {
-    return password.length >= 6;
-  };
-
-  // Form validation
-  const validateForm = (): boolean => {
-    const newErrors: { 
-      email?: string; 
-      password?: string; 
-      confirmPassword?: string; 
-      userType?: string 
-    } = {};
-
-    if (!email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!validateEmail(email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
-    if (!password) {
-      newErrors.password = 'Password is required';
-    } else if (!validatePassword(password)) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-
-    if (!confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-
+  const handleContinue = () => {
     if (!userType) {
-      newErrors.userType = 'Please select a user type';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Handle form submission
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
-    e.preventDefault();
-    setErrors({});
-
-    if (!validateForm()) {
+      setSelectionError('Choose how you want to use StyleLink to continue.');
       return;
     }
 
-    try {
-      await signup(email, password, userType as 'customer' | 'seller');
-      navigate('/');
-    } catch (error: any) {
-      const errorMessage = error.message || 'Failed to create account. Please try again.';
-      setErrors({ general: errorMessage });
-    }
+    navigate(`/signup/${userType}`);
   };
 
-  // Animation variants
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
     animate: { 
@@ -109,7 +48,7 @@ const SignupPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FAF3E0] flex items-center justify-center px-4 py-12">
       <motion.div
-        className="w-full max-w-md"
+        className="w-full max-w-xl"
         initial="initial"
         animate="animate"
         variants={staggerChildren}
@@ -124,203 +63,152 @@ const SignupPage: React.FC = () => {
           </p>
         </motion.div>
 
-        {/* Signup Form */}
+        {usingDemoAuth && (
+          <motion.div
+            variants={fadeInUp}
+            className="mb-6"
+            role="status"
+          >
+            <div className="flex items-start gap-3 rounded-xl border border-[#8B5E3C]/30 bg-[#8B5E3C]/10 px-4 py-3 text-[#2D2D2D]">
+              <svg
+                className="mt-0.5 h-5 w-5 flex-shrink-0"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-12a1 1 0 00-.894.553l-3.5 7A1 1 0 006.5 15h7a1 1 0 00.894-1.447l-3.5-7A1 1 0 0010 6z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <div>
+                <p className="font-semibold">Demo authentication enabled</p>
+                <p className="text-sm leading-5 text-[#2D2D2D]">
+                  Firebase credentials were not detected, so signups will create temporary demo accounts locally.
+                  Use any email and password to explore features without touching real data.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Signup selection */}
         <motion.div variants={fadeInUp}>
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* General Error Message */}
-              {errors.general && (
-                <motion.div
-                  className="flex items-center gap-2 p-4 bg-[#B7410E]/10 border border-[#B7410E] rounded-lg text-[#B7410E]"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  role="alert"
+          <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-semibold text-[#2D2D2D]">Pick your journey</h2>
+              <p className="text-sm text-[#2D2D2D]/70">
+                Choose the experience that fits you best to continue setting up your account.
+              </p>
+            </div>
+
+            {selectionError && (
+              <div
+                className="flex items-center gap-2 p-4 bg-[#B7410E]/10 border border-[#B7410E] rounded-lg text-[#B7410E]"
+                role="alert"
+              >
+                <svg
+                  className="w-4 h-4 flex-shrink-0"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
                 >
-                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                  <span className="text-sm font-medium">{errors.general}</span>
-                </motion.div>
-              )}
-
-              {/* Email Input */}
-              <div>
-                <Input
-                  label="Email"
-                  type="email"
-                  name="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  error={errors.email}
-                  required
-                  disabled={loading}
-                  aria-label="Email address"
-                />
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span className="text-sm font-medium">{selectionError}</span>
               </div>
+            )}
 
-              {/* Password Input */}
-              <div>
-                <Input
-                  label="Password"
-                  type="password"
-                  name="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Create a password (min. 6 characters)"
-                  error={errors.password}
-                  required
-                  disabled={loading}
-                  aria-label="Password"
-                />
-              </div>
-
-              {/* Confirm Password Input */}
-              <div>
-                <Input
-                  label="Confirm Password"
-                  type="password"
-                  name="confirmPassword"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm your password"
-                  error={errors.confirmPassword}
-                  required
-                  disabled={loading}
-                  aria-label="Confirm password"
-                />
-              </div>
-
-              {/* User Type Selection */}
-              <div>
-                <label className="block text-sm font-medium text-[#2D2D2D] mb-3">
-                  I want to... <span className="text-[#B7410E]">*</span>
-                </label>
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Customer Option */}
-                  <motion.button
-                    type="button"
-                    onClick={() => setUserType('customer')}
-                    disabled={loading}
-                    className={`
-                      p-4 rounded-lg border-2 transition-all duration-300
-                      ${userType === 'customer'
-                        ? 'border-[#B7410E] bg-[#B7410E]/10'
-                        : 'border-[#8B5E3C]/30 hover:border-[#B7410E]/50'
-                      }
-                      ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                    `}
-                    whileHover={!loading ? { scale: 1.02 } : {}}
-                    whileTap={!loading ? { scale: 0.98 } : {}}
-                    aria-pressed={userType === 'customer'}
-                  >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Customer Option */}
+              <motion.button
+                type="button"
+                onClick={() => handleUserTypeSelection('customer')}
+                className={`
+                  p-5 rounded-xl border-2 transition-all duration-300 text-left bg-white
+                  ${userType === 'customer'
+                    ? 'border-[#B7410E] bg-[#B7410E]/10 shadow-md'
+                    : 'border-[#8B5E3C]/30 hover:border-[#B7410E]/60 hover:-translate-y-1'
+                  }
+                `}
+                whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+                aria-pressed={userType === 'customer'}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
                     <ShoppingBag 
-                      className={`w-6 h-6 mx-auto mb-2 ${
+                      className={`w-7 h-7 mb-3 ${
                         userType === 'customer' ? 'text-[#B7410E]' : 'text-[#2D2D2D]/60'
                       }`}
                     />
-                    <p className={`font-semibold text-sm ${
-                      userType === 'customer' ? 'text-[#B7410E]' : 'text-[#2D2D2D]'
-                    }`}>
-                      Customer
+                    <p className="font-semibold text-lg text-[#2D2D2D]">Shop & Discover</p>
+                    <p className="text-sm text-[#2D2D2D]/70 mt-1">
+                      Explore looks, follow creators, and build your wardrobe.
                     </p>
-                    <p className="text-xs text-[#2D2D2D]/70 mt-1">
-                      Explore & shop
-                    </p>
-                    {userType === 'customer' && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="mt-2"
-                      >
-                        <CheckCircle2 className="w-5 h-5 text-[#B7410E] mx-auto" />
-                      </motion.div>
-                    )}
-                  </motion.button>
+                  </div>
+                  {userType === 'customer' && (
+                    <CheckCircle2 className="w-5 h-5 text-[#B7410E]" aria-hidden="true" />
+                  )}
+                </div>
+              </motion.button>
 
-                  {/* Seller Option */}
-                  <motion.button
-                    type="button"
-                    onClick={() => setUserType('seller')}
-                    disabled={loading}
-                    className={`
-                      p-4 rounded-lg border-2 transition-all duration-300
-                      ${userType === 'seller'
-                        ? 'border-[#B7410E] bg-[#B7410E]/10'
-                        : 'border-[#8B5E3C]/30 hover:border-[#B7410E]/50'
-                      }
-                      ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                    `}
-                    whileHover={!loading ? { scale: 1.02 } : {}}
-                    whileTap={!loading ? { scale: 0.98 } : {}}
-                    aria-pressed={userType === 'seller'}
-                  >
-                    <Store 
-                      className={`w-6 h-6 mx-auto mb-2 ${
+              {/* Seller Option */}
+              <motion.button
+                type="button"
+                onClick={() => handleUserTypeSelection('seller')}
+                className={`
+                  p-5 rounded-xl border-2 transition-all duration-300 text-left bg-white
+                  ${userType === 'seller'
+                    ? 'border-[#B7410E] bg-[#B7410E]/10 shadow-md'
+                    : 'border-[#8B5E3C]/30 hover:border-[#B7410E]/60 hover:-translate-y-1'
+                  }
+                `}
+                whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+                aria-pressed={userType === 'seller'}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <Store
+                      className={`w-7 h-7 mb-3 ${
                         userType === 'seller' ? 'text-[#B7410E]' : 'text-[#2D2D2D]/60'
                       }`}
                     />
-                    <p className={`font-semibold text-sm ${
-                      userType === 'seller' ? 'text-[#B7410E]' : 'text-[#2D2D2D]'
-                    }`}>
-                      Seller
+                    <p className="font-semibold text-lg text-[#2D2D2D]">Sell on StyleLink</p>
+                    <p className="text-sm text-[#2D2D2D]/70 mt-1">
+                      Open your shop, share your story, and reach shoppers who love your vibe.
                     </p>
-                    <p className="text-xs text-[#2D2D2D]/70 mt-1">
-                      Upload & promote
-                    </p>
-                    {userType === 'seller' && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="mt-2"
-                      >
-                        <CheckCircle2 className="w-5 h-5 text-[#B7410E] mx-auto" />
-                      </motion.div>
-                    )}
-                  </motion.button>
+                  </div>
+                  {userType === 'seller' && (
+                    <CheckCircle2 className="w-5 h-5 text-[#B7410E]" aria-hidden="true" />
+                  )}
                 </div>
-                {errors.userType && (
-                  <motion.p
-                    className="text-sm text-[#B7410E] mt-2 flex items-center gap-2"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    <AlertCircle className="w-4 h-4" />
-                    {errors.userType}
-                  </motion.p>
-                )}
-              </div>
-
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                disabled={loading}
-                className="w-full"
-                aria-label="Create account"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <LoadingSpinner size="sm" />
-                    Creating account...
-                  </span>
-                ) : (
-                  'Create Account'
-                )}
-              </Button>
-            </form>
-
-            {/* Login Link */}
-            <div className="mt-6 text-center">
-              <p className="text-[#2D2D2D]/70 text-sm">
-                Already have an account?{' '}
-                <Link
-                  to="/login"
-                  className="text-[#B7410E] font-semibold hover:text-[#D4AF37] transition-colors"
-                >
-                  Login
-                </Link>
-              </p>
+              </motion.button>
             </div>
+
+            <Button
+              type="button"
+              onClick={handleContinue}
+              className="w-full bg-[#8B5E3C] hover:bg-[#B7410E] text-white"
+            >
+              Continue
+            </Button>
+
+            <p className="text-center text-sm text-[#2D2D2D]/70">
+              Already have an account?{' '}
+              <Link
+                to="/login"
+                className="text-[#B7410E] font-semibold hover:text-[#D4AF37] transition-colors"
+              >
+                Login
+              </Link>
+            </p>
           </div>
         </motion.div>
 

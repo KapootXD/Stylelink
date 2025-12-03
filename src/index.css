@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Unbounded:wght@500;600;700&display=swap');
 
 body {
   margin: 0;
@@ -20,6 +20,11 @@ code {
 
 * {
   box-sizing: border-box;
+}
+
+.slogan-art {
+  font-family: 'Unbounded', 'Inter', sans-serif;
+  letter-spacing: 0.08em;
 }
 
 /* Hide scrollbars for social media feed */
@@ -40,4 +45,13 @@ code {
 
 .snap-item {
   scroll-snap-align: start;
+}
+
+/* Prevent the webpack dev server overlay iframe from intercepting pointer events
+   during local development and automated testing */
+#webpack-dev-server-client-overlay,
+iframe#webpack-dev-server-client-overlay,
+iframe[src="about:blank"][id="webpack-dev-server-client-overlay"] {
+  display: none !important;
+  pointer-events: none !important;
 }

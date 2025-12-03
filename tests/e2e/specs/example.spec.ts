@@ -15,25 +15,26 @@ test.describe('Stylelink smoke navigation', () => {
     await home.goto();
     await home.expectLoaded();
     
-    // Find and click the Explore Features button
-    // It might be in the hero section or CTA section
-    const exploreFeaturesButton = page.getByRole('button', { name: /explore features/i }).first();
-    await expect(exploreFeaturesButton).toBeVisible({ timeout: 10000 });
-    
-    // Scroll button into view if needed
-    await exploreFeaturesButton.scrollIntoViewIfNeeded();
+    // Find and click the Explore Features button or link
+    const exploreCTA = page
+      .getByRole('button', { name: /explore features/i })
+      .or(page.getByRole('link', { name: /explore features/i }))
+      .first();
+    await expect(exploreCTA).toBeVisible({ timeout: 10000 });
+
+    // Scroll CTA into view if needed
+    await exploreCTA.scrollIntoViewIfNeeded();
     await page.waitForTimeout(500);
-    
-    // Click the button and wait for navigation
-    await exploreFeaturesButton.click();
+
+    // Click the CTA and wait for navigation
+    await exploreCTA.click();
     
     // Wait for navigation to features page (public route)
     await page.waitForURL(/.*\/features/, { timeout: 10000 });
     await expect(page).toHaveURL(/.*\/features/);
     
-    // Verify features page loaded (shows "Features Overview Coming Soon" or similar)
-    await expect(
-      page.getByText(/features overview coming soon|coming soon/i).first()
-    ).toBeVisible({ timeout: 5000 });
+    // Verify features page loaded (shows headline and coming soon message)
+    await expect(page.getByRole('heading', { name: /stylelink features/i })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/features overview coming soon|coming soon/i).first()).toBeVisible({ timeout: 10000 });
   });
 });

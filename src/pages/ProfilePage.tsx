@@ -1,120 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
-import { 
-  Camera, 
-  Edit3, 
-  Heart, 
-  MessageCircle, 
-  Share2, 
-  ShoppingBag,
+import {
+  Camera,
+  Edit3,
+  Heart,
+  MessageCircle,
+  Share2,
   MapPin,
   Calendar,
-  Settings,
   Plus,
-  ArrowRight,
-  User,
-  Mail,
-  Link as LinkIcon
+  ArrowRight
 } from 'lucide-react';
+import { User } from 'firebase/auth';
 import { Button, Card, LoadingSpinner, EditProfileModal } from '../components';
 import { useReducedMotion } from '../components/PageTransition';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserProfile } from '../config/firebase';
+import { getOutfits } from '../services/firebaseService';
+import { AppUser, OutfitUpload } from '../types';
 import toast from 'react-hot-toast';
 
-// Mock user data - replace with actual user context when backend is implemented
-const mockUser = {
-  id: '1',
-  displayName: 'Alex Chen',
-  username: '@alexstyle',
-  bio: 'Fashion enthusiast sharing authentic streetwear from Tokyo to NYC. Always on the hunt for unique local brands! 🌟',
-  profilePicture: '/api/placeholder/150/150',
-  location: 'Tokyo, Japan',
-  joinDate: 'March 2023',
+type ProfileViewData = {
+  id: string;
+  displayName: string;
+  username: string;
+  bio: string;
+  profilePicture: string;
+  location: string;
+  joinDate: string;
+  usernameChangeCount: number;
   stats: {
-    followers: 2847,
-    following: 156,
-    posts: 42
-  },
-  isOwnProfile: true // For demo purposes
+    followers: number;
+    following: number;
+    posts: number;
+  };
+  isOwnProfile: boolean;
 };
-
-// Mock outfit posts data
-const mockOutfitPosts = [
-  {
-    id: '1',
-    image: '/api/placeholder/300/400',
-    title: 'Tokyo Streetwear Vibes',
-    description: 'Perfect for exploring the city streets',
-    likes: 1247,
-    comments: 89,
-    price: '$89',
-    brand: 'Local Tokyo Brand',
-    tags: ['streetwear', 'urban', 'casual'],
-    createdAt: '2 days ago'
-  },
-  {
-    id: '2',
-    image: '/api/placeholder/300/400',
-    title: 'Minimalist Monday',
-    description: 'Clean lines and neutral tones',
-    likes: 892,
-    comments: 45,
-    price: '$120',
-    brand: 'Nordic Design Co',
-    tags: ['minimalist', 'scandinavian', 'clean'],
-    createdAt: '5 days ago'
-  },
-  {
-    id: '3',
-    image: '/api/placeholder/300/400',
-    title: 'Vintage Denim Look',
-    description: 'Thrifted finds that never go out of style',
-    likes: 2156,
-    comments: 123,
-    price: '$45',
-    brand: 'Thrifted',
-    tags: ['vintage', 'denim', 'retro'],
-    createdAt: '1 week ago'
-  },
-  {
-    id: '4',
-    image: '/api/placeholder/300/400',
-    title: 'Bohemian Dreams',
-    description: 'Flowing fabrics and earthy tones',
-    likes: 743,
-    comments: 67,
-    price: '$65',
-    brand: 'Local Artisan',
-    tags: ['bohemian', 'flowy', 'colorful'],
-    createdAt: '2 weeks ago'
-  },
-  {
-    id: '5',
-    image: '/api/placeholder/300/400',
-    title: 'Athleisure Perfection',
-    description: 'Comfort meets style for active days',
-    likes: 1834,
-    comments: 98,
-    price: '$95',
-    brand: 'Aussie Active',
-    tags: ['athleisure', 'sporty', 'comfortable'],
-    createdAt: '3 weeks ago'
-  },
-  {
-    id: '6',
-    image: '/api/placeholder/300/400',
-    title: 'Formal Elegance',
-    description: 'Business casual that makes a statement',
-    likes: 967,
-    comments: 34,
-    price: '$180',
-    brand: 'British Tailoring',
-    tags: ['formal', 'elegant', 'business'],
-    createdAt: '1 month ago'
-  }
-];
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -122,10 +44,85 @@ const ProfilePage: React.FC = () => {
   const { currentUser, userProfile, refreshUserProfile, loading: authLoading } = useAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [profileData, setProfileData] = useState<typeof mockUser | null>(null);
-  const [profileImage, setProfileImage] = useState<string>(mockUser.profilePicture);
+  const [profileData, setProfileData] = useState<ProfileViewData | null>(null);
+  const [profileImage, setProfileImage] = useState<string>('');
+  const [outfitPosts, setOutfitPosts] = useState<OutfitUpload[]>([]);
+  const [areOutfitsLoading, setAreOutfitsLoading] = useState(false);
   const prefersReducedMotion = useReducedMotion();
-  
+
+  const formatDate = (date?: Date | string | number | null) => {
+    if (!date) return 'Recently';
+
+    try {
+      return new Date(date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Recently';
+    }
+  };
+
+  const generateAvatarPlaceholder = (name?: string | null, email?: string | null) => {
+    const fallbackName = name || email?.split('@')[0] || 'User';
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(fallbackName)}&background=8B5E3C&color=fff`;
+  };
+
+  const buildProfileView = ({
+    profile,
+    fallbackUser,
+    targetId,
+    isOwnProfile,
+  }: {
+    profile?: AppUser | null;
+    fallbackUser?: User | null;
+    targetId?: string;
+    isOwnProfile: boolean;
+  }): ProfileViewData => {
+    const displayName =
+      profile?.displayName ||
+      fallbackUser?.displayName ||
+      profile?.email ||
+      fallbackUser?.email ||
+      'User';
+
+    const username = profile?.username
+      ? `@${profile.username}`
+      : fallbackUser?.email
+        ? `@${fallbackUser.email.split('@')[0]}`
+        : profile?.email
+          ? `@${profile.email.split('@')[0]}`
+          : `@${displayName.replace(/\s+/g, '').toLowerCase() || 'user'}`;
+
+    const profilePicture =
+      profile?.profilePicture ||
+      profile?.photoURL ||
+      profile?.avatarUrl ||
+      fallbackUser?.photoURL ||
+      generateAvatarPlaceholder(displayName, profile?.email || fallbackUser?.email || null);
+
+    const joinDateValue = profile?.createdAt || profile?.joinDate || fallbackUser?.metadata?.creationTime;
+
+    return {
+      id: profile?.uid || targetId || fallbackUser?.uid || 'unknown',
+      displayName,
+      username,
+      bio: profile?.bio || 'Tell the community about your style.',
+      profilePicture,
+      location: profile?.location || 'Add your location',
+      joinDate: formatDate(joinDateValue),
+      usernameChangeCount: profile?.usernameChangeCount ?? 0,
+      stats: profile?.stats || {
+        followers: 0,
+        following: 0,
+        posts: 0,
+      },
+      isOwnProfile,
+    };
+  };
+
   // Determine which user's profile to show
   // If userId param exists, view that user's profile, otherwise view own profile
   const targetUserId = userId || currentUser?.uid;
@@ -142,46 +139,40 @@ const ProfilePage: React.FC = () => {
       try {
         setIsLoading(true);
         const profile = await getUserProfile(targetUserId);
-        
+
         if (profile) {
-          const formattedProfile = {
-            id: profile.uid,
-            displayName: profile.displayName || 'User',
-            username: profile.username ? `@${profile.username}` : '@user',
-            bio: profile.bio || 'No bio yet. Click edit to add one!',
-            profilePicture: profile.profilePicture || profile.photoURL || profile.avatarUrl || mockUser.profilePicture,
-            location: profile.location || 'Not set',
-            joinDate: profile.createdAt 
-              ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-              : 'Recently',
-            stats: profile.stats || {
-              followers: 0,
-              following: 0,
-              posts: 0
-            },
-            isOwnProfile: isViewingOwnProfile
-          };
-          
+          const formattedProfile = buildProfileView({
+            profile,
+            fallbackUser: currentUser,
+            targetId: targetUserId,
+            isOwnProfile: isViewingOwnProfile,
+          });
+
           setProfileData(formattedProfile);
           setProfileImage(formattedProfile.profilePicture);
         } else {
-          // No profile found, use defaults
-          setProfileData({
-            ...mockUser,
-            id: targetUserId,
-            displayName: currentUser?.displayName || 'User',
-            username: '@user',
-            isOwnProfile: isViewingOwnProfile
+          // No profile found, use user context data
+          const fallbackProfile = buildProfileView({
+            profile: userProfile,
+            fallbackUser: currentUser,
+            targetId: targetUserId,
+            isOwnProfile: isViewingOwnProfile,
           });
+
+          setProfileData(fallbackProfile);
+          setProfileImage(fallbackProfile.profilePicture);
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
         toast.error('Failed to load profile');
-        setProfileData({
-          ...mockUser,
-          id: targetUserId,
-          isOwnProfile: targetUserId === currentUser?.uid
+        const fallbackProfile = buildProfileView({
+          profile: userProfile,
+          fallbackUser: currentUser,
+          targetId: targetUserId,
+          isOwnProfile: targetUserId === currentUser?.uid,
         });
+        setProfileData(fallbackProfile);
+        setProfileImage(fallbackProfile.profilePicture);
       } finally {
         setIsLoading(false);
       }
@@ -192,13 +183,65 @@ const ProfilePage: React.FC = () => {
     }
   }, [targetUserId, currentUser, userProfile, authLoading]);
 
-  // Use Firebase profile data or fallback to mock
-  const currentUserData = profileData || mockUser;
+  useEffect(() => {
+    const fetchOutfits = async () => {
+      if (!targetUserId) {
+        setOutfitPosts([]);
+        return;
+      }
+
+      try {
+        setAreOutfitsLoading(true);
+        const { outfits } = await getOutfits({ userId: targetUserId }, 1, 30);
+        setOutfitPosts(outfits);
+      } catch (error) {
+        console.error('Error loading outfits:', error);
+        toast.error('Failed to load style posts');
+        setOutfitPosts([]);
+      } finally {
+        setAreOutfitsLoading(false);
+      }
+    };
+
+    if (!authLoading) {
+      fetchOutfits();
+    }
+  }, [targetUserId, authLoading]);
+
+  useEffect(() => {
+    if (!profileData && (userProfile || currentUser) && targetUserId) {
+      const baseProfile = buildProfileView({
+        profile: userProfile,
+        fallbackUser: currentUser,
+        targetId: targetUserId,
+        isOwnProfile: isViewingOwnProfile,
+      });
+      setProfileData(baseProfile);
+      setProfileImage(baseProfile.profilePicture);
+    }
+  }, [profileData, userProfile, currentUser, targetUserId, isViewingOwnProfile]);
+
+  // Use Firebase profile data or fallback to user context, but always reflect real post count
+  const fallbackProfileData = buildProfileView({
+    profile: userProfile,
+    fallbackUser: currentUser,
+    targetId: targetUserId,
+    isOwnProfile: isViewingOwnProfile,
+  });
+
+  const baseProfile = profileData || fallbackProfileData;
+  const currentUserData: ProfileViewData = {
+    ...baseProfile,
+    stats: {
+      ...baseProfile.stats,
+      posts: outfitPosts.length || baseProfile.stats?.posts || 0,
+    },
+  };
 
   // Animation variants
   const fadeInUp = {
     initial: { opacity: 0, y: 60 },
-    animate: { 
+    animate: {
       opacity: 1, 
       y: 0,
       transition: { duration: prefersReducedMotion ? 0.3 : 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
@@ -239,26 +282,15 @@ const ProfilePage: React.FC = () => {
         console.log('📥 Fetching updated profile for:', targetUserId);
         const profile = await getUserProfile(targetUserId);
         console.log('📥 Fetched profile:', profile);
-        
+
         if (profile) {
-          const formattedProfile = {
-            id: profile.uid,
-            displayName: profile.displayName || 'User',
-            username: profile.username ? `@${profile.username}` : '@user',
-            bio: profile.bio || 'No bio yet. Click edit to add one!',
-            profilePicture: profile.profilePicture || profile.photoURL || profile.avatarUrl || mockUser.profilePicture,
-            location: profile.location || 'Not set',
-            joinDate: profile.createdAt 
-              ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-              : 'Recently',
-            stats: profile.stats || {
-              followers: 0,
-              following: 0,
-              posts: 0
-            },
-            isOwnProfile: isViewingOwnProfile
-          };
-          
+          const formattedProfile = buildProfileView({
+            profile,
+            fallbackUser: currentUser,
+            targetId: targetUserId,
+            isOwnProfile: isViewingOwnProfile,
+          });
+
           console.log('✅ Setting profile data:', formattedProfile);
           setProfileData(formattedProfile);
           setProfileImage(formattedProfile.profilePicture);
@@ -289,13 +321,16 @@ const ProfilePage: React.FC = () => {
               variants={slideInLeft}
             >
               <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-2xl bg-gradient-to-br from-[#B7410E]/20 to-[#D4AF37]/20">
-                <img 
-                  src={profileImage || currentUserData.profilePicture} 
+                <img
+                  src={profileImage || currentUserData.profilePicture}
                   alt={`${currentUserData.displayName}'s profile`}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     // Fallback to placeholder if image fails to load
-                    (e.target as HTMLImageElement).src = mockUser.profilePicture;
+                    (e.target as HTMLImageElement).src = generateAvatarPlaceholder(
+                      currentUserData.displayName,
+                      currentUser?.email || userProfile?.email || null,
+                    );
                   }}
                 />
               </div>
@@ -395,126 +430,142 @@ const ProfilePage: React.FC = () => {
             </p>
           </motion.div>
 
-          {mockOutfitPosts.length > 0 ? (
-            <motion.div 
+          {areOutfitsLoading ? (
+            <div className="flex justify-center py-12">
+              <LoadingSpinner size="lg" />
+            </div>
+          ) : outfitPosts.length > 0 ? (
+            <motion.div
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
               initial="initial"
               animate="animate"
               variants={staggerChildren}
             >
-              {mockOutfitPosts.map((post, index) => (
-                <motion.div
-                  key={post.id}
-                  variants={fadeInUp}
-                  className="group"
-                >
-                  <Card 
-                    variant="outfit" 
-                    className="overflow-hidden h-full"
-                    onClick={() => navigate('/results')}
+              {outfitPosts.map((post) => {
+                const primaryItem = post.items?.[0];
+                const priceLabel = primaryItem?.price ? `${primaryItem.currency || 'USD'} ${primaryItem.price}` : null;
+                const brandLabel = primaryItem?.brand || 'View details';
+
+                return (
+                  <motion.div
+                    key={post.id}
+                    variants={fadeInUp}
+                    className="group"
                   >
-                    {/* Image Placeholder */}
-                    <div className="relative h-80 bg-gradient-to-br from-[#B7410E]/20 to-[#D4AF37]/20 rounded-t-2xl overflow-hidden">
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-center">
-                          <ShoppingBag className="w-16 h-16 text-[#B7410E]/50 mx-auto mb-2" />
-                          <p className="text-[#2D2D2D]/60 text-sm">Outfit Image</p>
-                        </div>
-                      </div>
-                      
-                      {/* Overlay Actions */}
-                      <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <motion.button
-                          className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg"
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          aria-label="Like post"
-                        >
-                          <Heart className="w-4 h-4 text-[#B7410E]" />
-                        </motion.button>
-                        <motion.button
-                          className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg"
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          aria-label="Comment on post"
-                        >
-                          <MessageCircle className="w-4 h-4 text-[#B7410E]" />
-                        </motion.button>
-                        <motion.button
-                          className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg"
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          aria-label="Share post"
-                        >
-                          <Share2 className="w-4 h-4 text-[#B7410E]" />
-                        </motion.button>
-                      </div>
-
-                      {/* Price Tag */}
-                      <div className="absolute bottom-4 left-4">
-                        <span className="bg-[#D4AF37] text-[#2D2D2D] font-bold px-3 py-1 rounded-full text-sm">
-                          {post.price}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-6">
-                      <h3 className="text-xl font-bold text-[#2D2D2D] mb-2 group-hover:text-[#B7410E] transition-colors duration-300">
-                        {post.title}
-                      </h3>
-                      
-                      <p className="text-[#2D2D2D]/70 mb-4 text-sm leading-relaxed">
-                        {post.description}
-                      </p>
-
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-4 text-[#2D2D2D]/70 text-sm">
-                          <div className="flex items-center gap-1">
-                            <Heart className="w-4 h-4" />
-                            <span>{post.likes.toLocaleString()}</span>
+                    <Card
+                      variant="outfit"
+                      className="overflow-hidden h-full"
+                      onClick={() => navigate('/results')}
+                    >
+                      <div className="relative h-80 bg-gradient-to-br from-[#B7410E]/10 to-[#D4AF37]/10 rounded-t-2xl overflow-hidden">
+                        {post.mainImageUrl ? (
+                          <img
+                            src={post.mainImageUrl}
+                            alt={post.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/api/placeholder/300/400';
+                            }}
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-[#2D2D2D]/60">
+                            No image available
                           </div>
-                          <div className="flex items-center gap-1">
-                            <MessageCircle className="w-4 h-4" />
-                            <span>{post.comments}</span>
-                          </div>
-                        </div>
-                        <span className="text-[#2D2D2D]/50 text-xs">
-                          {post.createdAt}
-                        </span>
-                      </div>
+                        )}
 
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {post.tags.map((tag, tagIndex) => (
-                          <span 
-                            key={tagIndex}
-                            className="bg-[#FAF3E0] text-[#8B5E3C] px-2 py-1 rounded-full text-xs font-medium"
+                        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <motion.button
+                            className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            aria-label="Like post"
                           >
-                            #{tag}
-                          </span>
-                        ))}
+                            <Heart className="w-4 h-4 text-[#B7410E]" />
+                          </motion.button>
+                          <motion.button
+                            className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            aria-label="Comment on post"
+                          >
+                            <MessageCircle className="w-4 h-4 text-[#B7410E]" />
+                          </motion.button>
+                          <motion.button
+                            className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            aria-label="Share post"
+                          >
+                            <Share2 className="w-4 h-4 text-[#B7410E]" />
+                          </motion.button>
+                        </div>
+
+                        {priceLabel && (
+                          <div className="absolute bottom-4 left-4">
+                            <span className="bg-[#D4AF37] text-[#2D2D2D] font-bold px-3 py-1 rounded-full text-sm">
+                              {priceLabel}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
-                      <div className="flex justify-between items-center">
-                        <span className="text-[#2D2D2D]/70 text-sm font-medium">
-                          {post.brand}
-                        </span>
-                        <Button 
-                          variant="primary" 
-                          size="sm"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                        >
-                          Shop Look
-                          <ArrowRight className="w-4 h-4 ml-1" />
-                        </Button>
+                      <div className="p-6">
+                        <h3 className="text-xl font-bold text-[#2D2D2D] mb-2 group-hover:text-[#B7410E] transition-colors duration-300">
+                          {post.title}
+                        </h3>
+
+                        <p className="text-[#2D2D2D]/70 mb-4 text-sm leading-relaxed line-clamp-3">
+                          {post.description}
+                        </p>
+
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-4 text-[#2D2D2D]/70 text-sm">
+                            <div className="flex items-center gap-1">
+                              <Heart className="w-4 h-4" />
+                              <span>{post.likes.toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Share2 className="w-4 h-4" />
+                              <span>{post.shares?.toLocaleString?.() || post.shares || 0}</span>
+                            </div>
+                          </div>
+                          <span className="text-[#2D2D2D]/50 text-xs">
+                            {formatDate(post.createdAt)}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {post.styleTags?.map((tag, tagIndex) => (
+                            <span
+                              key={tagIndex}
+                              className="bg-[#FAF3E0] text-[#8B5E3C] px-2 py-1 rounded-full text-xs font-medium"
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                          <span className="text-[#2D2D2D]/70 text-sm font-medium">
+                            {brandLabel}
+                          </span>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                          >
+                            View Look
+                            <ArrowRight className="w-4 h-4 ml-1" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </Card>
-                </motion.div>
-              ))}
+                    </Card>
+                  </motion.div>
+                );
+              })}
             </motion.div>
           ) : (
-            <motion.div 
+            <motion.div
               className="text-center py-20"
               initial="initial"
               animate="animate"
@@ -555,7 +606,8 @@ const ProfilePage: React.FC = () => {
             username: currentUserData.username?.replace('@', '') || '',
             bio: currentUserData.bio,
             location: currentUserData.location,
-            profilePicture: currentUserData.profilePicture
+            profilePicture: currentUserData.profilePicture,
+            usernameChangeCount: currentUserData.usernameChangeCount
           }}
         />
       )}

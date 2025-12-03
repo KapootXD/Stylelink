@@ -10,7 +10,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, loading, error, clearError } = useAuth();
+  const { login, loading, error, clearError, usingDemoAuth } = useAuth();
   const prefersReducedMotion = useReducedMotion();
 
   // Form state
@@ -104,12 +104,72 @@ const LoginPage: React.FC = () => {
             </p>
           </div>
 
+          {/* Demo mode notice */}
+          {usingDemoAuth && (
+            <motion.div
+              variants={fadeIn}
+              className="mb-6"
+              role="status"
+            >
+              <div className="flex items-start gap-3 rounded-xl border border-[#8B5E3C]/30 bg-[#8B5E3C]/10 px-4 py-3 text-[#2D2D2D]">
+                <svg
+                  className="mt-0.5 h-5 w-5 flex-shrink-0"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-12a1 1 0 00-.894.553l-3.5 7A1 1 0 006.5 15h7a1 1 0 00.894-1.447l-3.5-7A1 1 0 0010 6z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <div>
+                  <p className="font-semibold">Demo authentication enabled</p>
+                  <p className="text-sm leading-5 text-[#2D2D2D]">
+                    Firebase credentials were not detected, so sign-ins will use demo data locally.
+                    You can use any email and password to explore the app.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Auth error message */}
+          {error && (
+            <motion.div
+              variants={fadeIn}
+              className="mb-6"
+              role="alert"
+              aria-live="polite"
+            >
+              <div className="flex items-start gap-3 rounded-xl border border-[#B7410E]/20 bg-[#B7410E]/5 px-4 py-3 text-[#B7410E]">
+                <svg
+                  className="mt-0.5 h-5 w-5 flex-shrink-0"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-5.25a.75.75 0 011.5 0v1.5a.75.75 0 01-1.5 0v-1.5zm0-6a.75.75 0 011.5 0v4.5a.75.75 0 01-1.5 0V6.75z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <div>
+                  <p className="font-semibold">Login error</p>
+                  <p className="text-sm leading-5 text-[#2D2D2D]">{error}</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* Login Form */}
           <motion.div
             variants={fadeIn}
             className="bg-white rounded-2xl shadow-lg p-8 mb-6"
           >
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} noValidate className="space-y-6">
               {/* Email Input */}
               <div>
                 <Input
@@ -119,6 +179,9 @@ const LoginPage: React.FC = () => {
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
+                    if (error) {
+                      clearError();
+                    }
                     if (formErrors.email) {
                       setFormErrors({ ...formErrors, email: undefined });
                     }
@@ -139,6 +202,9 @@ const LoginPage: React.FC = () => {
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
+                      if (error) {
+                        clearError();
+                      }
                       if (formErrors.password) {
                         setFormErrors({ ...formErrors, password: undefined });
                       }

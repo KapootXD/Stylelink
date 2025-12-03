@@ -11,16 +11,24 @@
  */
 export enum UserType {
   ADMIN = 'admin',
-  PREMIUM = 'premium',
-  REGULAR = 'regular',
-  GUEST = 'guest'
+  SELLER_PREMIUM = 'seller_premium',
+  SELLER = 'seller',
+  BUYER = 'buyer'
 }
 
 /**
  * User Type as string literal union
  * Alternative to enum for type checking
  */
-export type UserTypeString = 'admin' | 'premium' | 'regular' | 'guest';
+export type UserTypeString =
+  | 'admin'
+  | 'seller_premium'
+  | 'seller'
+  | 'buyer'
+  // Backward compatibility with legacy roles
+  | 'premium'
+  | 'regular'
+  | 'guest';
 
 /**
  * App User Interface
@@ -38,6 +46,7 @@ export interface AppUser {
   // StyleLink specific fields
   userType: UserType | UserTypeString;
   username?: string;
+  usernameChangeCount?: number;
   bio?: string;
   avatarUrl?: string;
   profilePicture?: string; // Alias for photoURL/avatarUrl, used in ProfilePage
@@ -67,6 +76,7 @@ export interface FirestoreUserProfile {
   displayName?: string;
   userType: UserType | UserTypeString;
   username?: string;
+  usernameChangeCount?: number;
   bio?: string;
   avatarUrl?: string;
   photoURL?: string;
@@ -121,7 +131,7 @@ export const getUserTypePermissions = (userType: UserType | UserTypeString): Use
         maxOutfitsPerDay: undefined, // Unlimited
         maxItemsPerOutfit: undefined // Unlimited
       };
-    case UserType.PREMIUM:
+    case UserType.SELLER_PREMIUM:
       return {
         canUploadOutfits: true,
         canSellItems: true,
@@ -130,7 +140,17 @@ export const getUserTypePermissions = (userType: UserType | UserTypeString): Use
         maxOutfitsPerDay: 20,
         maxItemsPerOutfit: 10
       };
-    case UserType.REGULAR:
+    case UserType.SELLER:
+      return {
+        canUploadOutfits: true,
+        canSellItems: true,
+        canAccessPremiumFeatures: false,
+        canModerateContent: false,
+        maxOutfitsPerDay: 10,
+        maxItemsPerOutfit: 8
+      };
+    case UserType.BUYER:
+    default:
       return {
         canUploadOutfits: true,
         canSellItems: false,
@@ -138,16 +158,6 @@ export const getUserTypePermissions = (userType: UserType | UserTypeString): Use
         canModerateContent: false,
         maxOutfitsPerDay: 5,
         maxItemsPerOutfit: 5
-      };
-    case UserType.GUEST:
-    default:
-      return {
-        canUploadOutfits: false,
-        canSellItems: false,
-        canAccessPremiumFeatures: false,
-        canModerateContent: false,
-        maxOutfitsPerDay: 0,
-        maxItemsPerOutfit: 0
       };
   }
 };
@@ -166,5 +176,5 @@ export const hasPermission = (
 /**
  * Default user type for new signups
  */
-export const DEFAULT_USER_TYPE: UserType = UserType.REGULAR;
+export const DEFAULT_USER_TYPE: UserType = UserType.BUYER;
 

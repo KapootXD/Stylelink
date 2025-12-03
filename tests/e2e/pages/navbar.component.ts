@@ -111,14 +111,14 @@ export class NavbarComponent {
   }
 
   // Mobile menu methods
+  private getMobileMenuButton() {
+    return this.page.locator('button[aria-label*="main menu" i]').first();
+  }
+
   async openMobileMenu() {
-    // Mobile menu button has sr-only text "Open main menu"
-    // Find button that contains the sr-only span with "Open main menu" text
-    const menuButton = this.page
-      .locator('button')
-      .filter({ has: this.page.locator('.sr-only', { hasText: /open main menu/i }) })
-      .or(this.page.locator('button[aria-label*="main menu" i]'))
-      .first();
+    // Mobile menu button toggles between "Open main menu" / "Close main menu" aria-labels
+    // Always select it via aria-label to handle both states
+    const menuButton = this.getMobileMenuButton();
     
     // Check if button is visible (mobile menu button is only visible on mobile)
     const isVisible = await menuButton.isVisible().catch(() => false);
@@ -132,10 +132,7 @@ export class NavbarComponent {
   }
 
   async closeMobileMenu() {
-    const closeButton = this.page
-      .locator('button')
-      .filter({ has: this.page.locator('.sr-only', { hasText: /open main menu/i }) })
-      .first();
+    const closeButton = this.getMobileMenuButton();
     
     if (await closeButton.count() > 0) {
       await closeButton.click();

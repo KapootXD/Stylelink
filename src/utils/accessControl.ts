@@ -2,7 +2,7 @@
  * Access Control Utilities for StyleLink
  * 
  * Provides functions to check user permissions and access rights
- * based on user types (Admin, Premium, Regular, Guest)
+ * based on user types (Admin, Seller Premium, Seller, Buyer)
  */
 
 import { UserType, UserTypeString } from '../types/user';
@@ -11,7 +11,7 @@ import { UserType, UserTypeString } from '../types/user';
  * Feature types that can be protected
  */
 export type FeatureType = 
-  | 'premium'           // Premium features (Premium + Admin)
+  | 'premium'           // Premium features (Seller Premium + Admin)
   | 'admin'             // Admin-only features
   | 'upload'            // Upload functionality
   | 'sell'              // Sell items
@@ -25,8 +25,7 @@ export type FeatureType =
 
 /**
  * Normalize user type to enum value for consistent comparison
- * Since UserType enum values are string enums matching the string literals,
- * we can safely convert between them
+ * Supports legacy roles for backward compatibility
  */
 const normalizeUserType = (
   userType: UserType | UserTypeString | null | undefined
@@ -34,21 +33,23 @@ const normalizeUserType = (
   if (!userType) {
     return null;
   }
-  
+
   // Convert to enum value (works for both enum and string literal since they match)
   switch (userType) {
     case UserType.ADMIN:
     case 'admin':
       return UserType.ADMIN;
-    case UserType.PREMIUM:
+    case UserType.SELLER_PREMIUM:
+    case 'seller_premium':
     case 'premium':
-      return UserType.PREMIUM;
-    case UserType.REGULAR:
+      return UserType.SELLER_PREMIUM;
+    case UserType.SELLER:
+    case 'seller':
+      return UserType.SELLER;
+    case UserType.BUYER:
+    case 'buyer':
     case 'regular':
-      return UserType.REGULAR;
-    case UserType.GUEST:
-    case 'guest':
-      return UserType.GUEST;
+      return UserType.BUYER;
     default:
       return null;
   }
@@ -84,39 +85,37 @@ export const canAccessFeature = (
     
     case 'premium':
     case 'analytics':
-      // Premium and Admin can access premium features
-      return type === UserType.PREMIUM || type === UserType.ADMIN;
-    
+      // Seller Premium and Admin can access premium features
+      return type === UserType.SELLER_PREMIUM || type === UserType.ADMIN;
+
     case 'admin':
     case 'userManagement':
     case 'moderate':
       // Only Admin can access admin features
       return type === UserType.ADMIN;
-    
+
     case 'upload':
-      // Regular, Premium, and Admin can upload
-      return type === UserType.REGULAR || 
-             type === UserType.PREMIUM || 
+      // Buyers, Sellers, Seller Premium, and Admin can upload
+      return type === UserType.BUYER ||
+             type === UserType.SELLER ||
+             type === UserType.SELLER_PREMIUM ||
              type === UserType.ADMIN;
-    
+
     case 'sell':
-      // Premium and Admin can sell
-      return type === UserType.PREMIUM || type === UserType.ADMIN;
-    
+      // Sellers, Seller Premium, and Admin can sell
+      return type === UserType.SELLER || type === UserType.SELLER_PREMIUM || type === UserType.ADMIN;
+
     case 'edit':
       // All logged-in users except guests can edit
-      return type !== UserType.GUEST;
-    
+      return true;
+
     case 'delete':
-      // Regular, Premium, and Admin can delete (their own content)
-      // Admin can delete any content
-      return type === UserType.REGULAR || 
-             type === UserType.PREMIUM || 
-             type === UserType.ADMIN;
-    
+      // All logged-in users can delete their own content, Admin can delete any content
+      return true;
+
     case 'settings':
       // All logged-in users can access settings
-      return type !== UserType.GUEST;
+      return true;
     
     default:
       return false;
@@ -135,14 +134,14 @@ export const isAdmin = (userType: UserType | UserTypeString | null | undefined):
 };
 
 /**
- * Check if a user type is Premium
- * 
+ * Check if a user type is Seller Premium
+ *
  * @param userType - The user type to check
- * @returns true if the user is Premium or Admin, false otherwise
+ * @returns true if the user is Seller Premium or Admin, false otherwise
  */
 export const isPremium = (userType: UserType | UserTypeString | null | undefined): boolean => {
   const normalizedType = normalizeUserType(userType);
-  return normalizedType === UserType.PREMIUM || normalizedType === UserType.ADMIN;
+  return normalizedType === UserType.SELLER_PREMIUM || normalizedType === UserType.ADMIN;
 };
 
 /**
@@ -173,13 +172,13 @@ export const canDelete = (userType: UserType | UserTypeString | null | undefined
  */
 export const getAllowedUserTypes = (feature: FeatureType): UserType[] => {
   const allowed: UserType[] = [];
-  
-  [UserType.ADMIN, UserType.PREMIUM, UserType.REGULAR, UserType.GUEST].forEach(userType => {
+
+  [UserType.ADMIN, UserType.SELLER_PREMIUM, UserType.SELLER, UserType.BUYER].forEach(userType => {
     if (canAccessFeature(userType, feature)) {
       allowed.push(userType);
     }
   });
-  
+
   return allowed;
 };
 
@@ -195,14 +194,14 @@ export const getLockedFeatureMessage = (
   currentUserType: UserType | UserTypeString | null | undefined
 ): string => {
   const normalizedType = normalizeUserType(currentUserType);
-  if (!normalizedType || normalizedType === UserType.GUEST) {
+  if (!normalizedType) {
     return 'Please sign up or log in to access this feature.';
   }
 
   switch (feature) {
     case 'premium':
     case 'analytics':
-      return 'Upgrade to Premium to access this feature.';
+      return 'Upgrade to Seller Premium to access this feature.';
     
     case 'admin':
     case 'userManagement':
@@ -210,7 +209,7 @@ export const getLockedFeatureMessage = (
       return 'This feature is only available to administrators.';
     
     case 'sell':
-      return 'Upgrade to Premium to sell items.';
+      return 'Switch to a seller account to list items.';
     
     default:
       return 'You do not have permission to access this feature.';
