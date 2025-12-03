@@ -9,6 +9,13 @@ export class AuthHelper {
   constructor(private page: Page) {}
 
   async login(credentials: TestUser = testUser) {
+<<<<<<< HEAD
+    await this.page.goto('/login', { 
+      waitUntil: 'domcontentloaded',
+      timeout: 15000 
+    });
+    await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 });
+=======
     // When guest/demo mode is enabled we don't need to exercise the full
     // authentication flow. Short-circuit to save time and avoid failures when
     // Firebase credentials aren't configured in CI.
@@ -23,9 +30,10 @@ export class AuthHelper {
 
     await this.page.goto('/login');
     await this.page.waitForLoadState('domcontentloaded');
+>>>>>>> ffe28b165db6c4c2793b0bad996f24d523096343
     
     // Use label-based selectors to match the Input component
-    await this.page.getByLabel(/email/i).fill(credentials.email);
+    await this.page.getByLabel(/email/i).fill(credentials.email, { timeout: 5000 });
     
     // Password input might be type="password" or type="text" depending on visibility
     const passwordInput = this.page.locator('input[type="password"], input[type="text"]').filter({
@@ -33,9 +41,9 @@ export class AuthHelper {
     }).or(
       this.page.getByLabel(/password/i)
     ).first();
-    await passwordInput.fill(credentials.password);
+    await passwordInput.fill(credentials.password, { timeout: 5000 });
     
-    await this.page.getByRole('button', { name: /sign in|log in/i }).click();
+    await this.page.getByRole('button', { name: /sign in|log in/i }).click({ timeout: 5000 });
     await this.page.waitForTimeout(2000); // Wait for login to complete
     // In guest/demo mode auth may be disabled; don't fail if we stay on /login
     try {
