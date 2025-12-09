@@ -1,6 +1,6 @@
 /**
  * User Type Definitions for StyleLink
- * 
+ *
  * Defines user classification system with different user types
  * and the complete user interface for the application.
  */
@@ -11,9 +11,9 @@
  */
 export enum UserType {
   ADMIN = 'admin',
-  SELLER_PREMIUM = 'seller_premium',
+  PREMIUM = 'premium',
   SELLER = 'seller',
-  BUYER = 'buyer'
+  CUSTOMER = 'customer'
 }
 
 /**
@@ -22,11 +22,12 @@ export enum UserType {
  */
 export type UserTypeString =
   | 'admin'
-  | 'seller_premium'
-  | 'seller'
-  | 'buyer'
-  // Backward compatibility with legacy roles
   | 'premium'
+  | 'seller'
+  | 'customer'
+  // Backward compatibility with legacy roles
+  | 'seller_premium'
+  | 'buyer'
   | 'regular'
   | 'guest';
 
@@ -42,9 +43,11 @@ export interface AppUser {
   emailVerified: boolean;
   displayName: string | null;
   photoURL: string | null;
-  
+
   // StyleLink specific fields
   userType: UserType | UserTypeString;
+  /** Tracks whether the account was originally created as a customer or a seller */
+  accountRole?: 'customer' | 'seller';
   username?: string;
   usernameChangeCount?: number;
   bio?: string;
@@ -52,14 +55,14 @@ export interface AppUser {
   profilePicture?: string; // Alias for photoURL/avatarUrl, used in ProfilePage
   location?: string;
   joinDate?: string;
-  
+
   // Stats
   stats?: {
     followers: number;
     following: number;
     posts: number;
   };
-  
+
   // Metadata
   createdAt?: Date | string;
   updatedAt?: Date | string;
@@ -75,6 +78,7 @@ export interface FirestoreUserProfile {
   email: string;
   displayName?: string;
   userType: UserType | UserTypeString;
+  accountRole?: 'customer' | 'seller';
   username?: string;
   usernameChangeCount?: number;
   bio?: string;
@@ -102,6 +106,7 @@ export interface UserProfileUpdate {
   photoURL?: string;
   location?: string;
   userType?: UserType | UserTypeString;
+  accountRole?: 'customer' | 'seller';
 }
 
 /**
@@ -120,7 +125,10 @@ export interface UserTypePermissions {
 /**
  * Get permissions for a user type
  */
-export const getUserTypePermissions = (userType: UserType | UserTypeString): UserTypePermissions => {
+export const getUserTypePermissions = (
+  userType: UserType | UserTypeString,
+  accountRole: 'customer' | 'seller' = 'customer'
+): UserTypePermissions => {
   switch (userType) {
     case UserType.ADMIN:
       return {
@@ -131,16 +139,18 @@ export const getUserTypePermissions = (userType: UserType | UserTypeString): Use
         maxOutfitsPerDay: undefined, // Unlimited
         maxItemsPerOutfit: undefined // Unlimited
       };
-    case UserType.SELLER_PREMIUM:
+    case UserType.PREMIUM:
+    case 'premium':
       return {
         canUploadOutfits: true,
-        canSellItems: true,
+        canSellItems: accountRole === 'seller',
         canAccessPremiumFeatures: true,
         canModerateContent: false,
-        maxOutfitsPerDay: 20,
-        maxItemsPerOutfit: 10
+        maxOutfitsPerDay: accountRole === 'seller' ? 20 : 10,
+        maxItemsPerOutfit: accountRole === 'seller' ? 10 : 8
       };
     case UserType.SELLER:
+    case 'seller':
       return {
         canUploadOutfits: true,
         canSellItems: true,
@@ -149,7 +159,10 @@ export const getUserTypePermissions = (userType: UserType | UserTypeString): Use
         maxOutfitsPerDay: 10,
         maxItemsPerOutfit: 8
       };
-    case UserType.BUYER:
+    case UserType.CUSTOMER:
+    case 'customer':
+    case 'buyer':
+    case 'regular':
     default:
       return {
         canUploadOutfits: true,
@@ -167,14 +180,15 @@ export const getUserTypePermissions = (userType: UserType | UserTypeString): Use
  */
 export const hasPermission = (
   userType: UserType | UserTypeString,
-  permission: keyof UserTypePermissions
+  permission: keyof UserTypePermissions,
+  accountRole: 'customer' | 'seller' = 'customer'
 ): boolean => {
-  const permissions = getUserTypePermissions(userType);
+  const permissions = getUserTypePermissions(userType, accountRole);
   return permissions[permission] === true;
 };
 
 /**
  * Default user type for new signups
  */
-export const DEFAULT_USER_TYPE: UserType = UserType.BUYER;
+export const DEFAULT_USER_TYPE: UserType = UserType.CUSTOMER;
 

@@ -127,24 +127,26 @@ export const signUp = async (
       console.error('Auth instance is not linked to an app');
       throw new Error('Firebase Auth configuration error: Auth instance not properly initialized');
     }
-    
+
     console.log('Attempting to create user with email:', email);
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    
+
     // Update user profile with display name if provided
     if (displayName && userCredential.user) {
       await updateProfile(userCredential.user, { displayName });
     }
-    
+
     // Create user document in Firestore with userType classification
     // Map signup selection to new user roles
     const appUserType: UserType = userType === 'seller' ? UserType.SELLER : DEFAULT_USER_TYPE;
+    const accountRole: 'customer' | 'seller' = userType === 'seller' ? 'seller' : 'customer';
     
     try {
       const userProfile: Omit<FirestoreUserProfile, 'createdAt'> & { createdAt: any } = {
         uid: userCredential.user.uid,
         email,
         userType: appUserType,
+        accountRole,
         createdAt: serverTimestamp()
       };
       
@@ -207,6 +209,12 @@ export const getUserProfile = async (uid: string): Promise<AppUser | null> => {
     
     // Use photoURL or avatarUrl for profilePicture (convert null to undefined)
     const profilePicture = photoURL || data.avatarUrl || undefined;
+
+    const accountRole: 'customer' | 'seller' = data.accountRole
+      ? data.accountRole
+      : data.userType === UserType.SELLER || data.userType === 'seller_premium' || data.userType === 'seller'
+        ? 'seller'
+        : 'customer';
     
     return {
       uid,
@@ -215,6 +223,7 @@ export const getUserProfile = async (uid: string): Promise<AppUser | null> => {
       displayName,
       photoURL,
       userType: data.userType || DEFAULT_USER_TYPE,
+      accountRole,
       username: data.username,
       usernameChangeCount: data.usernameChangeCount,
       bio: data.bio,
@@ -248,6 +257,7 @@ const createDefaultUserProfile = (firebaseUser: User): AppUser => {
     photoURL: firebaseUser.photoURL,
     profilePicture: firebaseUser.photoURL || undefined, // Map photoURL to profilePicture
     userType: DEFAULT_USER_TYPE,
+    accountRole: 'customer',
     usernameChangeCount: 0,
     createdAt: new Date(),
     isOwnProfile: true

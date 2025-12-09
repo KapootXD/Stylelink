@@ -105,7 +105,7 @@ const ProtectedFeature: React.FC<ProtectedFeatureProps> = ({
           {needsLogin
             ? 'Sign In Required'
             : needsPremium
-              ? 'Seller Premium Feature'
+              ? 'Premium Feature'
               : needsSeller
                 ? 'Seller Feature'
                 : needsAdmin
@@ -138,7 +138,7 @@ const ProtectedFeature: React.FC<ProtectedFeatureProps> = ({
                 <Link to="/settings">
                   <Button variant="primary" className="flex items-center bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700">
                     <Crown className="w-4 h-4 mr-2" />
-                    Upgrade to Seller Premium
+                    Upgrade to Premium
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>

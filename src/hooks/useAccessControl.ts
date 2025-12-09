@@ -47,9 +47,21 @@ export interface UseAccessControlReturn {
  */
 export const useAccessControl = (): UseAccessControlReturn => {
   const { userProfile, currentUser } = useAuth();
-  
+
   const userType = useMemo(() => {
     return userProfile?.userType || null;
+  }, [userProfile]);
+
+  const accountRole = useMemo(() => {
+    if (userProfile?.accountRole) {
+      return userProfile.accountRole;
+    }
+
+    if (userProfile?.userType === UserType.SELLER || userProfile?.userType === 'seller') {
+      return 'seller';
+    }
+
+    return 'customer' as const;
   }, [userProfile]);
 
   const isLoggedIn = useMemo(() => {
@@ -58,9 +70,9 @@ export const useAccessControl = (): UseAccessControlReturn => {
 
   const canAccess = useMemo(() => {
     return (feature: FeatureType): boolean => {
-      return canAccessFeature(userType, feature);
+      return canAccessFeature(userType, feature, accountRole);
     };
-  }, [userType]);
+  }, [accountRole, userType]);
 
   const isAdmin = useMemo(() => {
     return (): boolean => {
@@ -88,9 +100,9 @@ export const useAccessControl = (): UseAccessControlReturn => {
 
   const getLockedMessage = useMemo(() => {
     return (feature: FeatureType): string => {
-      return getLockedFeatureMessage(feature, userType);
+      return getLockedFeatureMessage(feature, userType, accountRole);
     };
-  }, [userType]);
+  }, [accountRole, userType]);
 
   return {
     userType,

@@ -14,8 +14,18 @@ import { Button, Card, Input, LoadingSpinner, Modal } from '../components';
 import { useReducedMotion } from '../components/PageTransition';
 import { useAuth } from '../contexts/AuthContext';
 import { createOutfitWithMedia } from '../services/firebaseService';
+import { addOfflineOutfit } from '../utils/offlineOutfits';
+import { isFirebaseConfigured } from '../services/apiService';
 import { validateFileSize, validateImageType, getFileSize } from '../utils/imageCompression';
 import toast from 'react-hot-toast';
+
+const fileToDataUrl = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 
 const UploadOutfit: React.FC = () => {
   const navigate = useNavigate();
@@ -29,6 +39,9 @@ const UploadOutfit: React.FC = () => {
     location: '',
     price: '',
     brand: '',
+    shopLink: '',
+    color: '',
+    size: '',
     occasion: '',
     season: 'spring' as 'spring' | 'summer' | 'fall' | 'winter'
   });
@@ -258,28 +271,86 @@ const UploadOutfit: React.FC = () => {
 
       const styleTags = selectedStyles;
 
-      // Create outfit with media
-      const outfit = await createOutfitWithMedia(
-        {
+      if (isFirebaseConfigured()) {
+        // Create outfit with media on Firebase
+        await createOutfitWithMedia(
+          {
+            title: formData.title,
+            description: formData.description,
+            occasion: formData.occasion || 'casual',
+            season: formData.season,
+            styleTags,
+            hashtags,
+            items: [
+              {
+                id: `item-${Date.now()}`,
+                name: formData.title,
+                brand: formData.brand || 'Independent Seller',
+                price: Number(formData.price.replace(/[^0-9.]/g, '')) || 0,
+                currency: 'USD',
+                size: formData.size || 'One size',
+                color: formData.color || 'Assorted',
+                category: 'outerwear',
+                directLink: formData.shopLink || '#',
+                imageUrl: imagePreviews[0] || '',
+                availability: 'in-stock'
+              }
+            ],
+            isPublic: true
+          },
+          currentUser.uid,
+          imageFiles,
+          videoFiles,
+          (progress) => {
+            setUploadProgress(progress);
+          }
+        );
+
+        toast.success('Outfit uploaded successfully!');
+        setShowPreview(true);
+      } else {
+        // Offline/local demo mode: persist to localStorage so Discover shows uploads
+        const mediaSources = imageFiles.length > 0 ? imageFiles : videoFiles;
+        const mediaDataUrls = await Promise.all(mediaSources.map((file) => fileToDataUrl(file)));
+
+        addOfflineOutfit({
+          id: `offline-${Date.now()}`,
+          userId: currentUser.uid,
           title: formData.title,
           description: formData.description,
           occasion: formData.occasion || 'casual',
           season: formData.season,
           styleTags,
           hashtags,
-          items: [], // Can be added later
+          items: [
+            {
+              id: `item-${Date.now()}`,
+              name: formData.title || 'Custom look',
+              brand: formData.brand || 'Independent Seller',
+              price: Number(formData.price.replace(/[^0-9.]/g, '')) || 0,
+              currency: 'USD',
+              size: formData.size || 'One size',
+              color: formData.color || 'Assorted',
+              category: 'outerwear',
+              directLink: formData.shopLink || '#',
+              imageUrl: mediaDataUrls[0] || 'https://via.placeholder.com/600x800?text=StyleLink+Look',
+              availability: 'in-stock'
+            }
+          ],
+          mainImageUrl: mediaDataUrls[0] || 'https://via.placeholder.com/600x800?text=StyleLink+Look',
+          additionalImages: mediaDataUrls.slice(1),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          likes: 0,
+          shares: 0,
           isPublic: true
-        },
-        currentUser.uid,
-        imageFiles,
-        videoFiles,
-        (progress) => {
-          setUploadProgress(progress);
-        }
-      );
+        });
 
-      toast.success('Outfit uploaded successfully!');
-      setShowPreview(true);
+        setUploadProgress(100);
+        toast.success('Saved locally! Your look is now in the Discover feed.');
+        setShowPreview(true);
+        return;
+      }
     } catch (error: any) {
       console.error('Error uploading outfit:', error);
       
@@ -554,6 +625,29 @@ const UploadOutfit: React.FC = () => {
                     value={formData.brand}
                     onChange={(e) => handleInputChange('brand', e.target.value)}
                   />
+
+                  <Input
+                    label="Shop Link"
+                    placeholder="Paste the product or seller link"
+                    value={formData.shopLink}
+                    onChange={(e) => handleInputChange('shopLink', e.target.value)}
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                      label="Size"
+                      placeholder="e.g., M or One Size"
+                      value={formData.size}
+                      onChange={(e) => handleInputChange('size', e.target.value)}
+                    />
+
+                    <Input
+                      label="Color"
+                      placeholder="e.g., Navy / Black"
+                      value={formData.color}
+                      onChange={(e) => handleInputChange('color', e.target.value)}
+                    />
+                  </div>
 
                   <div className="space-y-3">
                     <label className="block text-sm font-medium text-[#2D2D2D]">Style Tags</label>
