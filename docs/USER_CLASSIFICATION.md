@@ -64,10 +64,10 @@ export interface AppUser {
 
 ### Default User Type
 
-New users are automatically assigned the `regular` user type on signup:
+New users are automatically assigned the `customer` user type on signup:
 
 ```typescript
-export const DEFAULT_USER_TYPE: UserType = UserType.REGULAR;
+export const DEFAULT_USER_TYPE: UserType = UserType.CUSTOMER;
 ```
 
 ### Firestore Structure
@@ -79,7 +79,8 @@ User profiles are stored in the `users` collection with the following structure:
   uid: string;
   email: string;
   displayName?: string;
-  userType: 'admin' | 'premium' | 'regular' | 'guest';
+  userType: 'admin' | 'premium' | 'seller' | 'customer';
+  accountRole?: 'customer' | 'seller';
   username?: string;
   bio?: string;
   avatarUrl?: string;

@@ -81,6 +81,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     displayName: 'Demo User',
     photoURL: null,
     userType: DEFAULT_USER_TYPE,
+    accountRole: 'customer',
     createdAt: new Date(),
     isOwnProfile: true,
   });
@@ -108,7 +109,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         displayName: user.displayName,
         photoURL: user.photoURL,
         profilePicture: user.photoURL || undefined, // Map photoURL to profilePicture
-        userType: UserType.BUYER,
+        userType: UserType.CUSTOMER,
+        accountRole: 'customer',
         createdAt: new Date(),
         isOwnProfile: true
       });
@@ -178,7 +180,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           displayName: displayName || email,
           photoURL: null,
         } as unknown as User;
-        const normalizedUserType = userType === 'seller' ? UserType.SELLER : UserType.BUYER;
+    const normalizedUserType = userType === 'seller' ? UserType.SELLER : UserType.CUSTOMER;
 
         setCurrentUser(mockUser);
         setUserProfile({
@@ -189,6 +191,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           photoURL: mockUser.photoURL,
           profilePicture: mockUser.photoURL || undefined,
           userType: normalizedUserType,
+          accountRole: userType,
           createdAt: new Date(),
           isOwnProfile: true,
         });

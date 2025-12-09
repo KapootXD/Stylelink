@@ -72,14 +72,16 @@ describe('apiService', () => {
       expect(noItems.status).toBe('error');
     });
 
-    it('returns an error when Firebase is not configured', async () => {
+    it('stores the upload locally when Firebase is not configured', async () => {
       delete process.env.REACT_APP_FIREBASE_API_KEY;
       delete process.env.REACT_APP_FIREBASE_PROJECT_ID;
+      localStorage.clear();
 
       const result = await processOutfitUpload(mockUserInput);
 
-      expect(result.status).toBe('error');
-      expect(result.message).toContain('Firebase is not configured');
+      expect(result.status).toBe('success');
+      expect(result.data.success).toBe(true);
+      expect(result.data.outfit?.id).toContain('offline-');
     });
 
     it('successfully processes outfit upload when Firebase is configured', async () => {
@@ -126,11 +128,12 @@ describe('apiService', () => {
   });
 
   describe('searchOutfits', () => {
-    it('returns an error when Firebase is not configured', async () => {
+    it('falls back to offline search when Firebase is not configured', async () => {
+      localStorage.clear();
       const result = await searchOutfits('casual');
 
-      expect(result.status).toBe('error');
-      expect(result.message).toContain('Firebase is not configured');
+      expect(result.status).toBe('success');
+      expect(result.data.outfits.length).toBeGreaterThan(0);
     });
 
     it('searches outfits via Firebase', async () => {

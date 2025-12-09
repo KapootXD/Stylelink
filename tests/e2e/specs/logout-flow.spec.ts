@@ -76,10 +76,10 @@ test.describe('User Logout', () => {
 
   test('logout from different user types works', async ({ page }) => {
     // Test logout for different user types
-    const userTypes: Array<'admin' | 'seller_premium' | 'seller' | 'buyer'> = [
-      'buyer',
+    const userTypes: Array<'admin' | 'premium' | 'seller' | 'customer'> = [
+      'customer',
       'seller',
-      'seller_premium',
+      'premium',
       'admin'
     ];
     

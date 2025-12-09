@@ -8,9 +8,10 @@ import {
   UserProfile
 } from '../types';
 import * as firebaseService from './firebaseService';
+import { addOfflineOutfit, searchOfflineOutfits } from '../utils/offlineOutfits';
 
 // Check if Firebase is configured
-const isFirebaseConfigured = (): boolean => {
+export const isFirebaseConfigured = (): boolean => {
   return !!(
     process.env.REACT_APP_FIREBASE_API_KEY &&
     process.env.REACT_APP_FIREBASE_PROJECT_ID
@@ -35,22 +36,41 @@ export const processOutfitUpload = async (userInput: UserInput): Promise<ApiResp
       throw new Error('Title and at least one clothing item are required.');
     }
 
-    if (!isFirebaseConfigured()) {
-      throw new Error('Firebase is not configured. Please add your Firebase environment variables.');
-    }
-
-    // Use Firebase
-    const userId = getCurrentUserId();
     const startTime = Date.now();
 
-    const outfit = await firebaseService.createOutfit(userInput, userId);
+    // Use Firebase when configured; otherwise store locally for offline/demo use
+    let outfit: OutfitUpload;
+
+    if (isFirebaseConfigured()) {
+      const userId = getCurrentUserId();
+      outfit = await firebaseService.createOutfit(userInput, userId);
+    } else {
+      outfit = addOfflineOutfit({
+        id: `offline-${Date.now()}`,
+        userId: getCurrentUserId(),
+        title: userInput.title,
+        description: userInput.description,
+        occasion: userInput.occasion,
+        season: userInput.season,
+        styleTags: userInput.styleTags,
+        hashtags: userInput.hashtags || [],
+        items: userInput.items,
+        mainImageUrl: userInput.mainImageUrl || 'https://via.placeholder.com/600x800?text=StyleLink+Look',
+        additionalImages: userInput.additionalImages || [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        likes: 0,
+        shares: 0,
+        isPublic: true
+      });
+    }
 
     // Get similar outfits for recommendations
-    const { outfits: similarOutfits } = await firebaseService.getOutfits(
-      { occasion: outfit.occasion },
-      1,
-      3
-    );
+    const { outfits: similarOutfits } = isFirebaseConfigured()
+      ? await firebaseService
+          .getOutfits({ occasion: outfit.occasion }, 1, 3)
+          .catch(() => ({ outfits: [], hasMore: false, lastDoc: null }))
+      : searchOfflineOutfits('', { occasion: outfit.occasion }, 1, 3);
 
     const processingTime = Date.now() - startTime;
 
@@ -97,16 +117,9 @@ export const searchOutfits = async (
   limit: number = 10
 ): Promise<ApiResponse<OutfitSearchResult>> => {
   try {
-    if (!isFirebaseConfigured()) {
-      throw new Error('Firebase is not configured. Please add your Firebase environment variables.');
-    }
-
-    const { outfits, hasMore } = await firebaseService.searchOutfitsByText(
-      query,
-      filters,
-      page,
-      limit
-    );
+    const { outfits, hasMore } = isFirebaseConfigured()
+      ? await firebaseService.searchOutfitsByText(query, filters, page, limit)
+      : searchOfflineOutfits(query, filters, page, limit);
 
     const result: OutfitSearchResult = {
       outfits,

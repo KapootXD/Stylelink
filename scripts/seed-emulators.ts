@@ -43,13 +43,15 @@ const sampleUsers = [
     email: 'test@stylelink.com',
     password: 'test123456',
     displayName: 'Test User',
-    userType: 'regular'
+    userType: 'customer',
+    accountRole: 'customer'
   },
   {
     email: 'admin@stylelink.com',
     password: 'admin123456',
     displayName: 'Admin User',
-    userType: 'admin'
+    userType: 'admin',
+    accountRole: 'customer'
   }
 ];
 
@@ -91,6 +93,7 @@ async function seedUsers() {
         email: userData.email,
         displayName: userData.displayName,
         userType: userData.userType,
+        accountRole: userData.accountRole,
         createdAt: new Date(),
         updatedAt: new Date()
       });
