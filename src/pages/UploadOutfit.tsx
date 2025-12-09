@@ -271,6 +271,19 @@ const UploadOutfit: React.FC = () => {
 
       const styleTags = selectedStyles;
 
+      const baseItem = {
+        name: formData.title,
+        brand: formData.brand || 'Independent Seller',
+        price: Number(formData.price.replace(/[^0-9.]/g, '')) || 0,
+        currency: 'USD',
+        size: formData.size || 'One size',
+        color: formData.color || 'Assorted',
+        category: 'outerwear' as const,
+        directLink: formData.shopLink || '#',
+        imageUrl: imagePreviews[0] || '',
+        availability: 'in-stock' as const
+      };
+
       if (isFirebaseConfigured()) {
         // Create outfit with media on Firebase
         await createOutfitWithMedia(
@@ -281,21 +294,7 @@ const UploadOutfit: React.FC = () => {
             season: formData.season,
             styleTags,
             hashtags,
-            items: [
-              {
-                id: `item-${Date.now()}`,
-                name: formData.title,
-                brand: formData.brand || 'Independent Seller',
-                price: Number(formData.price.replace(/[^0-9.]/g, '')) || 0,
-                currency: 'USD',
-                size: formData.size || 'One size',
-                color: formData.color || 'Assorted',
-                category: 'outerwear',
-                directLink: formData.shopLink || '#',
-                imageUrl: imagePreviews[0] || '',
-                availability: 'in-stock'
-              }
-            ],
+            items: [baseItem],
             isPublic: true
           },
           currentUser.uid,
@@ -324,17 +323,9 @@ const UploadOutfit: React.FC = () => {
           hashtags,
           items: [
             {
+              ...baseItem,
               id: `item-${Date.now()}`,
-              name: formData.title || 'Custom look',
-              brand: formData.brand || 'Independent Seller',
-              price: Number(formData.price.replace(/[^0-9.]/g, '')) || 0,
-              currency: 'USD',
-              size: formData.size || 'One size',
-              color: formData.color || 'Assorted',
-              category: 'outerwear',
-              directLink: formData.shopLink || '#',
-              imageUrl: mediaDataUrls[0] || 'https://via.placeholder.com/600x800?text=StyleLink+Look',
-              availability: 'in-stock'
+              imageUrl: mediaDataUrls[0] || 'https://via.placeholder.com/600x800?text=StyleLink+Look'
             }
           ],
           mainImageUrl: mediaDataUrls[0] || 'https://via.placeholder.com/600x800?text=StyleLink+Look',
@@ -860,6 +851,9 @@ const UploadOutfit: React.FC = () => {
                   location: '',
                   price: '',
                   brand: '',
+                  shopLink: '',
+                  color: '',
+                  size: '',
                   occasion: '',
                   season: 'spring'
                 });
@@ -887,6 +881,9 @@ const UploadOutfit: React.FC = () => {
                   location: '',
                   price: '',
                   brand: '',
+                  shopLink: '',
+                  color: '',
+                  size: '',
                   occasion: '',
                   season: 'spring'
                 });

@@ -7,7 +7,7 @@
 
 import { useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { UserType, UserTypeString } from '../types/user';
+import { DEFAULT_USER_TYPE, UserType, UserTypeString } from '../types/user';
 import {
   canAccessFeature,
   isAdmin as checkIsAdmin,
@@ -49,15 +49,20 @@ export const useAccessControl = (): UseAccessControlReturn => {
   const { userProfile, currentUser } = useAuth();
 
   const userType = useMemo(() => {
-    return userProfile?.userType || null;
+    return userProfile?.userType || DEFAULT_USER_TYPE;
   }, [userProfile]);
+
+  const isSellerUserType = (type: UserType | UserTypeString | null | undefined): boolean => {
+    const normalizedType = String(type ?? '');
+    return normalizedType === UserType.SELLER || normalizedType === 'seller';
+  };
 
   const accountRole = useMemo(() => {
     if (userProfile?.accountRole) {
       return userProfile.accountRole;
     }
 
-    if (userProfile?.userType === UserType.SELLER || userProfile?.userType === 'seller') {
+    if (isSellerUserType(userProfile?.userType)) {
       return 'seller';
     }
 

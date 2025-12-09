@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth, signUp, login, logout as firebaseLogout, resetPassword, getUserProfile, updateUserType, isAuthInitialized } from '../config/firebase';
-import { AppUser, DEFAULT_USER_TYPE, UserType } from '../types/user';
+import { AppUser, DEFAULT_USER_TYPE, REGISTERED_DEFAULT_USER_TYPE, UserType } from '../types/user';
 import toast from 'react-hot-toast';
 
 // Auth context type
@@ -80,7 +80,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     emailVerified: true,
     displayName: 'Demo User',
     photoURL: null,
-    userType: DEFAULT_USER_TYPE,
+    userType: REGISTERED_DEFAULT_USER_TYPE,
     accountRole: 'customer',
     createdAt: new Date(),
     isOwnProfile: true,
@@ -109,7 +109,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         displayName: user.displayName,
         photoURL: user.photoURL,
         profilePicture: user.photoURL || undefined, // Map photoURL to profilePicture
-        userType: UserType.CUSTOMER,
+        userType: REGISTERED_DEFAULT_USER_TYPE,
         accountRole: 'customer',
         createdAt: new Date(),
         isOwnProfile: true

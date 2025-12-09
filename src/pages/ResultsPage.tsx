@@ -26,8 +26,7 @@ import {
   ViewMode,
   FashionItemLabel
 } from '../types';
-import { likeOutfit, shareOutfit } from '../services/apiService';
-import { getOutfits } from '../services/firebaseService';
+import { likeOutfit, shareOutfit, searchOutfits } from '../services/apiService';
 import { getLikedPosts, getSavedPosts, saveLikedPosts, saveSavedPosts } from '../utils/localStorage';
 import PageErrorBoundary from '../components/PageErrorBoundary';
 
@@ -88,9 +87,19 @@ const ResultsPageContent: React.FC = () => {
     try {
       if (navigationData?.data?.results && navigationData.data.results.length > 0) {
         setResults(navigationData.data.results);
+      }
+
+      const response = await searchOutfits(
+        '',
+        navigationData?.data?.filters || {},
+        1,
+        40
+      );
+
+      if (response.status === 'success') {
+        setResults(response.data.outfits);
       } else {
-        const { outfits } = await getOutfits({}, 1, 30);
-        setResults(outfits);
+        setResults([]);
       }
     } catch (catalogError) {
       console.error('Error loading catalog:', catalogError);
@@ -269,6 +278,14 @@ const ResultsPageContent: React.FC = () => {
     const isSaved = interactions.savedOutfits.has(outfit.id);
     const isCommented = interactions.commentedOutfits.has(outfit.id);
     const isShared = interactions.sharedOutfits.has(outfit.id);
+    const totalPrice = outfit.items.reduce((sum, item) => sum + (item.price || 0), 0);
+    const priceLabel = totalPrice > 0 ? `${outfit.items[0]?.currency || 'USD'} ${totalPrice.toFixed(0)}` : null;
+    const handleOpenShop = (e?: React.MouseEvent) => {
+      if (e) {
+        e.stopPropagation();
+      }
+      navigate(`/profile/${outfit.userId}/outfits/${outfit.id}`, { state: { outfit } });
+    };
     
     return (
       <motion.div
@@ -321,6 +338,12 @@ const ResultsPageContent: React.FC = () => {
           <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
             {outfit.title}
           </h3>
+          {priceLabel && (
+            <div className="inline-flex items-center px-3 py-1 mb-2 text-sm font-semibold text-green-700 bg-green-50 rounded-full border border-green-100">
+              {priceLabel}
+              <span className="text-xs text-green-600 ml-2">complete look</span>
+            </div>
+          )}
           <p className="text-sm text-gray-600 mb-2">
             by {outfit.userId}
           </p>
@@ -344,6 +367,20 @@ const ResultsPageContent: React.FC = () => {
           <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
             <span>{outfit.likes} likes</span>
             <span>{outfit.shares} shares</span>
+          </div>
+
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-sm text-gray-700">
+              {priceLabel ? `Shop it now for ${priceLabel}` : 'Ready to shop this look'}
+            </div>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleOpenShop}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Buy this look
+            </Button>
           </div>
           
           {/* Action buttons */}
@@ -621,7 +658,7 @@ const ResultsPageContent: React.FC = () => {
                             />
                             <div className="flex-1">
                               <p className="font-medium text-gray-900">{item.name}</p>
-                              <p className="text-sm text-gray-600">{item.brand} • ${item.price}</p>
+                              <p className="text-sm text-gray-600">{item.brand} - {item.currency || 'USD'} {item.price}</p>
                             </div>
                           </div>
                         ))}

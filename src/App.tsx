@@ -34,6 +34,7 @@ import UploadOutfit from './pages/UploadOutfit';
 import ExplorePage from './pages/ExplorePage';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
+import ShopOutfitPage from './pages/ShopOutfitPage';
 
 function App() {
   // Deployment test - verify automatic deployment is working
@@ -88,6 +89,14 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <ProfilePage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/profile/:userId/outfits/:outfitId"
+                    element={
+                      <ProtectedRoute>
+                        <ShopOutfitPage />
                       </ProtectedRoute>
                     }
                   />

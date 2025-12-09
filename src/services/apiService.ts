@@ -54,7 +54,10 @@ export const processOutfitUpload = async (userInput: UserInput): Promise<ApiResp
         season: userInput.season,
         styleTags: userInput.styleTags,
         hashtags: userInput.hashtags || [],
-        items: userInput.items,
+        items: userInput.items.map((item, index) => ({
+          ...item,
+          id: `item-${Date.now()}-${index}`
+        })),
         mainImageUrl: userInput.mainImageUrl || 'https://via.placeholder.com/600x800?text=StyleLink+Look',
         additionalImages: userInput.additionalImages || [],
         createdAt: new Date(),

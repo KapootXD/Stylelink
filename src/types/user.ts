@@ -10,6 +10,7 @@
  * Defines the different types of users in the system
  */
 export enum UserType {
+  GUEST = 'guest',
   ADMIN = 'admin',
   PREMIUM = 'premium',
   SELLER = 'seller',
@@ -21,15 +22,11 @@ export enum UserType {
  * Alternative to enum for type checking
  */
 export type UserTypeString =
+  | 'guest'
   | 'admin'
   | 'premium'
   | 'seller'
-  | 'customer'
-  // Backward compatibility with legacy roles
-  | 'seller_premium'
-  | 'buyer'
-  | 'regular'
-  | 'guest';
+  | 'customer';
 
 /**
  * App User Interface
@@ -130,6 +127,16 @@ export const getUserTypePermissions = (
   accountRole: 'customer' | 'seller' = 'customer'
 ): UserTypePermissions => {
   switch (userType) {
+    case UserType.GUEST:
+    case 'guest':
+      return {
+        canUploadOutfits: false,
+        canSellItems: false,
+        canAccessPremiumFeatures: false,
+        canModerateContent: false,
+        maxOutfitsPerDay: 0,
+        maxItemsPerOutfit: 0
+      };
     case UserType.ADMIN:
       return {
         canUploadOutfits: true,
@@ -161,8 +168,6 @@ export const getUserTypePermissions = (
       };
     case UserType.CUSTOMER:
     case 'customer':
-    case 'buyer':
-    case 'regular':
     default:
       return {
         canUploadOutfits: true,
@@ -190,5 +195,10 @@ export const hasPermission = (
 /**
  * Default user type for new signups
  */
-export const DEFAULT_USER_TYPE: UserType = UserType.CUSTOMER;
+export const DEFAULT_USER_TYPE: UserType = UserType.GUEST;
+
+/**
+ * Default user type for registered accounts
+ */
+export const REGISTERED_DEFAULT_USER_TYPE: UserType = UserType.CUSTOMER;
 
