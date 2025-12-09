@@ -2,7 +2,7 @@
  * Access Control Utilities for StyleLink
  *
  * Provides functions to check user permissions and access rights
- * based on user types (Admin, Premium, Seller, Customer)
+ * based on user types (Admin, Premium, Seller, Customer, Guest)
  */
 
 import { UserType, UserTypeString } from '../types/user';
@@ -26,7 +26,7 @@ export type FeatureType =
 type AccountRole = 'customer' | 'seller';
 
 type UserContext = {
-  normalizedType: UserType | null;
+  normalizedType: UserType;
   accountRole: AccountRole;
 };
 
@@ -39,28 +39,27 @@ const resolveUserContext = (
   accountRole: AccountRole = 'customer'
 ): UserContext => {
   if (!userType) {
-    return { normalizedType: null, accountRole };
+    return { normalizedType: UserType.GUEST, accountRole };
   }
 
   switch (userType) {
+    case UserType.GUEST:
+    case 'guest':
+      return { normalizedType: UserType.GUEST, accountRole: 'customer' };
     case UserType.ADMIN:
     case 'admin':
       return { normalizedType: UserType.ADMIN, accountRole };
     case UserType.PREMIUM:
     case 'premium':
       return { normalizedType: UserType.PREMIUM, accountRole };
-    case 'seller_premium':
-      return { normalizedType: UserType.PREMIUM, accountRole: 'seller' };
     case UserType.SELLER:
     case 'seller':
       return { normalizedType: UserType.SELLER, accountRole: 'seller' };
     case UserType.CUSTOMER:
     case 'customer':
-    case 'buyer':
-    case 'regular':
       return { normalizedType: UserType.CUSTOMER, accountRole: 'customer' };
     default:
-      return { normalizedType: null, accountRole };
+      return { normalizedType: UserType.GUEST, accountRole };
   }
 };
 
@@ -78,11 +77,6 @@ export const canAccessFeature = (
   accountRole: AccountRole = 'customer'
 ): boolean => {
   const { normalizedType, accountRole: resolvedRole } = resolveUserContext(userType, accountRole);
-
-  if (normalizedType === null) {
-    return feature === 'basic';
-  }
-
   const role = resolvedRole;
   const type: UserType = normalizedType;
 
@@ -103,23 +97,24 @@ export const canAccessFeature = (
 
     case 'upload':
       return (
-        type === UserType.CUSTOMER ||
-        type === UserType.SELLER ||
-        type === UserType.PREMIUM ||
-        type === UserType.ADMIN
+        type !== UserType.GUEST &&
+        (type === UserType.CUSTOMER ||
+          type === UserType.SELLER ||
+          type === UserType.PREMIUM ||
+          type === UserType.ADMIN)
       );
 
     case 'sell':
       return type === UserType.ADMIN || type === UserType.SELLER || (type === UserType.PREMIUM && role === 'seller');
 
     case 'edit':
-      return true;
+      return type !== UserType.GUEST;
 
     case 'delete':
-      return true;
+      return type !== UserType.GUEST;
 
     case 'settings':
-      return true;
+      return type !== UserType.GUEST;
 
     default:
       return false;
@@ -177,7 +172,7 @@ export const canDelete = (userType: UserType | UserTypeString | null | undefined
 export const getAllowedUserTypes = (feature: FeatureType): UserType[] => {
   const allowed: UserType[] = [];
 
-  [UserType.ADMIN, UserType.PREMIUM, UserType.SELLER, UserType.CUSTOMER].forEach(userType => {
+  [UserType.ADMIN, UserType.PREMIUM, UserType.SELLER, UserType.CUSTOMER, UserType.GUEST].forEach(userType => {
     if (canAccessFeature(userType, feature, userType === UserType.SELLER ? 'seller' : 'customer')) {
       allowed.push(userType);
     }
@@ -201,7 +196,7 @@ export const getLockedFeatureMessage = (
 ): string => {
   const { normalizedType, accountRole: resolvedRole } = resolveUserContext(currentUserType, accountRole);
 
-  if (!normalizedType) {
+  if (normalizedType === UserType.GUEST) {
     return 'Please sign up or log in to access this feature.';
   }
 

@@ -40,6 +40,7 @@ const getAllOutfits = (): OutfitUpload[] => {
 };
 
 const matchesFilters = (outfit: OutfitUpload, filters: SearchFilters): boolean => {
+  if (filters.userId && outfit.userId !== filters.userId) return false;
   if (filters.occasion && outfit.occasion !== filters.occasion) return false;
   if (filters.season && outfit.season !== filters.season) return false;
   if (filters.styleTags && filters.styleTags.length > 0) {

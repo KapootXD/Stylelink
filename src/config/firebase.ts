@@ -12,7 +12,14 @@ import {
   UserCredential
 } from 'firebase/auth';
 import { getStorage, FirebaseStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { UserType, DEFAULT_USER_TYPE, FirestoreUserProfile, AppUser } from '../types/user';
+import {
+  UserType,
+  DEFAULT_USER_TYPE,
+  REGISTERED_DEFAULT_USER_TYPE,
+  FirestoreUserProfile,
+  AppUser,
+  UserTypeString
+} from '../types/user';
 
 // Firebase configuration
 // These values should be set in your .env file
@@ -138,7 +145,7 @@ export const signUp = async (
 
     // Create user document in Firestore with userType classification
     // Map signup selection to new user roles
-    const appUserType: UserType = userType === 'seller' ? UserType.SELLER : DEFAULT_USER_TYPE;
+    const appUserType: UserType = userType === 'seller' ? UserType.SELLER : REGISTERED_DEFAULT_USER_TYPE;
     const accountRole: 'customer' | 'seller' = userType === 'seller' ? 'seller' : 'customer';
     
     try {
@@ -210,9 +217,14 @@ export const getUserProfile = async (uid: string): Promise<AppUser | null> => {
     // Use photoURL or avatarUrl for profilePicture (convert null to undefined)
     const profilePicture = photoURL || data.avatarUrl || undefined;
 
+    const isSellerUserType = (type: UserType | UserTypeString | null | undefined): boolean => {
+      const normalizedType = String(type ?? '');
+      return normalizedType === UserType.SELLER || normalizedType === 'seller';
+    };
+
     const accountRole: 'customer' | 'seller' = data.accountRole
       ? data.accountRole
-      : data.userType === UserType.SELLER || data.userType === 'seller_premium' || data.userType === 'seller'
+      : isSellerUserType(data.userType)
         ? 'seller'
         : 'customer';
     
@@ -222,7 +234,7 @@ export const getUserProfile = async (uid: string): Promise<AppUser | null> => {
       emailVerified,
       displayName,
       photoURL,
-      userType: data.userType || DEFAULT_USER_TYPE,
+      userType: data.userType || REGISTERED_DEFAULT_USER_TYPE,
       accountRole,
       username: data.username,
       usernameChangeCount: data.usernameChangeCount,
@@ -256,7 +268,7 @@ const createDefaultUserProfile = (firebaseUser: User): AppUser => {
     displayName: firebaseUser.displayName,
     photoURL: firebaseUser.photoURL,
     profilePicture: firebaseUser.photoURL || undefined, // Map photoURL to profilePicture
-    userType: DEFAULT_USER_TYPE,
+    userType: REGISTERED_DEFAULT_USER_TYPE,
     accountRole: 'customer',
     usernameChangeCount: 0,
     createdAt: new Date(),

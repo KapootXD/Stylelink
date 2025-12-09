@@ -185,11 +185,11 @@ const MainFeaturePageContent: React.FC<MainFeaturePageProps> = () => {
   };
 
   const handleShopping = (outfitId: string) => {
-    // Show shopping links for the specific outfit
     const outfit = outfits.find(o => o.id === outfitId);
     if (outfit) {
-      setCurrentPostShopping(outfit);
-      setShowShopping(true);
+      navigate(`/profile/${outfit.userId}/outfits/${outfit.id}`, { state: { outfit } });
+    } else {
+      navigate('/results');
     }
   };
 

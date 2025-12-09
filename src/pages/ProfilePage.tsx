@@ -17,7 +17,7 @@ import { Button, Card, LoadingSpinner, EditProfileModal } from '../components';
 import { useReducedMotion } from '../components/PageTransition';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserProfile } from '../config/firebase';
-import { getOutfits } from '../services/firebaseService';
+import { searchOutfits } from '../services/apiService';
 import { AppUser, OutfitUpload } from '../types';
 import toast from 'react-hot-toast';
 
@@ -185,20 +185,25 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     const fetchOutfits = async () => {
-      if (!targetUserId) {
-        setOutfitPosts([]);
-        return;
-      }
+    if (!targetUserId) {
+      setOutfitPosts([]);
+      return;
+    }
 
-      try {
-        setAreOutfitsLoading(true);
-        const { outfits } = await getOutfits({ userId: targetUserId }, 1, 30);
-        setOutfitPosts(outfits);
-      } catch (error) {
-        console.error('Error loading outfits:', error);
-        toast.error('Failed to load style posts');
+    try {
+      setAreOutfitsLoading(true);
+      const response = await searchOutfits('', { userId: targetUserId }, 1, 50);
+
+      if (response.status === 'success') {
+        setOutfitPosts(response.data.outfits || []);
+      } else {
         setOutfitPosts([]);
-      } finally {
+      }
+    } catch (error) {
+      console.error('Error loading outfits:', error);
+      toast.error('Failed to load style posts');
+      setOutfitPosts([]);
+    } finally {
         setAreOutfitsLoading(false);
       }
     };
@@ -445,6 +450,10 @@ const ProfilePage: React.FC = () => {
                 const primaryItem = post.items?.[0];
                 const priceLabel = primaryItem?.price ? `${primaryItem.currency || 'USD'} ${primaryItem.price}` : null;
                 const brandLabel = primaryItem?.brand || 'View details';
+                const handleViewLook = () => navigate(
+                  `/profile/${post.userId}/outfits/${post.id}`,
+                  { state: { outfit: post, seller: currentUserData } }
+                );
 
                 return (
                   <motion.div
@@ -455,7 +464,7 @@ const ProfilePage: React.FC = () => {
                     <Card
                       variant="outfit"
                       className="overflow-hidden h-full"
-                      onClick={() => navigate('/results')}
+                      onClick={handleViewLook}
                     >
                       <div className="relative h-80 bg-gradient-to-br from-[#B7410E]/10 to-[#D4AF37]/10 rounded-t-2xl overflow-hidden">
                         {post.mainImageUrl ? (
@@ -552,9 +561,13 @@ const ProfilePage: React.FC = () => {
                           <Button
                             variant="primary"
                             size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewLook();
+                            }}
                             className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                           >
-                            View Look
+                            Shop Look
                             <ArrowRight className="w-4 h-4 ml-1" />
                           </Button>
                         </div>
