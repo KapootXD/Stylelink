@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
   Camera,
   Edit3,
@@ -40,8 +40,10 @@ type ProfileViewData = {
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { userId } = useParams<{ userId?: string }>();
   const { currentUser, userProfile, refreshUserProfile, loading: authLoading } = useAuth();
+  const previousLocationRef = useRef<string>('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [profileData, setProfileData] = useState<ProfileViewData | null>(null);
@@ -183,35 +185,60 @@ const ProfilePage: React.FC = () => {
     }
   }, [targetUserId, currentUser, userProfile, authLoading]);
 
+  // Fetch outfits for the profile user
   useEffect(() => {
     const fetchOutfits = async () => {
-    if (!targetUserId) {
-      setOutfitPosts([]);
-      return;
-    }
-
-    try {
-      setAreOutfitsLoading(true);
-      const response = await searchOutfits('', { userId: targetUserId }, 1, 50);
-
-      if (response.status === 'success') {
-        setOutfitPosts(response.data.outfits || []);
-      } else {
+      if (!targetUserId) {
         setOutfitPosts([]);
+        return;
       }
-    } catch (error) {
-      console.error('Error loading outfits:', error);
-      toast.error('Failed to load style posts');
-      setOutfitPosts([]);
-    } finally {
+
+      try {
+        setAreOutfitsLoading(true);
+        console.log('📥 Fetching outfits for user:', targetUserId);
+        const response = await searchOutfits('', { userId: targetUserId }, 1, 50);
+
+        if (response.status === 'success') {
+          console.log(`✅ Loaded ${response.data.outfits.length} outfits for user ${targetUserId}`);
+          setOutfitPosts(response.data.outfits || []);
+        } else {
+          console.warn('⚠️ Failed to load outfits:', response.message);
+          setOutfitPosts([]);
+        }
+      } catch (error) {
+        console.error('❌ Error loading outfits:', error);
+        toast.error('Failed to load style posts');
+        setOutfitPosts([]);
+      } finally {
         setAreOutfitsLoading(false);
       }
     };
 
-    if (!authLoading) {
+    if (!authLoading && targetUserId) {
       fetchOutfits();
     }
-  }, [targetUserId, authLoading]);
+  }, [targetUserId, authLoading, location.key]); // Added location.key to refresh on navigation
+
+  // Refresh outfits when navigating to profile (e.g., after uploading an outfit)
+  useEffect(() => {
+    // Check if we just navigated here from upload page
+    if (location.state?.fromUpload && targetUserId) {
+      console.log('🔄 Refreshing outfits after upload...');
+      const fetchOutfits = async () => {
+        try {
+          const response = await searchOutfits('', { userId: targetUserId }, 1, 50);
+          if (response.status === 'success') {
+            setOutfitPosts(response.data.outfits || []);
+            console.log(`✅ Refreshed: ${response.data.outfits.length} outfits loaded`);
+          }
+        } catch (error) {
+          console.error('Error refreshing outfits:', error);
+        }
+      };
+      // Small delay to ensure Firestore has indexed the new outfit
+      setTimeout(fetchOutfits, 1000);
+    }
+  }, [location.state, targetUserId]);
 
   useEffect(() => {
     if (!profileData && (userProfile || currentUser) && targetUserId) {

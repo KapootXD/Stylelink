@@ -306,7 +306,10 @@ const UploadOutfit: React.FC = () => {
         );
 
         toast.success('Outfit uploaded successfully!');
-        setShowPreview(true);
+        // Navigate to profile to see the new post
+        setTimeout(() => {
+          navigate('/profile', { state: { fromUpload: true } });
+        }, 1500); // Small delay to show success message and allow Firestore to index
       } else {
         // Offline/local demo mode: persist to localStorage so Discover shows uploads
         const mediaSources = imageFiles.length > 0 ? imageFiles : videoFiles;
