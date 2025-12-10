@@ -1,0 +1,20 @@
+[
+  {
+    "origin": [
+      "https://stylelink-74fdf.web.app",
+      "https://stylelink-74fdf.firebaseapp.com",
+      "http://localhost:3000",
+      "http://localhost:3001"
+    ],
+    "method": ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"],
+    "responseHeader": [
+      "Content-Type",
+      "Authorization",
+      "Content-Length",
+      "x-goog-*",
+      "x-firebase-*"
+    ],
+    "maxAgeSeconds": 3600
+  }
+]
+

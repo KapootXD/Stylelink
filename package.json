@@ -40,6 +40,7 @@
     "build:analyze": "npm run build && npx serve -s build",
     "seed:firebase": "ts-node -r dotenv/config scripts/seedFirebase.ts",
     "emulators:start": "firebase emulators:start",
+    "emulators:start:no-firestore": "firebase emulators:start --only auth,storage,ui",
     "emulators:ui": "firebase emulators:start --only ui",
     "emulators:exec": "firebase emulators:exec",
     "test:emulator": "cross-env REACT_APP_USE_FIREBASE_EMULATOR=true npm test",

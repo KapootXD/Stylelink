@@ -1,0 +1,23 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Profile pictures - public read, own write
+    match /{userId}/profile/{allPaths=**} {
+      allow read: if true;  // Anyone can view profile pictures
+      allow write: if request.auth != null && request.auth.uid == userId;  // Only owner can upload
+    }
+    
+    // Outfit images/videos - public read, authenticated write
+    match /{userId}/outfits/{allPaths=**} {
+      allow read: if true;  // Anyone can view outfit images
+      allow write: if request.auth != null;  // Authenticated users can upload
+    }
+    
+    // General uploads - authenticated only
+    match /{userId}/{allPaths=**} {
+      allow read: if true;  // Public read
+      allow write: if request.auth != null && request.auth.uid == userId;  // Only owner can write
+    }
+  }
+}
+
