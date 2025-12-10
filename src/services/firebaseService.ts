@@ -300,13 +300,20 @@ export const createOutfit = async (userInput: UserInput, userId: string): Promis
       isPublic: userInput.isPublic ?? true
     };
 
-    const outfitRef = await addDoc(collection(firestoreDb, COLLECTIONS.OUTFITS), convertOutfitToFirestore(outfitData));
+    const firestoreData = convertOutfitToFirestore(outfitData);
+    console.log('💾 Creating outfit in Firestore with userId:', userId);
+    console.log('📋 Outfit data:', { title: outfitData.title, userId: firestoreData.userId });
+    
+    const outfitRef = await addDoc(collection(firestoreDb, COLLECTIONS.OUTFITS), firestoreData);
+    console.log('✅ Outfit created in Firestore with ID:', outfitRef.id);
+    
     const newOutfit = await getOutfitById(outfitRef.id);
 
     if (!newOutfit) {
       throw new Error('Failed to create outfit');
     }
 
+    console.log('✅ Outfit retrieved successfully:', { id: newOutfit.id, userId: newOutfit.userId, title: newOutfit.title });
     return newOutfit;
   } catch (error) {
     console.error('Error creating outfit:', error);
