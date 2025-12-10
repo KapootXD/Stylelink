@@ -11,7 +11,7 @@ export interface ButtonProps {
   /** Size of the button */
   size?: 'sm' | 'md' | 'lg';
   /** Click handler */
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   /** Disabled state */
   disabled?: boolean;
   /** Additional CSS classes */
